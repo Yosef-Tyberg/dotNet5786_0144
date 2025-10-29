@@ -13,7 +13,8 @@ namespace Stage0
 
         private static void WelcomeYYYY()
         {
-            return;
+            Console.WriteLine("Hello Mr. Nobody"); 
+            Console.WriteLine("Press any key to continue");
         }
 
         private static void Welcome0144()
