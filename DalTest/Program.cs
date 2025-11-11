@@ -30,21 +30,6 @@ internal static class Program
 
     private static void Main()
     {
-        // Provide same instances to Initialization (so it populates the same data we will operate on)
-        try
-        {
-
-            Console.WriteLine("Initializing database with test data...");
-            DalTest.Initialization.Do(s_dalCourier!, s_dalOrder!, s_dalDelivery!, s_dalConfig!);
-            Console.WriteLine("Initialization completed.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Initialization failed:");
-            Console.WriteLine(ex.ToString());
-            // return to main menu - user can still operate (or exit)
-        }
-
         while (true)
         {
             PrintMainMenu();
@@ -73,9 +58,8 @@ internal static class Program
                 case 4:
                     try
                     {
-                        Console.WriteLine("Re-initializing database...");
                         DalTest.Initialization.Do(s_dalCourier!, s_dalOrder!, s_dalDelivery!, s_dalConfig!);
-                        Console.WriteLine("Re-initialization complete.");
+                        Console.WriteLine("Initialization complete.");
                     }
                     catch (Exception ex)
                     {
@@ -125,10 +109,10 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("=== Courier Menu ===");
         Console.WriteLine("0. Back");
-        Console.WriteLine("1. Create courier (all fields)");
+        Console.WriteLine("1. Create courier ");
         Console.WriteLine("2. Read courier by Id");
         Console.WriteLine("3. Read all couriers");
-        Console.WriteLine("4. Update courier (all fields)");
+        Console.WriteLine("4. Update courier");
         Console.WriteLine("5. Delete courier by Id");
         Console.WriteLine("6. Delete all couriers");
         Console.Write("Choose option: ");
