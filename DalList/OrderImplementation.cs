@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// <summary>
 /// DAL implementation of <see cref="DalApi.IOrder"/> using the in-memory DataSource.
 /// </summary>
-internal class OrderImplementation : IOrder
+public class OrderImplementation : IOrder
 {
     /// <summary>
     /// Creates a new Order record and assigns it a new ID from <see cref="Config.NextOrderId"/>.

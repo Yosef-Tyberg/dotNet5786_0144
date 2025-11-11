@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// <summary>
 /// DAL implementation of <see cref="DalApi.IDelivery"/> using the in-memory DataSource.
 /// </summary>
-internal class DeliveryImplementation : IDelivery
+public class DeliveryImplementation : IDelivery
 {
     /// <summary>
     /// Creates a new Delivery record and assigns it a new ID from <see cref="Config.NextDeliveryId"/>.

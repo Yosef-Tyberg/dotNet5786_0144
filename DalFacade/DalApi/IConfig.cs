@@ -31,6 +31,14 @@ public interface IConfig
     string? CompanyFullAddress { get; set; }
 
     /// <summary>
+    /// Company's latitude.
+    /// </summary>
+    double? Latitude { get; set; }
+    /// <summary>
+    /// Company's longitude.
+    /// </summary> 
+    double? Longitude { get; set; }
+    /// <summary>
     /// Average car speed in km/h used to estimate delivery times.
     /// </summary>
     double AvgCarSpeedKmh { get; set; }

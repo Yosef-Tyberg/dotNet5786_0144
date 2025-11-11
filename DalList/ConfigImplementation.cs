@@ -5,7 +5,7 @@ namespace Dal;
 /// <summary>
 /// DAL implementation of <see cref="DalApi.IConfig"/> that forwards to the internal Config store.
 /// </summary>
-internal class ConfigImplementation : IConfig
+public class ConfigImplementation : IConfig
 {
     /// <inheritdoc />
     public DateTime Clock
@@ -46,6 +46,13 @@ internal class ConfigImplementation : IConfig
 
     /// <inheritdoc />
     public string? CompanyFullAddress { get => Config.CompanyFullAddress; set => Config.CompanyFullAddress = value; }
+
+    /// <inheritdoc />
+    public double? Latitude { get => Config.Latitude; set => Config.Latitude = value; }
+
+    /// <inheritdoc />
+    public double? Longitude { get => Config.Longitude; set => Config.Longitude = value;  }
+
 
     /// <summary>
     /// Resets the underlying <see cref="Config"/> to its defaults.
