@@ -67,7 +67,6 @@ public class DeliveryImplementation : IDelivery
 
     /// <summary>
     /// Updates an existing delivery entry by replacing the stored instance.
-    /// Note: Update does not assign a new Id — it preserves the provided Id.
     /// </summary>
     /// <param name="item">Delivery item containing updated values.</param>
     public void Update(Delivery item)

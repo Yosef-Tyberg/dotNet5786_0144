@@ -66,7 +66,6 @@ public class OrderImplementation : IOrder
 
     /// <summary>
     /// Updates an existing order entry by replacing the stored instance.
-    /// Note: Update preserves the provided Id — it does not request a new id.
     /// </summary>
     /// <param name="item">Order item containing updated values.</param>
     public void Update(Order item)
