@@ -4,9 +4,9 @@ using DO;
 using System.Collections.Generic;
 
 /// <summary>
-/// DAL implementation of <see cref="DalApi.IOrder"/> using the in-memory DataSource.
+/// DAL implementation of <see cref="DalApi.ICrud"/> using the in-memory DataSource.
 /// </summary>
-public class OrderImplementation : IOrder
+internal class OrderImplementation : IOrder
 {
     /// <summary>
     /// Creates a new Order record and assigns it a new ID from <see cref="Config.NextOrderId"/>.
@@ -55,14 +55,25 @@ public class OrderImplementation : IOrder
         return DataSource.Orders.FirstOrDefault(item => item.Id == id);
     }
 
+
+    /// <summary>
+    /// Reads an entity by first matching filter.
+    /// </summary>
+    /// <param name="filter">boolean to filter by.</param>
+    /// <returns>The first entity matching the filter, or null if not found.</returns>
+    public Order? Read(Func<Order, bool> filter)
+    {
+        return DataSource.Orders.FirstOrDefault(item => filter(item));
+    }
+
     /// <summary>
     /// Returns all orders currently in the data source.
     /// </summary>
     /// <returns>List of all orders.</returns>
-    public List<Order> ReadAll()
-    {
-        return DataSource.Orders.ToList(); ;
-    }
+    public IEnumerable<Order> ReadAll(Func<Order, bool>? filter = null) //stage 2 
+       => filter == null
+           ? DataSource.Orders.Select(item => item) 
+            : DataSource.Orders.Where(filter);
 
     /// <summary>
     /// Updates an existing order entry by replacing the stored instance.

@@ -4,9 +4,9 @@ using DO;
 using System.Collections.Generic;
 
 /// <summary>
-/// DAL implementation of <see cref="DalApi.IDelivery"/> using the in-memory DataSource.
+/// DAL implementation of <see cref="DalApi.ICrud"/> using the in-memory DataSource.
 /// </summary>
-public class DeliveryImplementation : IDelivery
+internal class DeliveryImplementation : IDelivery
 {
     /// <summary>
     /// Creates a new Delivery record and assigns it a new ID from <see cref="Config.NextDeliveryId"/>.
@@ -56,14 +56,25 @@ public class DeliveryImplementation : IDelivery
         return DataSource.Deliveries.FirstOrDefault(item => item.Id == id);
     }
 
+
+    /// <summary>
+    /// Reads an entity by first matching filter.
+    /// </summary>
+    /// <param name="filter">boolean to filter by.</param>
+    /// <returns>The first entity matching the filter, or null if not found.</returns>
+    public Delivery? Read(Func<Delivery, bool> filter)
+    {
+        return DataSource.Deliveries.FirstOrDefault(item => filter(item));
+    }
+
     /// <summary>
     /// Returns all deliveries currently in the data source.
     /// </summary>
     /// <returns>List of all deliveries.</returns>
-    public List<Delivery> ReadAll()
-    {
-        return DataSource.Deliveries.ToList(); ;
-    }
+    public IEnumerable<Delivery> ReadAll(Func<Delivery, bool>? filter = null) //stage 2 
+       => filter == null
+           ? DataSource.Deliveries.Select(item => item)
+            : DataSource.Deliveries.Where(filter);
 
     /// <summary>
     /// Updates an existing delivery entry by replacing the stored instance.

@@ -1,14 +1,13 @@
-﻿namespace DalList;
+﻿namespace Dal;
 
-using Dal;
 using DalApi;
 using DO;
 using System.Collections.Generic;
 
 /// <summary>
-/// List-backed implementation of <see cref="DalApi.ICourier"/> for in-memory storage.
+/// List-backed implementation of <see cref="DalApi.ICrud"/> for in-memory storage.
 /// </summary>
-public class CourierImplementation : ICourier
+internal class CourierImplementation : ICourier
 {
     /// <summary>
     /// Creates a new courier in the in-memory data source.
@@ -58,14 +57,25 @@ public class CourierImplementation : ICourier
         return DataSource.Couriers.FirstOrDefault(item => item.Id == id);
     }
 
+
+    /// <summary>
+    /// Reads an entity by first matching filter.
+    /// </summary>
+    /// <param name="filter">boolean to filter by.</param>
+    /// <returns>The first entity matching the filter, or null if not found.</returns>
+    public Courier? Read(Func<Courier, bool> filter)
+    {
+        return DataSource.Couriers.FirstOrDefault(item => filter(item));
+    }
+
     /// <summary>
     /// Returns all couriers currently in the data source.
     /// </summary>
     /// <returns>List of all couriers.</returns>
-    public List<Courier> ReadAll()
-    {
-        return DataSource.Couriers.ToList(); ;
-    }
+    public IEnumerable<Courier> ReadAll(Func<Courier, bool>? filter = null) //stage 2 
+       => filter == null
+           ? DataSource.Couriers.Select(item => item)
+            : DataSource.Couriers.Where(filter);
 
     /// <summary>
     /// Updates an existing courier by replacing the stored instance.

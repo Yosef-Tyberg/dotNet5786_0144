@@ -1,5 +1,4 @@
 ﻿using Dal;
-using DalList;
 using DalApi;
 using DO;
 
@@ -22,12 +21,8 @@ namespace DalTest;
  */
 internal static class Program
 {
-    // Program-owned DAL instances (we pass these to Initialization so both use the same store)
-    private static ICourier? s_dalCourier = new CourierImplementation();
-    private static IOrder? s_dalOrder = new OrderImplementation();
-    private static IDelivery? s_dalDelivery = new DeliveryImplementation();
-    private static IConfig? s_dalConfig = new ConfigImplementation();
 
+    static readonly IDal s_dal = new DalList();
     private static void Main()
     {
         while (true)
@@ -58,7 +53,7 @@ internal static class Program
                 case 4:
                     try
                     {
-                        DalTest.Initialization.Do(s_dalCourier!, s_dalOrder!, s_dalDelivery!, s_dalConfig!);
+                        DalTest.Initialization.Do(s_dal);
                         Console.WriteLine("Initialization complete.");
                     }
                     catch (Exception ex)
@@ -135,7 +130,7 @@ internal static class Program
                 case 4: UpdateCourier(); break;
                 case 5: DeleteCourier(); break;
                 case 6:
-                    s_dalCourier!.DeleteAll();
+                    s_dal.Courier!.DeleteAll();
                     Console.WriteLine("All couriers deleted.");
                     break;
                 default:
@@ -191,12 +186,12 @@ private static void CreateCourier()
     if (string.IsNullOrWhiteSpace(dtypeRaw) || !Enum.TryParse<DeliveryTypes>(dtypeRaw, true, out var dtype))
         throw new FormatException("DeliveryType is invalid!");
 
-    Console.Write($"EmploymentStartTime (yyyy-MM-dd HH:mm) (empty = config clock {s_dalConfig!.Clock}): ");
+    Console.Write($"EmploymentStartTime (yyyy-MM-dd HH:mm) (empty = config clock {s_dal.Config!.Clock}): ");
     var startRaw = Console.ReadLine();
     DateTime start;
     if (string.IsNullOrWhiteSpace(startRaw))
     {
-        start = s_dalConfig!.Clock;
+        start = s_dal.Config!.Clock;
     }
     else if (!DateTime.TryParse(startRaw, out start))
     {
@@ -214,7 +209,7 @@ private static void CreateCourier()
     }
 
     var courier = new Courier(id, fullName!, phone!, email!, password!, active, dtype, start, pmax);
-    s_dalCourier!.Create(courier);
+    s_dal.Courier!.Create(courier);
     Console.WriteLine("Courier created.");
 }
 
@@ -224,14 +219,14 @@ private static void ReadCourier()
     if (!int.TryParse(Console.ReadLine(), out int id))
         throw new FormatException("Courier Id is invalid!");
 
-    var c = s_dalCourier!.Read(id);
+    var c = s_dal.Courier!.Read(id);
     Console.WriteLine(c == null ? $"Courier Id={id} not found." : c.ToString());
 }
 
 private static void ReadAllCouriers()
 {
-    var list = s_dalCourier!.ReadAll();
-    Console.WriteLine($"Couriers ({list.Count}):");
+    var list = s_dal.Courier!.ReadAll();
+    Console.WriteLine($"Couriers ({list.Count()}):");
     foreach (var c in list) Console.WriteLine(c);
 }
 
@@ -241,7 +236,7 @@ private static void UpdateCourier()
     if (!int.TryParse(Console.ReadLine(), out int id))
         throw new FormatException("Courier Id is invalid!");
 
-    var existing = s_dalCourier!.Read(id);
+    var existing = s_dal.Courier!.Read(id);
     if (existing == null)
     {
         Console.WriteLine("Courier not found.");
@@ -315,7 +310,7 @@ private static void UpdateCourier()
         PersonalMaxDeliveryDistance = pmax
     };
 
-    s_dalCourier.Update(updated);
+    s_dal.Courier.Update(updated);
     Console.WriteLine("Courier updated.");
 }
 
@@ -325,7 +320,7 @@ private static void DeleteCourier()
     if (!int.TryParse(Console.ReadLine(), out int id))
         throw new FormatException("Courier Id is invalid!");
 
-    s_dalCourier!.Delete(id);
+    s_dal.Courier!.Delete(id);
     Console.WriteLine("Courier deleted.");
 }
 
@@ -365,7 +360,7 @@ private static void OrderMenu()
                 case 4: UpdateOrder(); break;
                 case 5: DeleteOrder(); break;
                 case 6:
-                    s_dalOrder!.DeleteAll();
+                    s_dal.Order!.DeleteAll();
                     Console.WriteLine("All orders deleted.");
                     break;
                 default:
@@ -444,12 +439,12 @@ private static void CreateOrder()
     if (string.IsNullOrWhiteSpace(widRaw) || !double.TryParse(widRaw, out double width))
         throw new FormatException("Width is invalid!");
 
-    Console.Write($"OrderOpenTime (yyyy-MM-dd HH:mm) (empty = config clock {s_dalConfig!.Clock}): ");
+    Console.Write($"OrderOpenTime (yyyy-MM-dd HH:mm) (empty = config clock {s_dal.Config!.Clock}): ");
     var openRaw = Console.ReadLine();
     DateTime open;
     if (string.IsNullOrWhiteSpace(openRaw))
     {
-        open = s_dalConfig!.Clock;
+        open = s_dal.Config!.Clock;
     }
     else if (!DateTime.TryParse(openRaw, out open))
     {
@@ -457,7 +452,7 @@ private static void CreateOrder()
     }
 
     var order = new Order(0, otype, verbal!, access!, lat, lon, cust!, custPhone!, volume, weight, fragile, height, width, open);
-    s_dalOrder!.Create(order);
+    s_dal.Order!.Create(order);
     Console.WriteLine("Order created (Id assigned by DAL).");
 }
 
@@ -467,14 +462,14 @@ private static void ReadOrder()
     if (!int.TryParse(Console.ReadLine(), out int id))
         throw new FormatException("Order Id is invalid!");
 
-    var o = s_dalOrder!.Read(id);
+    var o = s_dal.Order!.Read(id);
     Console.WriteLine(o == null ? $"Order Id={id} not found." : o.ToString());
 }
 
 private static void ReadAllOrders()
 {
-    var list = s_dalOrder!.ReadAll();
-    Console.WriteLine($"Orders ({list.Count}):");
+    var list = s_dal.Order!.ReadAll();
+    Console.WriteLine($"Orders ({list.Count()}):");
     foreach (var o in list) Console.WriteLine(o);
 }
 
@@ -484,7 +479,7 @@ private static void UpdateOrder()
     if (!int.TryParse(Console.ReadLine(), out int id))
         throw new FormatException("Order Id is invalid!");
 
-    var existing = s_dalOrder!.Read(id);
+    var existing = s_dal.Order!.Read(id);
     if (existing == null)
     {
         Console.WriteLine("Order not found.");
@@ -607,7 +602,7 @@ private static void UpdateOrder()
         OrderOpenTime = open
     };
 
-    s_dalOrder.Update(updated);
+    s_dal.Order.Update(updated);
     Console.WriteLine("Order updated.");
 }
 
@@ -617,7 +612,7 @@ private static void DeleteOrder()
     if (!int.TryParse(Console.ReadLine(), out int id))
         throw new FormatException("Order Id is invalid!");
 
-    s_dalOrder!.Delete(id);
+    s_dal.Order!.Delete(id);
     Console.WriteLine("Order deleted.");
 }
 
@@ -657,7 +652,7 @@ private static void DeliveryMenu()
                 case 4: UpdateDelivery(); break;
                 case 5: DeleteDelivery(); break;
                 case 6:
-                    s_dalDelivery!.DeleteAll();
+                    s_dal.Delivery!.DeleteAll();
                     Console.WriteLine("All deliveries deleted.");
                     break;
                 default:
@@ -691,10 +686,10 @@ private static void CreateDelivery()
     if (string.IsNullOrWhiteSpace(dtRaw) || !Enum.TryParse<DeliveryTypes>(dtRaw, true, out var dtype))
         throw new FormatException("DeliveryType is invalid!");
 
-    Console.Write($"DeliveryStartTime (yyyy-MM-dd HH:mm) (empty = config clock {s_dalConfig!.Clock}): ");
+    Console.Write($"DeliveryStartTime (yyyy-MM-dd HH:mm) (empty = config clock {s_dal.Config!.Clock}): ");
     var stRaw = Console.ReadLine();
     DateTime start;
-    if (string.IsNullOrWhiteSpace(stRaw)) start = s_dalConfig!.Clock;
+    if (string.IsNullOrWhiteSpace(stRaw)) start = s_dal.Config!.Clock;
     else if (!DateTime.TryParse(stRaw, out start)) throw new FormatException("DeliveryStartTime is invalid!");
 
     Console.Write("ActualDistance (km) (empty => null): ");
@@ -726,7 +721,7 @@ private static void CreateDelivery()
     }
 
     var d = new Delivery(0, orderId, courierId, dtype, start, actual, endType, endTime);
-    s_dalDelivery!.Create(d);
+    s_dal.Delivery!.Create(d);
     Console.WriteLine("Delivery created.");
 }
 
@@ -736,14 +731,14 @@ private static void ReadDelivery()
     if (!int.TryParse(Console.ReadLine(), out int id))
         throw new FormatException("Delivery Id is invalid!");
 
-    var d = s_dalDelivery!.Read(id);
+    var d = s_dal.Delivery!.Read(id);
     Console.WriteLine(d == null ? $"Delivery Id={id} not found." : d.ToString());
 }
 
 private static void ReadAllDeliveries()
 {
-    var list = s_dalDelivery!.ReadAll();
-    Console.WriteLine($"Deliveries ({list.Count}):");
+    var list = s_dal.Delivery!.ReadAll();
+    Console.WriteLine($"Deliveries ({list.Count()}):");
     foreach (var d in list) Console.WriteLine(d);
 }
 
@@ -753,7 +748,7 @@ private static void UpdateDelivery()
     if (!int.TryParse(Console.ReadLine(), out int id))
         throw new FormatException("Delivery Id is invalid!");
 
-    var existing = s_dalDelivery!.Read(id);
+    var existing = s_dal.Delivery!.Read(id);
     if (existing == null)
     {
         Console.WriteLine("Delivery not found.");
@@ -833,7 +828,7 @@ private static void UpdateDelivery()
         DeliveryEndTime = endTime
     };
 
-    s_dalDelivery.Update(updated);
+    s_dal.Delivery.Update(updated);
     Console.WriteLine("Delivery updated.");
 }
 
@@ -843,7 +838,7 @@ private static void DeleteDelivery()
     if (!int.TryParse(Console.ReadLine(), out int id))
         throw new FormatException("Delivery Id is invalid!");
 
-    s_dalDelivery!.Delete(id);
+    s_dal.Delivery!.Delete(id);
     Console.WriteLine("Delivery deleted.");
 }
 
@@ -877,26 +872,26 @@ private static void ConfigMenu()
             {
                 case 0: return;
                 case 1:
-                    s_dalConfig!.Clock = s_dalConfig.Clock.AddMinutes(1);
-                    Console.WriteLine($"Clock: {s_dalConfig.Clock}");
+                    s_dal.Config!.Clock = s_dal.Config.Clock.AddMinutes(1);
+                    Console.WriteLine($"Clock: {s_dal.Config.Clock}");
                     break;
                 case 2:
-                    s_dalConfig!.Clock = s_dalConfig.Clock.AddHours(1);
-                    Console.WriteLine($"Clock: {s_dalConfig.Clock}");
+                    s_dal.Config!.Clock = s_dal.Config.Clock.AddHours(1);
+                    Console.WriteLine($"Clock: {s_dal.Config.Clock}");
                     break;
                 case 3:
-                    Console.WriteLine($"Clock: {s_dalConfig!.Clock}");
+                    Console.WriteLine($"Clock: {s_dal.Config!.Clock}");
                     break;
                 case 4:
                     Console.Write("Enter MaxGeneralDeliveryDistanceKm (double) (empty to cancel): ");
                     var vRaw = Console.ReadLine();
                     if (string.IsNullOrWhiteSpace(vRaw)) break;
                     if (!double.TryParse(vRaw, out double v)) throw new FormatException("MaxGeneralDeliveryDistanceKm is invalid!");
-                    s_dalConfig!.MaxGeneralDeliveryDistanceKm = v;
+                    s_dal.Config!.MaxGeneralDeliveryDistanceKm = v;
                     Console.WriteLine("Saved.");
                     break;
                 case 5:
-                    s_dalConfig!.Reset();
+                    s_dal.Config!.Reset();
                     Console.WriteLine("Configuration reset.");
                     break;
                 default:
@@ -920,17 +915,17 @@ private static void DisplayAllData()
 {
     try
     {
-        var couriers = s_dalCourier!.ReadAll();
-        var orders = s_dalOrder!.ReadAll();
-        var deliveries = s_dalDelivery!.ReadAll();
+        var couriers = s_dal.Courier!.ReadAll();
+        var orders = s_dal.Order!.ReadAll();
+        var deliveries = s_dal.Delivery!.ReadAll();
 
-        Console.WriteLine($"\nCouriers ({couriers.Count}):");
+        Console.WriteLine($"\nCouriers ({couriers.Count()}):");
         foreach (var c in couriers) Console.WriteLine(c);
 
-        Console.WriteLine($"\nOrders ({orders.Count}):");
+        Console.WriteLine($"\nOrders ({orders.Count()}):");
         foreach (var o in orders) Console.WriteLine(o);
 
-        Console.WriteLine($"\nDeliveries ({deliveries.Count}):");
+        Console.WriteLine($"\nDeliveries ({deliveries.Count()}):");
         foreach (var d in deliveries) Console.WriteLine(d);
     }
     catch (Exception ex)
@@ -944,10 +939,10 @@ private static void ResetAllDataAndConfig()
 {
     try
     {
-        s_dalCourier!.DeleteAll();
-        s_dalOrder!.DeleteAll();
-        s_dalDelivery!.DeleteAll();
-        s_dalConfig!.Reset();
+        s_dal.Courier!.DeleteAll();
+        s_dal.Order!.DeleteAll();
+        s_dal.Delivery!.DeleteAll();
+        s_dal.Config!.Reset();
         Console.WriteLine("Reset complete.");
     }
     catch (Exception ex)

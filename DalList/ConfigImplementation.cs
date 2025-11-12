@@ -5,7 +5,7 @@ namespace Dal;
 /// <summary>
 /// DAL implementation of <see cref="DalApi.IConfig"/> that forwards to the internal Config store.
 /// </summary>
-public class ConfigImplementation : IConfig
+internal class ConfigImplementation : IConfig
 {
     /// <inheritdoc />
     public DateTime Clock
