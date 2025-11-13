@@ -19,7 +19,17 @@ namespace DalTest;
  * if (!DateTime.TryParse(Console.ReadLine(), out DateTime bdt)) throw new FormatException("BirthDate is invalid!"); 
  * make sure tryparse is used for all applicable values.
  * for update methods, empty input should always cause no change - it means the current value should remain the same after the update.
- */
+ * 3)
+* using github copilot with claude:
+* i would like to modify the config menu in Program.cs. first, there should be clock increments for days and months. 
+* second, Set MaxGeneralDeliveryDistanceKm"); should be removed. instead i want an option for set configuration variables
+* and another for display configuration variables. these should each open a submenu containing return (as 0) 
+* and options for all configuration variables found in the ConfigImplementation class 
+* (except for clock, which has its options in the main config menu already). 
+* the set config menu should allow setting the variables (in the case of an exception return to the set config menu. 
+* remember to use try parse where appropriate when reading input). the display config menu should give allow 
+* displaying each variable, plus an additional option to display all variables.
+*/
 internal static class Program
 {
     // Program-owned DAL instances (we pass these to Initialization so both use the same store)
@@ -64,7 +74,7 @@ internal static class Program
                     catch (Exception ex)
                     {
                         Console.WriteLine("Error during re-initialization:");
-                        Console.WriteLine(ex.ToString());
+                        Console.WriteLine(ex.Message);
                     }
                     break;
                 case 5:
@@ -145,10 +155,9 @@ internal static class Program
         }
         catch (Exception ex)
         {
-            // print exception and return to main menu
-            Console.WriteLine("Exception:");
-            Console.WriteLine(ex.ToString());
-            return;
+            // print exception and return to menu
+            Console.WriteLine(ex.Message);
+            continue;
         }
     }
 }
@@ -375,9 +384,8 @@ private static void OrderMenu()
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Exception:");
-            Console.WriteLine(ex.ToString());
-            return;
+            Console.WriteLine(ex.Message);
+            continue;
         }
     }
 }
@@ -667,9 +675,8 @@ private static void DeliveryMenu()
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Exception:");
-            Console.WriteLine(ex.ToString());
-            return;
+            Console.WriteLine(ex.Message);
+            continue;
         }
     }
 }
@@ -859,15 +866,18 @@ private static void ConfigMenu()
         Console.WriteLine("0. Back");
         Console.WriteLine("1. Increment time by one minute");
         Console.WriteLine("2. Increment time by one hour");
-        Console.WriteLine("3. Display current time");
-        Console.WriteLine("4. Set MaxGeneralDeliveryDistanceKm");
-        Console.WriteLine("5. Reset configuration");
+        Console.WriteLine("3. Increment time by one day");
+        Console.WriteLine("4. Increment time by one month");
+        Console.WriteLine("5. Display current time");
+        Console.WriteLine("6. Set configuration variables");
+        Console.WriteLine("7. Display configuration variables");
+        Console.WriteLine("8. Reset configuration");
         Console.Write("Choose option: ");
 
         var raw = Console.ReadLine();
         if (!int.TryParse(raw, out int choice))
         {
-            Console.WriteLine("Invalid number.");
+            Console.WriteLine("invalid number.");
             continue;
         }
 
@@ -885,30 +895,279 @@ private static void ConfigMenu()
                     Console.WriteLine($"Clock: {s_dalConfig.Clock}");
                     break;
                 case 3:
-                    Console.WriteLine($"Clock: {s_dalConfig!.Clock}");
+                    s_dalConfig!.Clock = s_dalConfig.Clock.AddDays(1);
+                    Console.WriteLine($"Clock: {s_dalConfig.Clock}");
                     break;
                 case 4:
-                    Console.Write("Enter MaxGeneralDeliveryDistanceKm (double) (empty to cancel): ");
-                    var vRaw = Console.ReadLine();
-                    if (string.IsNullOrWhiteSpace(vRaw)) break;
-                    if (!double.TryParse(vRaw, out double v)) throw new FormatException("MaxGeneralDeliveryDistanceKm is invalid!");
-                    s_dalConfig!.MaxGeneralDeliveryDistanceKm = v;
-                    Console.WriteLine("Saved.");
+                    s_dalConfig!.Clock = s_dalConfig.Clock.AddMonths(1);
+                    Console.WriteLine($"Clock: {s_dalConfig.Clock}");
                     break;
                 case 5:
+                    Console.WriteLine($"Clock: {s_dalConfig!.Clock}");
+                    break;
+                case 6:
+                    SetConfigMenu();
+                    break;
+                case 7:
+                    DisplayConfigMenu();
+                    break;
+                case 8:
                     s_dalConfig!.Reset();
                     Console.WriteLine("Configuration reset.");
                     break;
                 default:
-                    Console.WriteLine("Unknown option.");
+                    Console.WriteLine("unknown option.");
                     break;
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Exception:");
-            Console.WriteLine(ex.ToString());
-            return;
+            Console.WriteLine(ex.Message);
+            continue;
+        }
+    }
+}
+
+private static void SetConfigMenu()
+{
+    while (true)
+    {
+        Console.WriteLine();
+        Console.WriteLine("=== Set Configuration Variables ===");
+        Console.WriteLine("0. Back");
+        Console.WriteLine("1. Set AdminId");
+        Console.WriteLine("2. Set AdminPassword");
+        Console.WriteLine("3. Set AvgCarSpeedKmh");
+        Console.WriteLine("4. Set AvgMotorcycleSpeedKmh");
+        Console.WriteLine("5. Set AvgBicycleSpeedKmh");
+        Console.WriteLine("6. Set AvgWalkingSpeedKmh");
+        Console.WriteLine("7. Set MaxGeneralDeliveryDistanceKm");
+        Console.WriteLine("8. Set MaxDeliveryTimeSpan");
+        Console.WriteLine("9. Set RiskRange");
+        Console.WriteLine("10. Set InactivityRange");
+        Console.WriteLine("11. Set CompanyFullAddress");
+        Console.WriteLine("12. Set Latitude");
+        Console.WriteLine("13. Set Longitude");
+        Console.Write("Choose option: ");
+
+        var raw = Console.ReadLine();
+        if (!int.TryParse(raw, out int choice))
+        {
+            Console.WriteLine("invalid number.");
+            continue;
+        }
+
+        try
+        {
+            switch (choice)
+            {
+                case 0: return;
+                case 1:
+                    Console.Write("Enter AdminId (int): ");
+                    if (!int.TryParse(Console.ReadLine(), out int adminId))
+                        throw new DalInvalidInputException("invalid admin id");
+                    s_dalConfig!.AdminId = adminId;
+                    Console.WriteLine("AdminId set.");
+                    break;
+                case 2:
+                    Console.Write("Enter AdminPassword: ");
+                    var adminPwd = Console.ReadLine();
+                    if (string.IsNullOrWhiteSpace(adminPwd))
+                        throw new DalInvalidInputException("admin password cannot be empty");
+                    s_dalConfig!.AdminPassword = adminPwd;
+                    Console.WriteLine("AdminPassword set.");
+                    break;
+                case 3:
+                    Console.Write("Enter AvgCarSpeedKmh (double): ");
+                    if (!double.TryParse(Console.ReadLine(), out double carSpeed))
+                        throw new DalInvalidInputException("invalid car speed");
+                    s_dalConfig!.AvgCarSpeedKmh = carSpeed;
+                    Console.WriteLine("AvgCarSpeedKmh set.");
+                    break;
+                case 4:
+                    Console.Write("Enter AvgMotorcycleSpeedKmh (double): ");
+                    if (!double.TryParse(Console.ReadLine(), out double motoSpeed))
+                        throw new DalInvalidInputException("invalid motorcycle speed");
+                    s_dalConfig!.AvgMotorcycleSpeedKmh = motoSpeed;
+                    Console.WriteLine("AvgMotorcycleSpeedKmh set.");
+                    break;
+                case 5:
+                    Console.Write("Enter AvgBicycleSpeedKmh (double): ");
+                    if (!double.TryParse(Console.ReadLine(), out double bikeSpeed))
+                        throw new DalInvalidInputException("invalid bicycle speed");
+                    s_dalConfig!.AvgBicycleSpeedKmh = bikeSpeed;
+                    Console.WriteLine("AvgBicycleSpeedKmh set.");
+                    break;
+                case 6:
+                    Console.Write("Enter AvgWalkingSpeedKmh (double): ");
+                    if (!double.TryParse(Console.ReadLine(), out double walkSpeed))
+                        throw new DalInvalidInputException("invalid walking speed");
+                    s_dalConfig!.AvgWalkingSpeedKmh = walkSpeed;
+                    Console.WriteLine("AvgWalkingSpeedKmh set.");
+                    break;
+                case 7:
+                    Console.Write("Enter MaxGeneralDeliveryDistanceKm (double): ");
+                    if (!double.TryParse(Console.ReadLine(), out double maxDist))
+                        throw new DalInvalidInputException("invalid max delivery distance");
+                    s_dalConfig!.MaxGeneralDeliveryDistanceKm = maxDist;
+                    Console.WriteLine("MaxGeneralDeliveryDistanceKm set.");
+                    break;
+                case 8:
+                    Console.Write("Enter MaxDeliveryTimeSpan (format: d.HH:mm:ss): ");
+                    if (!TimeSpan.TryParse(Console.ReadLine(), out TimeSpan maxTime))
+                        throw new DalInvalidInputException("invalid max delivery time span");
+                    s_dalConfig!.MaxDeliveryTimeSpan = maxTime;
+                    Console.WriteLine("MaxDeliveryTimeSpan set.");
+                    break;
+                case 9:
+                    Console.Write("Enter RiskRange (format: d.HH:mm:ss): ");
+                    if (!TimeSpan.TryParse(Console.ReadLine(), out TimeSpan riskRange))
+                        throw new DalInvalidInputException("invalid risk range");
+                    s_dalConfig!.RiskRange = riskRange;
+                    Console.WriteLine("RiskRange set.");
+                    break;
+                case 10:
+                    Console.Write("Enter InactivityRange (format: d.HH:mm:ss): ");
+                    if (!TimeSpan.TryParse(Console.ReadLine(), out TimeSpan inactRange))
+                        throw new DalInvalidInputException("invalid inactivity range");
+                    s_dalConfig!.InactivityRange = inactRange;
+                    Console.WriteLine("InactivityRange set.");
+                    break;
+                case 11:
+                    Console.Write("Enter CompanyFullAddress: ");
+                    var address = Console.ReadLine();
+                    if (string.IsNullOrWhiteSpace(address))
+                        throw new DalInvalidInputException("company address cannot be empty");
+                    s_dalConfig!.CompanyFullAddress = address;
+                    Console.WriteLine("CompanyFullAddress set.");
+                    break;
+                case 12:
+                    Console.Write("Enter Latitude (double): ");
+                    if (!double.TryParse(Console.ReadLine(), out double lat))
+                        throw new DalInvalidInputException("invalid latitude");
+                    s_dalConfig!.Latitude = lat;
+                    Console.WriteLine("Latitude set.");
+                    break;
+                case 13:
+                    Console.Write("Enter Longitude (double): ");
+                    if (!double.TryParse(Console.ReadLine(), out double lon))
+                        throw new DalInvalidInputException("invalid longitude");
+                    s_dalConfig!.Longitude = lon;
+                    Console.WriteLine("Longitude set.");
+                    break;
+                default:
+                    Console.WriteLine("unknown option.");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            continue;
+        }
+    }
+}
+
+private static void DisplayConfigMenu()
+{
+    while (true)
+    {
+        Console.WriteLine();
+        Console.WriteLine("=== Display Configuration Variables ===");
+        Console.WriteLine("0. Back");
+        Console.WriteLine("1. Display AdminId");
+        Console.WriteLine("2. Display AdminPassword");
+        Console.WriteLine("3. Display AvgCarSpeedKmh");
+        Console.WriteLine("4. Display AvgMotorcycleSpeedKmh");
+        Console.WriteLine("5. Display AvgBicycleSpeedKmh");
+        Console.WriteLine("6. Display AvgWalkingSpeedKmh");
+        Console.WriteLine("7. Display MaxGeneralDeliveryDistanceKm");
+        Console.WriteLine("8. Display MaxDeliveryTimeSpan");
+        Console.WriteLine("9. Display RiskRange");
+        Console.WriteLine("10. Display InactivityRange");
+        Console.WriteLine("11. Display CompanyFullAddress");
+        Console.WriteLine("12. Display Latitude");
+        Console.WriteLine("13. Display Longitude");
+        Console.WriteLine("14. Display All Variables");
+        Console.Write("Choose option: ");
+
+        var raw = Console.ReadLine();
+        if (!int.TryParse(raw, out int choice))
+        {
+            Console.WriteLine("invalid number.");
+            continue;
+        }
+
+        try
+        {
+            switch (choice)
+            {
+                case 0: return;
+                case 1:
+                    Console.WriteLine($"AdminId: {s_dalConfig!.AdminId}");
+                    break;
+                case 2:
+                    Console.WriteLine($"AdminPassword: {s_dalConfig!.AdminPassword}");
+                    break;
+                case 3:
+                    Console.WriteLine($"AvgCarSpeedKmh: {s_dalConfig!.AvgCarSpeedKmh}");
+                    break;
+                case 4:
+                    Console.WriteLine($"AvgMotorcycleSpeedKmh: {s_dalConfig!.AvgMotorcycleSpeedKmh}");
+                    break;
+                case 5:
+                    Console.WriteLine($"AvgBicycleSpeedKmh: {s_dalConfig!.AvgBicycleSpeedKmh}");
+                    break;
+                case 6:
+                    Console.WriteLine($"AvgWalkingSpeedKmh: {s_dalConfig!.AvgWalkingSpeedKmh}");
+                    break;
+                case 7:
+                    Console.WriteLine($"MaxGeneralDeliveryDistanceKm: {s_dalConfig!.MaxGeneralDeliveryDistanceKm}");
+                    break;
+                case 8:
+                    Console.WriteLine($"MaxDeliveryTimeSpan: {s_dalConfig!.MaxDeliveryTimeSpan}");
+                    break;
+                case 9:
+                    Console.WriteLine($"RiskRange: {s_dalConfig!.RiskRange}");
+                    break;
+                case 10:
+                    Console.WriteLine($"InactivityRange: {s_dalConfig!.InactivityRange}");
+                    break;
+                case 11:
+                    Console.WriteLine($"CompanyFullAddress: {s_dalConfig!.CompanyFullAddress}");
+                    break;
+                case 12:
+                    Console.WriteLine($"Latitude: {s_dalConfig!.Latitude}");
+                    break;
+                case 13:
+                    Console.WriteLine($"Longitude: {s_dalConfig!.Longitude}");
+                    break;
+                case 14:
+                    Console.WriteLine();
+                    Console.WriteLine("=== All Configuration Variables ===");
+                    Console.WriteLine($"AdminId: {s_dalConfig!.AdminId}");
+                    Console.WriteLine($"AdminPassword: {s_dalConfig!.AdminPassword}");
+                    Console.WriteLine($"AvgCarSpeedKmh: {s_dalConfig!.AvgCarSpeedKmh}");
+                    Console.WriteLine($"AvgMotorcycleSpeedKmh: {s_dalConfig!.AvgMotorcycleSpeedKmh}");
+                    Console.WriteLine($"AvgBicycleSpeedKmh: {s_dalConfig!.AvgBicycleSpeedKmh}");
+                    Console.WriteLine($"AvgWalkingSpeedKmh: {s_dalConfig!.AvgWalkingSpeedKmh}");
+                    Console.WriteLine($"MaxGeneralDeliveryDistanceKm: {s_dalConfig!.MaxGeneralDeliveryDistanceKm}");
+                    Console.WriteLine($"MaxDeliveryTimeSpan: {s_dalConfig!.MaxDeliveryTimeSpan}");
+                    Console.WriteLine($"RiskRange: {s_dalConfig!.RiskRange}");
+                    Console.WriteLine($"InactivityRange: {s_dalConfig!.InactivityRange}");
+                    Console.WriteLine($"CompanyFullAddress: {s_dalConfig!.CompanyFullAddress}");
+                    Console.WriteLine($"Latitude: {s_dalConfig!.Latitude}");
+                    Console.WriteLine($"Longitude: {s_dalConfig!.Longitude}");
+                    break;
+                default:
+                    Console.WriteLine("unknown option.");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            continue;
         }
     }
 }
@@ -935,8 +1194,7 @@ private static void DisplayAllData()
     }
     catch (Exception ex)
     {
-        Console.WriteLine("Exception while reading data:");
-        Console.WriteLine(ex.ToString());
+        Console.WriteLine(ex.Message);
     }
 }
 
@@ -952,8 +1210,7 @@ private static void ResetAllDataAndConfig()
     }
     catch (Exception ex)
     {
-        Console.WriteLine("Exception while resetting:");
-        Console.WriteLine(ex.ToString());
+        Console.WriteLine(ex.Message);
     }
 }
 }
