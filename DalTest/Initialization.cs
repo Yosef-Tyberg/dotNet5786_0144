@@ -76,7 +76,11 @@ public static class Initialization
         s_dalConfig = config ?? throw new ArgumentNullException(nameof(config));
 
         // 1. Reset and initialize config first
-        s_dalConfig!.Reset();
+        Console.WriteLine("Reset Configuration values and List values..."); 
+        s_dalConfig.Reset(); 
+        s_dalCourier.DeleteAll();
+        s_dalOrder.DeleteAll();
+        s_dalDelivery.DeleteAll();
         InitializeConfig(s_dalConfig);
 
         // 2. Prepare a short list of real-ish addresses (labels + coordinates)
