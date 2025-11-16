@@ -53,6 +53,7 @@ internal static class Program
                 continue;
             }
 
+            // Switch based on main menu choice.
             switch (mainChoice)
             {
                 case 0:
