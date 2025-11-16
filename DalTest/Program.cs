@@ -223,15 +223,21 @@ internal static class Program
         Console.Write("Active (y/n): ");
         var activeRaw = Console.ReadLine();
         if (string.IsNullOrWhiteSpace(activeRaw))
-            throw new FormatException("Active (y/n) is required!");
-        bool active = activeRaw.Trim().ToLowerInvariant() == "y";
+            throw new DalInvalidInputException("invalid active flag");
+        activeRaw = activeRaw.Trim().ToLowerInvariant();
+        if (!(activeRaw == "y") && !(activeRaw == "n"))
+            throw new DalInvalidInputException("invalid active flag");
+        // Interpret 'y' (case-insensitive) as true
+        bool active = activeRaw == "y";
 
         // DeliveryType enum parsing (Car/Motorcycle/Bicycle/OnFoot). Required.
         Console.Write("DeliveryType (Car/Motorcycle/Bicycle/OnFoot): ");
         var dtypeRaw = Console.ReadLine();
-        if (string.IsNullOrWhiteSpace(dtypeRaw) || !Enum.TryParse<DeliveryTypes>(dtypeRaw, true, out var dtype))
-            throw new FormatException("DeliveryType is invalid!");
-
+        if (string.IsNullOrWhiteSpace(dtypeRaw) || !Enum.TryParse<DeliveryTypes>(dtypeRaw, true, out var dtype)
+            || !Enum.IsDefined(typeof(DeliveryTypes), dtype))
+        {
+            throw new DalInvalidInputException("invalid delivery type");
+        }
         // EmploymentStartTime: optional; if empty, default to config clock.
         Console.Write($"EmploymentStartTime (yyyy-MM-dd HH:mm) (empty = config clock {s_dalConfig!.Clock}): ");
         var startRaw = Console.ReadLine();
@@ -322,9 +328,11 @@ internal static class Program
         var activeRaw = Console.ReadLine();
         var active = existing.Active;
         if (!string.IsNullOrWhiteSpace(activeRaw))
-        {
+            //if value provided, parse and validate
+            activeRaw = activeRaw.Trim().ToLowerInvariant();
+            if (!(activeRaw == "y") && !(activeRaw == "n"))
+                throw new DalInvalidInputException("invalid active flag");
             active = activeRaw.Trim().ToLowerInvariant() == "y";
-        }
 
         // DeliveryType enum update.
         Console.Write($"DeliveryType (Car/Motorcycle/Bicycle/OnFoot) (current: {existing.DeliveryType}): ");
@@ -332,8 +340,11 @@ internal static class Program
         var dtype = existing.DeliveryType;
         if (!string.IsNullOrWhiteSpace(dtypeRaw))
         {
-            if (!Enum.TryParse<DeliveryTypes>(dtypeRaw, true, out var parsedType))
-                throw new FormatException("DeliveryType is invalid!");
+            if (!Enum.TryParse<DeliveryTypes>(dtypeRaw, true, out var parsedType)
+                || !Enum.IsDefined(typeof(DeliveryTypes), parsedType))
+            {
+                throw new DalInvalidInputException("invalid delivery type");
+            }
             dtype = parsedType;
         }
 
@@ -446,9 +457,11 @@ internal static class Program
         // OrderType enum parsing (Pizza/Falafel) required.
         Console.Write("OrderType (Pizza/Falafel): ");
         var otRaw = Console.ReadLine();
-        if (string.IsNullOrWhiteSpace(otRaw) || !Enum.TryParse<OrderTypes>(otRaw, true, out var otype))
-            throw new FormatException("OrderType is invalid!");
-
+        if (string.IsNullOrWhiteSpace(otRaw) || !Enum.TryParse<OrderTypes>(otRaw, true, out var otype)
+            || !Enum.IsDefined(typeof(OrderTypes), otype))
+        {
+            throw new DalInvalidInputException("invalid order type");
+        }
         // VerbalDescription (required).
         Console.Write("VerbalDescription: ");
         var verbal = Console.ReadLine();
@@ -571,8 +584,11 @@ internal static class Program
         var otype = existing.OrderType;
         if (!string.IsNullOrWhiteSpace(otRaw))
         {
-            if (!Enum.TryParse<OrderTypes>(otRaw, true, out var parsedOt))
-                throw new FormatException("OrderType is invalid!");
+            if (!Enum.TryParse<OrderTypes>(otRaw, true, out var parsedOt) 
+                || !Enum.IsDefined(typeof(OrderTypes), otype))
+            {
+                throw new DalInvalidInputException("invalid order type");
+            }
             otype = parsedOt;
         }
 
@@ -772,8 +788,12 @@ internal static class Program
 
         Console.Write("DeliveryType (Car/Motorcycle/Bicycle/OnFoot): ");
         var dtRaw = Console.ReadLine();
-        if (string.IsNullOrWhiteSpace(dtRaw) || !Enum.TryParse<DeliveryTypes>(dtRaw, true, out var dtype))
-            throw new FormatException("DeliveryType is invalid!");
+        if (string.IsNullOrWhiteSpace(dtRaw) || !Enum.TryParse<DeliveryTypes>(dtRaw, true, out var dtype)
+            || !Enum.IsDefined(typeof(DeliveryTypes), dtype))
+        {
+            throw new DalInvalidInputException("invalid delivery type");
+        
+        }
 
         Console.Write($"DeliveryStartTime (yyyy-MM-dd HH:mm) (empty = config clock {s_dalConfig!.Clock}): ");
         var stRaw = Console.ReadLine();
@@ -797,7 +817,11 @@ internal static class Program
         DeliveryEndTypes? endType = null;
         if (!string.IsNullOrWhiteSpace(etRaw))
         {
-            if (!Enum.TryParse<DeliveryEndTypes>(etRaw, true, out var parsedEt)) throw new FormatException("DeliveryEndType is invalid!");
+            if (!Enum.TryParse<DeliveryEndTypes>(etRaw, true, out var parsedEt)
+                || !Enum.IsDefined(typeof(DeliveryEndTypes), parsedEt))
+            {
+                throw new DalInvalidInputException("invalid delivery end type");
+            }
             endType = parsedEt;
         }
 
@@ -874,8 +898,12 @@ internal static class Program
         var dtype = existing.DeliveryType;
         if (!string.IsNullOrWhiteSpace(dtRaw))
         {
-            if (!Enum.TryParse<DeliveryTypes>(dtRaw, true, out var parsedDt)) throw new FormatException("DeliveryType is invalid!");
-            dtype = parsedDt;
+            if (!Enum.TryParse<DeliveryTypes>(dtRaw, true, out var parsedDt)
+                || !Enum.IsDefined(typeof(DeliveryTypes), parsedDt))
+            {
+                throw new DalInvalidInputException("invalid delivery type");
+            }
+                dtype = parsedDt;
         }
 
         Console.Write($"DeliveryStartTime (current: {existing.DeliveryStartTime}) leave empty to keep: ");
@@ -900,7 +928,11 @@ internal static class Program
         DeliveryEndTypes? endType = existing.DeliveryEndType;
         if (!string.IsNullOrWhiteSpace(etRaw2))
         {
-            if (!Enum.TryParse<DeliveryEndTypes>(etRaw2, true, out var parsedEt)) throw new FormatException("DeliveryEndType is invalid!");
+            if (!Enum.TryParse<DeliveryEndTypes>(etRaw2, true, out var parsedEt)
+                || !Enum.IsDefined(typeof(DeliveryEndTypes), parsedEt))
+            {
+                throw new DalInvalidInputException("invalid delivery end type");
+            }
             endType = parsedEt;
         }
 
