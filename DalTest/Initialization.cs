@@ -60,6 +60,10 @@ public static class Initialization
     private const int Closed_CustomerRefused = 2;
     private const int Closed_RecipientNotFound = 2;
 
+    //legal ID limits
+    private const int minId = 200000000;
+    private const int maxId = 999999999;
+
     // small test address model
     private record TestAddress(string Label, double Lat, double Lon);
 
@@ -88,8 +92,6 @@ public static class Initialization
 
         // 5. Create Deliveries (assign courier->order respecting distances and no overlapping)
         CreateDeliveries(s_dal, createdCouriers, createdOrders);
-
-        Console.WriteLine("Initialization finished.");
     }
 
     // -----------------------------
@@ -170,9 +172,14 @@ public static class Initialization
         // company global max used for per-courier personal max selection
         var globalMax = s_dal.Config.MaxGeneralDeliveryDistanceKm ?? 10.0;
 
+        int minID = minId;
         for (int i = 0; i < courierCount; i++)
         {
-            int id = i + 1; // explicit courier IDs 1..N
+            //to prevent id collisions cheaply, we choose ids in increasing order. min increase is 1. max is (remaining range)/(remaining couriers)
+            //to avoid running out of space
+            int id = minID + s_rnd.Next(1, (maxId - minID) / (courierCount - i));
+            minID = id;
+
             var fullName = names[i % names.Length];
 
             // personal max: choose randomly but <= global max. Some couriers may leave it null.
@@ -303,7 +310,7 @@ public static class Initialization
         var orders = new List<Order>(ordersFromDal); // local mutable copy
 
         if (orders.Count < OrdersCount)
-            throw new InvalidOperationException("Not enough orders in DAL to partition as requested.");
+            throw new DalInvalidInputException("Not enough orders in DAL to partition as requested.");
 
         var openOrders = orders.Take(OrdersOpenCount).ToList();
         var inProgressOrders = orders.Skip(OrdersOpenCount).Take(OrdersInProgressCount).ToList();

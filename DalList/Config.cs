@@ -16,7 +16,7 @@ internal static class Config
     /// <summary>
     /// Generates the next unique Order ID.
     /// </summary>
-    internal static int NextOrderId { get; } = nextOrderId++;
+    internal static int NextOrderId { get => nextOrderId++; }
 
     /// <summary>
     /// Starting value for the delivery ID sequence generator.
@@ -28,7 +28,7 @@ internal static class Config
     /// <summary>
     /// Generates the next unique Delivery ID.
     /// </summary>
-    internal static int NextDeliveryId { get; } = nextDeliveryId++;
+    internal static int NextDeliveryId { get => nextDeliveryId++; }
 
     /// <summary>
     /// Represents the system clock used for simulation or time tracking.

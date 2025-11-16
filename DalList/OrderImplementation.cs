@@ -33,7 +33,7 @@ internal class OrderImplementation : IOrder
         }
         else
         {
-            throw new Exception($"Order with Id=" + id + " doesn't exist");
+            throw new DalDoesNotExistException($"Order with Id=" + id + " doesn't exist");
         }
     }
 

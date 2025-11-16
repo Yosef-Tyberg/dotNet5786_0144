@@ -34,7 +34,7 @@ internal class DeliveryImplementation : IDelivery
         }
         else
         {
-            throw new Exception($"Delivery with Id=" + id + " doesn't exist");
+            throw new DalDoesNotExistException($"Delivery with Id=" + id + " doesn't exist");
         }
     }
 
