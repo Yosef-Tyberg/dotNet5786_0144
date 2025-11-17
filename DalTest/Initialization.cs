@@ -23,13 +23,17 @@ namespace DalTest;
  * I would like to ensure the numbers regarding the entities are accurate, so instead of using 
  * weighted probabilities to get the right distribution, please make the distribution explicit.
  * 
- * stage two modifications were made with the prompt:
+ * stage two modifications were made with the chatgptprompts:
+ * 1) 
  * I have made some changes to the class structure. now all implementations are accessed more centrally in the class: (pasted DalList)
  * this necessitates changes to the initialization class as well.
  * I have already created the appropriate fields, with stage2 commented after them, 
  * while the previous fields have been commented out with the comment stage1 preceding them. 
  * I would like you to modify the class to use the correct names. here is the current class for comparison: (pasted slightly modified
  * Initialization class)
+ * 2)
+ * I would like to modify the exceptions used. instead of calling any of the currently used exceptions, 
+ * only my exceptions defined in Exceptions.cs should be used.
  */
 
 /// <summary>

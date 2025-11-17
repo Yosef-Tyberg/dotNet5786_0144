@@ -2,7 +2,9 @@
 using System.Runtime.Serialization;
 
 namespace DO;
-
+/* Used chatGPT to add comments and recommended constructors to exception classes (despite not being in the stage 2 worksheet,
+ our instructor said to include them)
+*/
 /// <summary>
 /// Thrown when attempting to access a DAL instance that does not exist.
 /// </summary>

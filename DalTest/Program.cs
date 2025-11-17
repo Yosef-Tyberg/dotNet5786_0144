@@ -30,7 +30,15 @@ namespace DalTest;
  * displaying each variable, plus an additional option to display all variables.
  * 
  * stage 2:
- */
+ * 1)
+ * I would like to modify the exceptions used. instead of calling any of the currently used exceptions, 
+ * only my exceptions defined in Exceptions.cs should be used.
+ * 2)
+ * I have added an a Read method which accepts a function well as an option to pass a filtering method to readall methods. 
+ * (pasted the new methods). Please add options to each of the Entity menus to make use of these new possibilities (directly after the options
+ * for the current versions of these methods. for read use the example method of finding the entity with the highest Id and for readall allow
+ * the user to filter by an appropriate enum field.
+ */ 
 
 
 internal static class Program
