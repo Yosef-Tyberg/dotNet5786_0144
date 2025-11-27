@@ -5,7 +5,6 @@
 /// <param name="Id">Unique identifier for the order</param>
 /// <param name="OrderType">Type/category of the order</param>
 /// <param name="VerbalDescription">Verbal/short description of the order contents</param>
-/// <param name="FullOrderAccess">Full access string/code for order validation</param>
 /// <param name="Latitude">Latitude coordinate of the delivery destination</param>
 /// <param name="Longitude">Longitude coordinate of the delivery destination</param>
 /// <param name="CustomerFullName">Full name of the customer making the order</param>
@@ -21,7 +20,6 @@ public record Order
     int Id,
     OrderTypes OrderType,
     string VerbalDescription,
-    string FullOrderAccess,
     double Latitude,
     double Longitude,
     string CustomerFullName,
@@ -35,6 +33,5 @@ public record Order
 
 )
 {
-    public Order() : this(0, OrderTypes.Pizza, "", "", 0, 0, "", "",
-        0, 0, false, 0, 0, DateTime.Now) { }
+    public Order() : this(0, OrderTypes.Pizza, "", 0, 0, "", "", 0, 0, false, 0, 0, DateTime.Now) { }
 }

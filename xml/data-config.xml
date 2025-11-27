@@ -1,17 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <config>
+  <NextOrderId>50</NextOrderId>
+  <NextDeliveryId>32</NextDeliveryId>
   <AdminId>0</AdminId>
   <AdminPassword>Admin</AdminPassword>
   <AvgCarSpeedKmh>40</AvgCarSpeedKmh>
   <AvgMotorcycleSpeedKmh>35</AvgMotorcycleSpeedKmh>
   <AvgBicycleSpeedKmh>15</AvgBicycleSpeedKmh>
   <AvgWalkingSpeedKmh>5</AvgWalkingSpeedKmh>
-  <MaxGeneralDeliveryDistanceKm>10</MaxGeneralDeliveryDistanceKm>
-  <MaxDeliveryTimeSpan>02:00:00</MaxDeliveryTimeSpan>
-  <RiskRange>00:10:00</RiskRange>
-  <InactivityRange>00:30:00</InactivityRange>
+  <MaxDeliveryTimeSpan>7200</MaxDeliveryTimeSpan>
+  <RiskRange>600</RiskRange>
+  <InactivityRange>1800</InactivityRange>
+  <Clock>11/27/2025 4:50:57 PM</Clock>
   <CompanyFullAddress>Downtown (test) - company HQ</CompanyFullAddress>
   <Latitude>31.771959</Latitude>
   <Longitude>35.217018</Longitude>
-  <Clock>2025-11-27T00:00:00</Clock>
+  <MaxGeneralDeliveryDistanceKm>10</MaxGeneralDeliveryDistanceKm>
 </config>

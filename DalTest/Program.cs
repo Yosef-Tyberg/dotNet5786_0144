@@ -44,8 +44,8 @@ namespace DalTest;
 internal static class Program
 {
     // The DAL instance used by the test program. It is created once and reused.
-    static readonly IDal s_dal = new DalList();
-
+    //static readonly IDal s_dal = new DalList(); // stage2
+    static readonly IDal s_dal = new DalXml(); //stage 3 
     // Main entry point: repeatedly show main menu and handle user's top-level choice.
     private static void Main()
     {
@@ -591,7 +591,7 @@ internal static class Program
         else if (!DateTime.TryParse(openRaw, out open))
             throw new DalInvalidInputException("invalid order open time");
 
-        var order = new Order(0, otype, verbal!, access!, lat, lon, cust!, custPhone!, volume, weight, fragile, height, width, open);
+        var order = new Order(0, otype, verbal!, lat, lon, cust!, custPhone!, volume, weight, fragile, height, width, open);
         s_dal.Order!.Create(order);
         Console.WriteLine("Order created (Id assigned by DAL).");
     }
@@ -693,7 +693,7 @@ internal static class Program
         if (!string.IsNullOrWhiteSpace(otRaw))
         {
             if (!Enum.TryParse<OrderTypes>(otRaw, true, out var parsedOt) 
-                || !Enum.IsDefined(typeof(OrderTypes), otype))
+                || !Enum.IsDefined(typeof(OrderTypes), parsedOt))
             {
                 throw new DalInvalidInputException("invalid order type");
             }
@@ -703,10 +703,6 @@ internal static class Program
         Console.Write($"VerbalDescription (current: {existing.VerbalDescription}): ");
         var verbalRaw = Console.ReadLine();
         var verbal = string.IsNullOrEmpty(verbalRaw) ? existing.VerbalDescription : verbalRaw;
-
-        Console.Write($"FullOrderAccess (current: {existing.FullOrderAccess}): ");
-        var accessRaw = Console.ReadLine();
-        var access = string.IsNullOrWhiteSpace(accessRaw) ? existing.FullOrderAccess : accessRaw;
 
         Console.Write($"Latitude (current: {existing.Latitude}): ");
         var latRaw = Console.ReadLine();
@@ -791,7 +787,6 @@ internal static class Program
         {
             OrderType = otype,
             VerbalDescription = verbal,
-            FullOrderAccess = access,
             Latitude = lat,
             Longitude = lon,
             CustomerFullName = cust,

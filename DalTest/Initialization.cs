@@ -1,5 +1,4 @@
-﻿
-using DalApi;
+﻿using DalApi;
 using DO;
 
 namespace DalTest;
@@ -27,7 +26,7 @@ namespace DalTest;
  * 1) 
  * I have made some changes to the class structure. now all implementations are accessed more centrally in the class: (pasted DalList)
  * this necessitates changes to the initialization class as well.
- * I have already created the appropriate fields, with stage2 commented after them, 
+ * I have already created the appropriate fields, with stage2 commented after them. 
  * while the previous fields have been commented out with the comment stage1 preceding them. 
  * I would like you to modify the class to use the correct names. here is the current class for comparison: (pasted slightly modified
  * Initialization class)
@@ -277,7 +276,6 @@ public static class Initialization
                 Id: 0, // DAL assigns
                 OrderType: otype,
                 VerbalDescription: $"{verbal} #{i + 1}",
-                FullOrderAccess: Guid.NewGuid().ToString("N"),
                 Latitude: addr.Lat,
                 Longitude: addr.Lon,
                 CustomerFullName: $"Customer {i + 1}",

@@ -4,6 +4,10 @@ using DO;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
+/// <summary>
+/// XML-based implementation of <see cref="DalApi.IOrder"/> using XElement for persistence.
+/// Null fields are not included in the XML output.
+/// </summary>
 public class OrderImplementation : IOrder
 {
     /// <summary>
@@ -16,7 +20,6 @@ public class OrderImplementation : IOrder
             Id = orderElem.ToIntNullable("Id") ?? throw new FormatException("can't convert id"),
             OrderType = orderElem.ToEnumNullable<OrderTypes>("OrderType") ?? OrderTypes.Pizza,
             VerbalDescription = (string?)orderElem.Element("VerbalDescription") ?? "",
-            FullOrderAccess = (string?)orderElem.Element("FullOrderAccess") ?? "",
             Latitude = orderElem.ToDoubleNullable("Latitude") ?? 0,
             Longitude = orderElem.ToDoubleNullable("Longitude") ?? 0,
             CustomerFullName = (string?)orderElem.Element("CustomerFullName") ?? "",
@@ -32,20 +35,24 @@ public class OrderImplementation : IOrder
 
     /// <summary>
     /// Helper method to create XElement from Order object.
+    /// Only includes fields with non-null/non-default values.
     /// </summary>
     private static IEnumerable<XElement> CreateOrderElement(Order item)
     {
         yield return new XElement("Id", item.Id);
         yield return new XElement("OrderType", item.OrderType);
-        yield return new XElement("VerbalDescription", item.VerbalDescription);
-        yield return new XElement("FullOrderAccess", item.FullOrderAccess);
+        if (!string.IsNullOrEmpty(item.VerbalDescription))
+            yield return new XElement("VerbalDescription", item.VerbalDescription);
         yield return new XElement("Latitude", item.Latitude);
         yield return new XElement("Longitude", item.Longitude);
-        yield return new XElement("CustomerFullName", item.CustomerFullName);
-        yield return new XElement("CustomerMobile", item.CustomerMobile);
+        if (!string.IsNullOrEmpty(item.CustomerFullName))
+            yield return new XElement("CustomerFullName", item.CustomerFullName);
+        if (!string.IsNullOrEmpty(item.CustomerMobile))
+            yield return new XElement("CustomerMobile", item.CustomerMobile);
         yield return new XElement("Volume", item.Volume);
         yield return new XElement("Weight", item.Weight);
-        yield return new XElement("Fragile", item.Fragile);
+        if (item.Fragile)
+            yield return new XElement("Fragile", item.Fragile);
         yield return new XElement("Height", item.Height);
         yield return new XElement("Width", item.Width);
         yield return new XElement("OrderOpenTime", item.OrderOpenTime);
@@ -53,12 +60,15 @@ public class OrderImplementation : IOrder
 
     /// <summary>
     /// Creates a new order and persists it to the XML file.
+    /// Assigns a new ID from Config.NextOrderId.
     /// </summary>
     /// <param name="item">Order to create.</param>
     public void Create(Order item)
     {
+        int id = Config.NextOrderId;
+        Order orderWithId = item with { Id = id };
         XElement ordersRootElem = XMLTools.LoadListFromXMLElement(Config.s_orders_xml);
-        ordersRootElem.Add(new XElement("Order", CreateOrderElement(item)));
+        ordersRootElem.Add(new XElement("Order", CreateOrderElement(orderWithId)));
         XMLTools.SaveListToXMLElement(ordersRootElem, Config.s_orders_xml);
     }
 

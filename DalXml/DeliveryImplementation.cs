@@ -47,12 +47,15 @@ public class DeliveryImplementation : IDelivery
 
     /// <summary>
     /// Creates a new delivery and persists it to the XML file.
+    /// Assigns a new ID from Config.NextDeliveryId.
     /// </summary>
     /// <param name="item">Delivery to create.</param>
     public void Create(Delivery item)
     {
+        int id = Config.NextDeliveryId;
+        Delivery deliveryWithId = item with { Id = id };
         XElement deliveriesRootElem = XMLTools.LoadListFromXMLElement(Config.s_deliveries_xml);
-        deliveriesRootElem.Add(new XElement("Delivery", CreateDeliveryElement(item)));
+        deliveriesRootElem.Add(new XElement("Delivery", CreateDeliveryElement(deliveryWithId)));
         XMLTools.SaveListToXMLElement(deliveriesRootElem, Config.s_deliveries_xml);
     }
 

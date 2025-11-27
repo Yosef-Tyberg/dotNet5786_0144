@@ -2,7 +2,13 @@
 using DalApi;
 using DO;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 
+/// <summary>
+/// XML-based implementation of <see cref="DalApi.ICourier"/> using XmlSerializer for persistence.
+/// Null fields are automatically excluded from serialization by XmlSerializer's default behavior
+/// when using the XmlIgnoreAttribute or by not serializing properties with null values.
+/// </summary>
 public class CourierImplementation : ICourier
 {
     /// <summary>
