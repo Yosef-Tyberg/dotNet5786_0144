@@ -5,118 +5,129 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 
-
-public static class XMLTools
+static class XMLTools
 {
-    const string s_xml_dir = @"..\xml\";
+    const string s_xmlDir = @"..\xml\";
     static XMLTools()
     {
-        if (!Directory.Exists(s_xml_dir))
-            Directory.CreateDirectory(s_xml_dir);
+        if (!Directory.Exists(s_xmlDir))
+            Directory.CreateDirectory(s_xmlDir);
     }
-
-    public static void Reset()
-    {
-        DirectoryInfo d = new DirectoryInfo(s_xml_dir);
-
-        FileInfo[] Files = d.GetFiles("*.xml");
-        foreach (FileInfo file in Files)
-        {
-            if (file.Name == "data-config.xml" || file.Name == "dal-config.xml")
-                continue;
-            XElement el = LoadListFromXMLElement(file.Name);
-            el.Descendants().Remove();
-            SaveListToXMLElement(el, file.Name);
-        }
-        
-        XElement root = XMLTools.LoadListFromXMLElement("data-config.xml");
-        root.Element("NextTaskId")?.SetValue(0.ToString());
-        root.Element("NextDependencyId")?.SetValue(0.ToString());
-        SaveListToXMLElement(root, "data-config.xml");
-        
-    }
-
-    #region Extension Fuctions
-    public static T? ToEnumNullable<T>(this XElement element, string name) where T : struct, Enum =>
-        Enum.TryParse<T>((string?)element.Element(name), out var result) ? (T?)result : null;
-    public static DateTime? ToDateTimeNullable(this XElement element, string name) =>
-        DateTime.TryParse((string?)element.Element(name), out var result) ? (DateTime?)result : null;
-    public static double? ToDoubleNullable(this XElement element, string name) =>
-        double.TryParse((string?)element.Element(name), out var result) ? (double?)result : null;
-    public static int? ToIntNullable(this XElement element, string name) =>
-        int.TryParse((string?)element.Element(name), out var result) ? (int?)result : null;
-    #endregion
-
-    #region XmlConfig
-    public static int GetAndIncreaseNextId(string data_config_xml, string elemName)
-    {
-        XElement root = XMLTools.LoadListFromXMLElement(data_config_xml);
-        int nextId = root.ToIntNullable(elemName) ?? throw new FormatException($"can't convert id.  {data_config_xml}, {elemName}");
-        root.Element(elemName)?.SetValue((nextId + 1).ToString());
-        XMLTools.SaveListToXMLElement(root, data_config_xml);
-        return nextId;
-    }
-    #endregion
-
-    #region SaveLoadWithXElement
-    public static void SaveListToXMLElement(XElement rootElem, string entity)
-    {
-        string filePath = $"{s_xml_dir + entity}";
-        try
-        {
-            rootElem.Save(filePath);
-        }
-        catch (Exception ex)
-        {
-            throw new DalXMLFileLoadCreateException($"fail to create xml file: {s_xml_dir + filePath}, {ex.Message}");
-        }
-    }
-    public static XElement LoadListFromXMLElement(string entity)
-    {
-        string filePath = $"{s_xml_dir + entity}";
-        try
-        {
-            if (File.Exists(filePath))
-                return XElement.Load(filePath);
-            XElement rootElem = new(entity);
-            rootElem.Save(filePath);
-            return rootElem;
-        }
-        catch (Exception ex)
-        {
-            throw new DalXMLFileLoadCreateException($"fail to load xml file: {s_xml_dir + filePath}, {ex.Message}");
-        }
-    }
-    #endregion
 
     #region SaveLoadWithXMLSerializer
-    public static void SaveListToXMLSerializer<T>(List<T> list, string entity) where T : class
+    private const int MAX_SAVE_TRIES = 5;
+    public static void SaveListToXMLSerializer<T>(List<T> list, string xmlFileName) where T : class
     {
-        string filePath = $"{s_xml_dir + entity}";
+        saveListToXMLSerializer(list, xmlFileName, MAX_SAVE_TRIES);
+    }
+    private static void saveListToXMLSerializer<T>(List<T> list, string xmlFileName, int tries) where T : class
+    {
+        string xmlFilePath = s_xmlDir + xmlFileName;
         try
         {
-            using FileStream file = new(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+            using FileStream file = new(xmlFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
             new XmlSerializer(typeof(List<T>)).Serialize(file, list);
         }
         catch (Exception ex)
         {
-            throw new DalXMLFileLoadCreateException($"fail to create xml file: {s_xml_dir + filePath}, {ex.Message}");
+            if (tries == 1)
+                throw new DalXMLFileLoadCreateException($"fail to create xml file: {xmlFilePath}, {ex.Message}", ex);
+            else
+                saveListToXMLSerializer(list, xmlFileName, tries - 1);
         }
     }
-    public static List<T> LoadListFromXMLSerializer<T>(string entity) where T : class
+
+    public static List<T> LoadListFromXMLSerializer<T>(string xmlFileName) where T : class
     {
-        string filePath = $"{s_xml_dir + entity}";
+        string xmlFilePath = s_xmlDir + xmlFileName;
+        XmlSerializer x = new(typeof(List<T>));
         try
         {
-            if (!File.Exists(filePath)) return new();
-            using FileStream file = new(filePath, FileMode.Open);
-            XmlSerializer x = new(typeof(List<T>));
-            return x.Deserialize(file) as List<T> ?? new();
+            if (!File.Exists(xmlFilePath)) return [];
+            using FileStream file = new(xmlFilePath, FileMode.Open);
+            return x.Deserialize(file) as List<T> ?? [];
         }
         catch (Exception ex)
         {
-            throw new DalXMLFileLoadCreateException($"fail to load xml file: {filePath}, {ex.Message}");
+            throw new DalXMLFileLoadCreateException($"fail to load xml file: {xmlFilePath}, {ex.Message}", ex);
         }
     }
+    #endregion
+
+    #region SaveLoadWithXElement
+    public static void SaveListToXMLElement(XElement rootElem, string xmlFileName)
+    {
+        string xmlFilePath = s_xmlDir + xmlFileName;
+        try
+        {
+            rootElem.Save(xmlFilePath);
+        }
+        catch (Exception ex)
+        {
+            throw new DalXMLFileLoadCreateException($"fail to create xml file: {xmlFilePath}, {ex.Message}", ex);
+        }
+    }
+    public static XElement LoadListFromXMLElement(string xmlFileName)
+    {
+        string xmlFilePath = s_xmlDir + xmlFileName;
+        try
+        {
+            if (File.Exists(xmlFilePath))
+                return XElement.Load(xmlFilePath);
+            XElement root = new(xmlFileName);
+            root.Save(xmlFilePath);
+            return root;
+        }
+        catch (Exception ex)
+        {
+            throw new DalXMLFileLoadCreateException($"fail to load xml file: {s_xmlDir + xmlFilePath}, {ex.Message}", ex);
+        }
+    }
+    #endregion
+
+    #region XmlConfig
+    public static int GetAndIncreaseConfigIntVal(string xmlFileName, string elemName)
+    {
+        XElement root = XMLTools.LoadListFromXMLElement(xmlFileName);
+        int nextId = root.ToIntNullable(elemName) ?? throw new FormatException($"can't convert:  {xmlFileName}, {elemName}");
+        root.Element(elemName)?.SetValue((nextId + 1).ToString());
+        XMLTools.SaveListToXMLElement(root, xmlFileName);
+        return nextId;
+    }
+    public static int GetConfigIntVal(string xmlFileName, string elemName) =>
+        LoadListFromXMLElement(xmlFileName)
+            .ToIntNullable(elemName) ?? throw new FormatException($"can't convert:  {xmlFileName}, {elemName}");
+
+    public static DateTime GetConfigDateVal(string xmlFileName, string elemName) =>
+        LoadListFromXMLElement(xmlFileName)
+            .ToDateTimeNullable(elemName) ?? throw new FormatException($"can't convert:  {xmlFileName}, {elemName}");
+
+    public static void SetConfigIntVal(string xmlFileName, string elemName, int elemVal)
+    {
+        XElement root = LoadListFromXMLElement(xmlFileName);
+        root.Element(elemName)?.SetValue((elemVal).ToString());
+        SaveListToXMLElement(root, xmlFileName);
+    }
+
+    public static void SetConfigDateVal(string xmlFileName, string elemName, DateTime elemVal)
+    {
+        XElement root = LoadListFromXMLElement(xmlFileName);
+        root.Element(elemName)?.SetValue((elemVal).ToString());
+        SaveListToXMLElement(root, xmlFileName);
+    }
+    #endregion
+
+    #region ExtensionMethods
+    public static T? ToEnumNullable<T>(this XElement element, string name) where T : struct, Enum =>
+        Enum.TryParse<T>((string?)element.Element(name), out var result) ? (T?)result : null;
+
+    public static DateTime? ToDateTimeNullable(this XElement element, string name) =>
+        DateTime.TryParse((string?)element.Element(name), out var result) ? (DateTime?)result : null;
+
+    public static double? ToDoubleNullable(this XElement element, string name) =>
+        double.TryParse((string?)element.Element(name), out var result) ? (double?)result : null;
+
+    public static int? ToIntNullable(this XElement element, string name) =>
+        int.TryParse((string?)element.Element(name), out var result) ? (int?)result : null;
     #endregion
 }
