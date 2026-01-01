@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <config>
   <NextOrderId>50</NextOrderId>
-  <NextDeliveryId>32</NextDeliveryId>
+  <NextDeliveryId>31</NextDeliveryId>
   <AdminId>0</AdminId>
   <AdminPassword>Admin</AdminPassword>
   <AvgCarSpeedKmh>40</AvgCarSpeedKmh>
@@ -11,7 +11,7 @@
   <MaxDeliveryTimeSpan>7200</MaxDeliveryTimeSpan>
   <RiskRange>600</RiskRange>
   <InactivityRange>1800</InactivityRange>
-  <Clock>11/27/2025 4:50:57 PM</Clock>
+  <Clock>12/4/2025 4:51:12 PM</Clock>
   <CompanyFullAddress>Downtown (test) - company HQ</CompanyFullAddress>
   <Latitude>31.771959</Latitude>
   <Longitude>35.217018</Longitude>

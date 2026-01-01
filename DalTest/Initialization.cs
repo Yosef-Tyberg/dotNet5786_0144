@@ -73,9 +73,10 @@ public static class Initialization
     /// <summary>
     /// Populates the DAL fully (config, couriers, orders, deliveries).
     /// </summary>
-    public static void Do(IDal dal)
+    public static void Do()
     {
-        s_dal = dal ?? throw new NullReferenceException("DAL object can not be null!"); // stage 2
+        //s_dal = dal ?? throw new NullReferenceException("DAL object can not be null!"); // stage 2
+        s_dal = DalApi.Factory.Get;
 
         Console.WriteLine("Reset Configuration values and List values...");
         // Reset the DB (ResetDB handles clearing lists + s_dal.Config.Reset())

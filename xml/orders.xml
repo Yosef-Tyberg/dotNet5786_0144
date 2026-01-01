@@ -4,708 +4,706 @@
     <Id>0</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #1</VerbalDescription>
-    <Latitude>31.77667</Latitude>
-    <Longitude>35.20528</Longitude>
+    <Latitude>31.759164</Latitude>
+    <Longitude>35.143</Longitude>
     <CustomerFullName>Customer 1</CustomerFullName>
-    <CustomerMobile>058-9536502</CustomerMobile>
-    <Volume>1.267</Volume>
-    <Weight>4.564</Weight>
-    <Height>15.26</Height>
-    <Width>26.58</Width>
-    <OrderOpenTime>2025-11-21T05:52:57</OrderOpenTime>
+    <CustomerMobile>054-1232457</CustomerMobile>
+    <Volume>0.864</Volume>
+    <Weight>3.817</Weight>
+    <Fragile>true</Fragile>
+    <Height>53.99</Height>
+    <Width>46.03</Width>
+    <OrderOpenTime>2025-12-03T15:51:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>1</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #2</VerbalDescription>
-    <Latitude>31.787128</Latitude>
-    <Longitude>35.190108</Longitude>
+    <Latitude>31.759164</Latitude>
+    <Longitude>35.143</Longitude>
     <CustomerFullName>Customer 2</CustomerFullName>
-    <CustomerMobile>052-6119792</CustomerMobile>
-    <Volume>2.347</Volume>
-    <Weight>7.46</Weight>
-    <Height>21.44</Height>
-    <Width>13.99</Width>
-    <OrderOpenTime>2025-11-25T11:54:57</OrderOpenTime>
+    <CustomerMobile>052-6820936</CustomerMobile>
+    <Volume>0.392</Volume>
+    <Weight>6.478</Weight>
+    <Height>51.77</Height>
+    <Width>47.12</Width>
+    <OrderOpenTime>2025-12-04T00:03:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>2</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #3</VerbalDescription>
-    <Latitude>31.757919</Latitude>
-    <Longitude>35.218139</Longitude>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #3</VerbalDescription>
+    <Latitude>31.784637</Latitude>
+    <Longitude>35.215046</Longitude>
     <CustomerFullName>Customer 3</CustomerFullName>
-    <CustomerMobile>052-1047773</CustomerMobile>
-    <Volume>1.097</Volume>
-    <Weight>7.244</Weight>
-    <Height>30.76</Height>
-    <Width>34.44</Width>
-    <OrderOpenTime>2025-11-13T19:29:57</OrderOpenTime>
+    <CustomerMobile>050-9832995</CustomerMobile>
+    <Volume>0.323</Volume>
+    <Weight>5.827</Weight>
+    <Height>13.21</Height>
+    <Width>35.9</Width>
+    <OrderOpenTime>2025-11-26T07:49:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>3</Id>
-    <OrderType>Pizza</OrderType>
-    <VerbalDescription>Pizza order #4</VerbalDescription>
-    <Latitude>31.787128</Latitude>
-    <Longitude>35.190108</Longitude>
+    <OrderType>Falafel</OrderType>
+    <VerbalDescription>Falafel order #4</VerbalDescription>
+    <Latitude>31.784637</Latitude>
+    <Longitude>35.215046</Longitude>
     <CustomerFullName>Customer 4</CustomerFullName>
-    <CustomerMobile>052-6676057</CustomerMobile>
-    <Volume>0.534</Volume>
-    <Weight>9.514</Weight>
-    <Height>53.04</Height>
-    <Width>23.18</Width>
-    <OrderOpenTime>2025-11-24T15:35:57</OrderOpenTime>
+    <CustomerMobile>050-3958768</CustomerMobile>
+    <Volume>2.436</Volume>
+    <Weight>4.111</Weight>
+    <Height>16.13</Height>
+    <Width>36.49</Width>
+    <OrderOpenTime>2025-11-21T14:39:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>4</Id>
-    <OrderType>Pizza</OrderType>
-    <VerbalDescription>Pizza order #5</VerbalDescription>
-    <Latitude>31.757919</Latitude>
-    <Longitude>35.218139</Longitude>
+    <OrderType>Falafel</OrderType>
+    <VerbalDescription>Falafel order #5</VerbalDescription>
+    <Latitude>31.7815</Latitude>
+    <Longitude>35.2176</Longitude>
     <CustomerFullName>Customer 5</CustomerFullName>
-    <CustomerMobile>050-9344927</CustomerMobile>
-    <Volume>0.958</Volume>
-    <Weight>2.783</Weight>
-    <Height>18.25</Height>
-    <Width>18.61</Width>
-    <OrderOpenTime>2025-11-16T11:58:57</OrderOpenTime>
+    <CustomerMobile>050-1354738</CustomerMobile>
+    <Volume>0.339</Volume>
+    <Weight>8.486</Weight>
+    <Height>48.01</Height>
+    <Width>31.46</Width>
+    <OrderOpenTime>2025-11-30T06:04:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>5</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #6</VerbalDescription>
-    <Latitude>31.759164</Latitude>
-    <Longitude>35.143</Longitude>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #6</VerbalDescription>
+    <Latitude>31.757919</Latitude>
+    <Longitude>35.218139</Longitude>
     <CustomerFullName>Customer 6</CustomerFullName>
-    <CustomerMobile>052-7617373</CustomerMobile>
-    <Volume>0.153</Volume>
-    <Weight>9.047</Weight>
+    <CustomerMobile>050-8669782</CustomerMobile>
+    <Volume>2.22</Volume>
+    <Weight>3.169</Weight>
     <Fragile>true</Fragile>
-    <Height>51.06</Height>
-    <Width>35.8</Width>
-    <OrderOpenTime>2025-11-24T06:37:57</OrderOpenTime>
+    <Height>38.19</Height>
+    <Width>52.57</Width>
+    <OrderOpenTime>2025-11-25T11:24:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>6</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #7</VerbalDescription>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #7</VerbalDescription>
     <Latitude>31.766509</Latitude>
     <Longitude>35.225938</Longitude>
     <CustomerFullName>Customer 7</CustomerFullName>
-    <CustomerMobile>054-9086261</CustomerMobile>
-    <Volume>1.028</Volume>
-    <Weight>3.037</Weight>
-    <Height>41.83</Height>
-    <Width>26.21</Width>
-    <OrderOpenTime>2025-11-15T20:52:57</OrderOpenTime>
+    <CustomerMobile>052-6913830</CustomerMobile>
+    <Volume>0.547</Volume>
+    <Weight>9.578</Weight>
+    <Height>54.14</Height>
+    <Width>48.4</Width>
+    <OrderOpenTime>2025-11-21T06:20:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>7</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #8</VerbalDescription>
-    <Latitude>31.759164</Latitude>
-    <Longitude>35.143</Longitude>
+    <Latitude>31.766509</Latitude>
+    <Longitude>35.225938</Longitude>
     <CustomerFullName>Customer 8</CustomerFullName>
-    <CustomerMobile>058-8144574</CustomerMobile>
-    <Volume>2.897</Volume>
-    <Weight>0.781</Weight>
-    <Height>30.83</Height>
-    <Width>40.96</Width>
-    <OrderOpenTime>2025-11-18T21:42:57</OrderOpenTime>
+    <CustomerMobile>052-8384386</CustomerMobile>
+    <Volume>1.273</Volume>
+    <Weight>7.52</Weight>
+    <Height>5.57</Height>
+    <Width>50.09</Width>
+    <OrderOpenTime>2025-11-29T03:38:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>8</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #9</VerbalDescription>
-    <Latitude>31.7815</Latitude>
-    <Longitude>35.2176</Longitude>
+    <Latitude>31.784637</Latitude>
+    <Longitude>35.215046</Longitude>
     <CustomerFullName>Customer 9</CustomerFullName>
-    <CustomerMobile>050-7672511</CustomerMobile>
-    <Volume>2.44</Volume>
-    <Weight>0.141</Weight>
-    <Height>36.57</Height>
-    <Width>35.66</Width>
-    <OrderOpenTime>2025-11-24T13:13:57</OrderOpenTime>
+    <CustomerMobile>054-2346192</CustomerMobile>
+    <Volume>2.389</Volume>
+    <Weight>9.754</Weight>
+    <Height>23.63</Height>
+    <Width>36.1</Width>
+    <OrderOpenTime>2025-12-04T03:15:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>9</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #10</VerbalDescription>
-    <Latitude>31.7847</Latitude>
-    <Longitude>35.2073</Longitude>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #10</VerbalDescription>
+    <Latitude>31.757919</Latitude>
+    <Longitude>35.218139</Longitude>
     <CustomerFullName>Customer 10</CustomerFullName>
-    <CustomerMobile>052-7200128</CustomerMobile>
-    <Volume>1.389</Volume>
-    <Weight>6.398</Weight>
-    <Height>20.5</Height>
-    <Width>35.9</Width>
-    <OrderOpenTime>2025-11-15T05:50:57</OrderOpenTime>
+    <CustomerMobile>052-9532200</CustomerMobile>
+    <Volume>1.752</Volume>
+    <Weight>9.041</Weight>
+    <Height>33.78</Height>
+    <Width>49.52</Width>
+    <OrderOpenTime>2025-11-30T23:46:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>10</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #11</VerbalDescription>
-    <Latitude>31.77667</Latitude>
-    <Longitude>35.20528</Longitude>
+    <Latitude>31.784637</Latitude>
+    <Longitude>35.215046</Longitude>
     <CustomerFullName>Customer 11</CustomerFullName>
-    <CustomerMobile>058-5178863</CustomerMobile>
-    <Volume>2.867</Volume>
-    <Weight>1.345</Weight>
-    <Height>36.42</Height>
-    <Width>45.14</Width>
-    <OrderOpenTime>2025-11-16T03:37:57</OrderOpenTime>
+    <CustomerMobile>058-8497712</CustomerMobile>
+    <Volume>2.378</Volume>
+    <Weight>0.14</Weight>
+    <Height>14.13</Height>
+    <Width>28.06</Width>
+    <OrderOpenTime>2025-12-02T06:10:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>11</Id>
-    <OrderType>Pizza</OrderType>
-    <VerbalDescription>Pizza order #12</VerbalDescription>
+    <OrderType>Falafel</OrderType>
+    <VerbalDescription>Falafel order #12</VerbalDescription>
     <Latitude>31.77667</Latitude>
     <Longitude>35.20528</Longitude>
     <CustomerFullName>Customer 12</CustomerFullName>
-    <CustomerMobile>050-5968129</CustomerMobile>
-    <Volume>1.666</Volume>
-    <Weight>7.413</Weight>
-    <Height>48.75</Height>
-    <Width>10.92</Width>
-    <OrderOpenTime>2025-11-20T16:36:57</OrderOpenTime>
+    <CustomerMobile>058-7439883</CustomerMobile>
+    <Volume>0.9</Volume>
+    <Weight>4.406</Weight>
+    <Height>15.62</Height>
+    <Width>49.7</Width>
+    <OrderOpenTime>2025-12-04T12:48:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>12</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #13</VerbalDescription>
-    <Latitude>31.7847</Latitude>
-    <Longitude>35.2073</Longitude>
+    <Latitude>31.784637</Latitude>
+    <Longitude>35.215046</Longitude>
     <CustomerFullName>Customer 13</CustomerFullName>
-    <CustomerMobile>050-2566451</CustomerMobile>
-    <Volume>2.751</Volume>
-    <Weight>0.451</Weight>
-    <Height>18.82</Height>
-    <Width>23.22</Width>
-    <OrderOpenTime>2025-11-25T11:15:57</OrderOpenTime>
+    <CustomerMobile>052-4566171</CustomerMobile>
+    <Volume>1.056</Volume>
+    <Weight>4.539</Weight>
+    <Fragile>true</Fragile>
+    <Height>22.88</Height>
+    <Width>18.49</Width>
+    <OrderOpenTime>2025-11-28T08:50:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>13</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #14</VerbalDescription>
-    <Latitude>31.7847</Latitude>
-    <Longitude>35.2073</Longitude>
+    <Latitude>31.757919</Latitude>
+    <Longitude>35.218139</Longitude>
     <CustomerFullName>Customer 14</CustomerFullName>
-    <CustomerMobile>058-7541018</CustomerMobile>
-    <Volume>1.86</Volume>
-    <Weight>3.376</Weight>
-    <Height>43.93</Height>
-    <Width>45.95</Width>
-    <OrderOpenTime>2025-11-21T01:42:57</OrderOpenTime>
+    <CustomerMobile>050-7928892</CustomerMobile>
+    <Volume>0.767</Volume>
+    <Weight>2.506</Weight>
+    <Fragile>true</Fragile>
+    <Height>45.09</Height>
+    <Width>24.51</Width>
+    <OrderOpenTime>2025-11-23T15:24:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>14</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #15</VerbalDescription>
-    <Latitude>31.766509</Latitude>
-    <Longitude>35.225938</Longitude>
+    <Latitude>31.759164</Latitude>
+    <Longitude>35.143</Longitude>
     <CustomerFullName>Customer 15</CustomerFullName>
-    <CustomerMobile>058-6973248</CustomerMobile>
-    <Volume>0.517</Volume>
-    <Weight>4.333</Weight>
-    <Height>44.64</Height>
-    <Width>13.35</Width>
-    <OrderOpenTime>2025-11-25T08:33:57</OrderOpenTime>
+    <CustomerMobile>058-6916890</CustomerMobile>
+    <Volume>1.692</Volume>
+    <Weight>3.756</Weight>
+    <Height>32.78</Height>
+    <Width>39.07</Width>
+    <OrderOpenTime>2025-11-24T05:04:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>15</Id>
-    <OrderType>Pizza</OrderType>
-    <VerbalDescription>Pizza order #16</VerbalDescription>
-    <Latitude>31.766509</Latitude>
-    <Longitude>35.225938</Longitude>
+    <OrderType>Falafel</OrderType>
+    <VerbalDescription>Falafel order #16</VerbalDescription>
+    <Latitude>31.7815</Latitude>
+    <Longitude>35.2176</Longitude>
     <CustomerFullName>Customer 16</CustomerFullName>
-    <CustomerMobile>050-3814751</CustomerMobile>
-    <Volume>1.584</Volume>
-    <Weight>3.28</Weight>
-    <Height>38.34</Height>
-    <Width>34.03</Width>
-    <OrderOpenTime>2025-11-23T09:01:57</OrderOpenTime>
+    <CustomerMobile>054-7361388</CustomerMobile>
+    <Volume>0.448</Volume>
+    <Weight>5.711</Weight>
+    <Height>34.79</Height>
+    <Width>30.73</Width>
+    <OrderOpenTime>2025-11-24T07:02:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>16</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #17</VerbalDescription>
-    <Latitude>31.77667</Latitude>
-    <Longitude>35.20528</Longitude>
+    <Latitude>31.7847</Latitude>
+    <Longitude>35.2073</Longitude>
     <CustomerFullName>Customer 17</CustomerFullName>
-    <CustomerMobile>052-5501178</CustomerMobile>
-    <Volume>0.296</Volume>
-    <Weight>6.474</Weight>
-    <Height>28.76</Height>
-    <Width>53.27</Width>
-    <OrderOpenTime>2025-11-27T15:51:57</OrderOpenTime>
+    <CustomerMobile>058-9678515</CustomerMobile>
+    <Volume>0.636</Volume>
+    <Weight>1.613</Weight>
+    <Height>54.61</Height>
+    <Width>29.66</Width>
+    <OrderOpenTime>2025-11-20T18:12:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>17</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #18</VerbalDescription>
-    <Latitude>31.784637</Latitude>
-    <Longitude>35.215046</Longitude>
+    <Latitude>31.7815</Latitude>
+    <Longitude>35.2176</Longitude>
     <CustomerFullName>Customer 18</CustomerFullName>
-    <CustomerMobile>050-5163921</CustomerMobile>
-    <Volume>1.841</Volume>
-    <Weight>3.404</Weight>
-    <Height>27.99</Height>
-    <Width>6.75</Width>
-    <OrderOpenTime>2025-11-16T04:10:57</OrderOpenTime>
+    <CustomerMobile>058-2215471</CustomerMobile>
+    <Volume>1.815</Volume>
+    <Weight>2.765</Weight>
+    <Height>40.16</Height>
+    <Width>48.29</Width>
+    <OrderOpenTime>2025-11-27T09:05:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>18</Id>
-    <OrderType>Pizza</OrderType>
-    <VerbalDescription>Pizza order #19</VerbalDescription>
-    <Latitude>31.757919</Latitude>
-    <Longitude>35.218139</Longitude>
+    <OrderType>Falafel</OrderType>
+    <VerbalDescription>Falafel order #19</VerbalDescription>
+    <Latitude>31.77667</Latitude>
+    <Longitude>35.20528</Longitude>
     <CustomerFullName>Customer 19</CustomerFullName>
-    <CustomerMobile>050-6995567</CustomerMobile>
-    <Volume>0.925</Volume>
-    <Weight>5.852</Weight>
-    <Height>34.3</Height>
-    <Width>16.61</Width>
-    <OrderOpenTime>2025-11-20T19:53:57</OrderOpenTime>
+    <CustomerMobile>054-2346306</CustomerMobile>
+    <Volume>2.883</Volume>
+    <Weight>0.526</Weight>
+    <Fragile>true</Fragile>
+    <Height>25.71</Height>
+    <Width>37.69</Width>
+    <OrderOpenTime>2025-11-26T17:28:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>19</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #20</VerbalDescription>
-    <Latitude>31.7847</Latitude>
-    <Longitude>35.2073</Longitude>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #20</VerbalDescription>
+    <Latitude>31.766509</Latitude>
+    <Longitude>35.225938</Longitude>
     <CustomerFullName>Customer 20</CustomerFullName>
-    <CustomerMobile>050-9385309</CustomerMobile>
-    <Volume>2.544</Volume>
-    <Weight>7.319</Weight>
-    <Height>21.42</Height>
-    <Width>34.92</Width>
-    <OrderOpenTime>2025-11-17T15:49:57</OrderOpenTime>
+    <CustomerMobile>052-1671176</CustomerMobile>
+    <Volume>2.741</Volume>
+    <Weight>6.259</Weight>
+    <Height>52.36</Height>
+    <Width>28.94</Width>
+    <OrderOpenTime>2025-11-28T08:49:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>20</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #21</VerbalDescription>
-    <Latitude>31.787128</Latitude>
-    <Longitude>35.190108</Longitude>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #21</VerbalDescription>
+    <Latitude>31.757919</Latitude>
+    <Longitude>35.218139</Longitude>
     <CustomerFullName>Customer 21</CustomerFullName>
-    <CustomerMobile>058-9753905</CustomerMobile>
-    <Volume>1.153</Volume>
-    <Weight>2.143</Weight>
-    <Height>41.45</Height>
-    <Width>41.61</Width>
-    <OrderOpenTime>2025-11-24T17:19:57</OrderOpenTime>
+    <CustomerMobile>050-6897718</CustomerMobile>
+    <Volume>2.314</Volume>
+    <Weight>0.561</Weight>
+    <Height>32.32</Height>
+    <Width>11.76</Width>
+    <OrderOpenTime>2025-11-27T13:10:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>21</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #22</VerbalDescription>
-    <Latitude>31.784637</Latitude>
-    <Longitude>35.215046</Longitude>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #22</VerbalDescription>
+    <Latitude>31.759164</Latitude>
+    <Longitude>35.143</Longitude>
     <CustomerFullName>Customer 22</CustomerFullName>
-    <CustomerMobile>054-2081061</CustomerMobile>
-    <Volume>1.72</Volume>
-    <Weight>3.599</Weight>
-    <Height>34.89</Height>
-    <Width>16.26</Width>
-    <OrderOpenTime>2025-11-24T07:37:57</OrderOpenTime>
+    <CustomerMobile>054-6053585</CustomerMobile>
+    <Volume>1.224</Volume>
+    <Weight>3.192</Weight>
+    <Height>43.17</Height>
+    <Width>6.83</Width>
+    <OrderOpenTime>2025-12-03T03:39:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>22</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #23</VerbalDescription>
-    <Latitude>31.757919</Latitude>
-    <Longitude>35.218139</Longitude>
+    <Latitude>31.784637</Latitude>
+    <Longitude>35.215046</Longitude>
     <CustomerFullName>Customer 23</CustomerFullName>
-    <CustomerMobile>050-7271304</CustomerMobile>
-    <Volume>1.805</Volume>
-    <Weight>6.399</Weight>
-    <Height>11.21</Height>
-    <Width>37.39</Width>
-    <OrderOpenTime>2025-11-27T11:26:57</OrderOpenTime>
+    <CustomerMobile>052-8487602</CustomerMobile>
+    <Volume>1.898</Volume>
+    <Weight>9.398</Weight>
+    <Height>42.38</Height>
+    <Width>17.74</Width>
+    <OrderOpenTime>2025-11-28T00:40:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>23</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #24</VerbalDescription>
-    <Latitude>31.759164</Latitude>
-    <Longitude>35.143</Longitude>
+    <Latitude>31.77667</Latitude>
+    <Longitude>35.20528</Longitude>
     <CustomerFullName>Customer 24</CustomerFullName>
-    <CustomerMobile>058-5801575</CustomerMobile>
-    <Volume>2.017</Volume>
-    <Weight>1.443</Weight>
-    <Height>11.84</Height>
-    <Width>20.76</Width>
-    <OrderOpenTime>2025-11-27T16:03:57</OrderOpenTime>
+    <CustomerMobile>050-5378449</CustomerMobile>
+    <Volume>1.535</Volume>
+    <Weight>4.398</Weight>
+    <Height>6.04</Height>
+    <Width>25.58</Width>
+    <OrderOpenTime>2025-11-26T09:23:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>24</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #25</VerbalDescription>
-    <Latitude>31.7815</Latitude>
-    <Longitude>35.2176</Longitude>
+    <Latitude>31.77667</Latitude>
+    <Longitude>35.20528</Longitude>
     <CustomerFullName>Customer 25</CustomerFullName>
-    <CustomerMobile>058-1612711</CustomerMobile>
-    <Volume>0.944</Volume>
-    <Weight>3.944</Weight>
-    <Fragile>true</Fragile>
-    <Height>8.9</Height>
-    <Width>24.58</Width>
-    <OrderOpenTime>2025-11-19T23:04:57</OrderOpenTime>
+    <CustomerMobile>052-8238438</CustomerMobile>
+    <Volume>2.023</Volume>
+    <Weight>3.259</Weight>
+    <Height>41.29</Height>
+    <Width>39.99</Width>
+    <OrderOpenTime>2025-11-26T20:00:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>25</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #26</VerbalDescription>
-    <Latitude>31.757919</Latitude>
-    <Longitude>35.218139</Longitude>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #26</VerbalDescription>
+    <Latitude>31.787128</Latitude>
+    <Longitude>35.190108</Longitude>
     <CustomerFullName>Customer 26</CustomerFullName>
-    <CustomerMobile>050-1975186</CustomerMobile>
-    <Volume>0.538</Volume>
-    <Weight>8.153</Weight>
-    <Height>11.53</Height>
-    <Width>25.22</Width>
-    <OrderOpenTime>2025-11-23T10:08:57</OrderOpenTime>
+    <CustomerMobile>058-4086607</CustomerMobile>
+    <Volume>1.11</Volume>
+    <Weight>10.079</Weight>
+    <Height>16.53</Height>
+    <Width>7.79</Width>
+    <OrderOpenTime>2025-12-03T16:16:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>26</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #27</VerbalDescription>
-    <Latitude>31.766509</Latitude>
-    <Longitude>35.225938</Longitude>
+    <Latitude>31.759164</Latitude>
+    <Longitude>35.143</Longitude>
     <CustomerFullName>Customer 27</CustomerFullName>
-    <CustomerMobile>050-8863204</CustomerMobile>
-    <Volume>2.312</Volume>
-    <Weight>9.949</Weight>
-    <Height>9.91</Height>
-    <Width>29.05</Width>
-    <OrderOpenTime>2025-11-25T21:33:57</OrderOpenTime>
+    <CustomerMobile>052-2614011</CustomerMobile>
+    <Volume>1.359</Volume>
+    <Weight>4.365</Weight>
+    <Height>17.18</Height>
+    <Width>9.16</Width>
+    <OrderOpenTime>2025-12-02T06:29:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>27</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #28</VerbalDescription>
-    <Latitude>31.757919</Latitude>
-    <Longitude>35.218139</Longitude>
+    <Latitude>31.77667</Latitude>
+    <Longitude>35.20528</Longitude>
     <CustomerFullName>Customer 28</CustomerFullName>
-    <CustomerMobile>052-2390297</CustomerMobile>
-    <Volume>0.604</Volume>
-    <Weight>8.126</Weight>
-    <Height>13.74</Height>
-    <Width>25.77</Width>
-    <OrderOpenTime>2025-11-17T02:37:57</OrderOpenTime>
+    <CustomerMobile>052-2393712</CustomerMobile>
+    <Volume>0.144</Volume>
+    <Weight>4.906</Weight>
+    <Height>31.7</Height>
+    <Width>14.55</Width>
+    <OrderOpenTime>2025-11-30T12:24:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>28</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #29</VerbalDescription>
-    <Latitude>31.784637</Latitude>
-    <Longitude>35.215046</Longitude>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #29</VerbalDescription>
+    <Latitude>31.7847</Latitude>
+    <Longitude>35.2073</Longitude>
     <CustomerFullName>Customer 29</CustomerFullName>
-    <CustomerMobile>054-2646199</CustomerMobile>
-    <Volume>0.191</Volume>
-    <Weight>1.312</Weight>
-    <Height>42.65</Height>
-    <Width>24.37</Width>
-    <OrderOpenTime>2025-11-20T00:57:57</OrderOpenTime>
+    <CustomerMobile>050-7153132</CustomerMobile>
+    <Volume>2.079</Volume>
+    <Weight>3.669</Weight>
+    <Height>49.07</Height>
+    <Width>12.5</Width>
+    <OrderOpenTime>2025-11-27T13:31:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>29</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #30</VerbalDescription>
-    <Latitude>31.759164</Latitude>
-    <Longitude>35.143</Longitude>
+    <Latitude>31.757919</Latitude>
+    <Longitude>35.218139</Longitude>
     <CustomerFullName>Customer 30</CustomerFullName>
-    <CustomerMobile>054-6346776</CustomerMobile>
-    <Volume>1.575</Volume>
-    <Weight>2.034</Weight>
-    <Height>54</Height>
-    <Width>21.54</Width>
-    <OrderOpenTime>2025-11-20T05:42:57</OrderOpenTime>
+    <CustomerMobile>058-6432116</CustomerMobile>
+    <Volume>0.314</Volume>
+    <Weight>9.576</Weight>
+    <Height>9.99</Height>
+    <Width>24.24</Width>
+    <OrderOpenTime>2025-11-30T19:54:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>30</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #31</VerbalDescription>
-    <Latitude>31.7847</Latitude>
-    <Longitude>35.2073</Longitude>
+    <Latitude>31.784637</Latitude>
+    <Longitude>35.215046</Longitude>
     <CustomerFullName>Customer 31</CustomerFullName>
-    <CustomerMobile>054-9871422</CustomerMobile>
-    <Volume>2.436</Volume>
-    <Weight>0.818</Weight>
-    <Fragile>true</Fragile>
-    <Height>52.44</Height>
-    <Width>52.02</Width>
-    <OrderOpenTime>2025-11-13T21:06:57</OrderOpenTime>
+    <CustomerMobile>054-7792541</CustomerMobile>
+    <Volume>2.407</Volume>
+    <Weight>10.071</Weight>
+    <Height>42.79</Height>
+    <Width>21.41</Width>
+    <OrderOpenTime>2025-11-28T00:00:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>31</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #32</VerbalDescription>
-    <Latitude>31.7847</Latitude>
-    <Longitude>35.2073</Longitude>
+    <Latitude>31.759164</Latitude>
+    <Longitude>35.143</Longitude>
     <CustomerFullName>Customer 32</CustomerFullName>
-    <CustomerMobile>054-2986060</CustomerMobile>
-    <Volume>0.63</Volume>
-    <Weight>0.416</Weight>
-    <Height>49.91</Height>
-    <Width>47.18</Width>
-    <OrderOpenTime>2025-11-16T13:41:57</OrderOpenTime>
+    <CustomerMobile>050-7950778</CustomerMobile>
+    <Volume>1.902</Volume>
+    <Weight>3.104</Weight>
+    <Fragile>true</Fragile>
+    <Height>35.4</Height>
+    <Width>30.98</Width>
+    <OrderOpenTime>2025-11-25T18:16:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>32</Id>
-    <OrderType>Pizza</OrderType>
-    <VerbalDescription>Pizza order #33</VerbalDescription>
-    <Latitude>31.787128</Latitude>
-    <Longitude>35.190108</Longitude>
+    <OrderType>Falafel</OrderType>
+    <VerbalDescription>Falafel order #33</VerbalDescription>
+    <Latitude>31.7815</Latitude>
+    <Longitude>35.2176</Longitude>
     <CustomerFullName>Customer 33</CustomerFullName>
-    <CustomerMobile>054-6824685</CustomerMobile>
-    <Volume>0.824</Volume>
-    <Weight>1.631</Weight>
-    <Fragile>true</Fragile>
-    <Height>39.43</Height>
-    <Width>38.14</Width>
-    <OrderOpenTime>2025-11-18T22:05:57</OrderOpenTime>
+    <CustomerMobile>050-6423510</CustomerMobile>
+    <Volume>2.164</Volume>
+    <Weight>5.354</Weight>
+    <Height>42.4</Height>
+    <Width>9.17</Width>
+    <OrderOpenTime>2025-12-04T15:11:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>33</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #34</VerbalDescription>
-    <Latitude>31.77667</Latitude>
-    <Longitude>35.20528</Longitude>
+    <Latitude>31.7815</Latitude>
+    <Longitude>35.2176</Longitude>
     <CustomerFullName>Customer 34</CustomerFullName>
-    <CustomerMobile>058-2070616</CustomerMobile>
-    <Volume>0.639</Volume>
-    <Weight>5.67</Weight>
-    <Height>42.35</Height>
-    <Width>25.21</Width>
-    <OrderOpenTime>2025-11-25T03:32:57</OrderOpenTime>
+    <CustomerMobile>050-9787558</CustomerMobile>
+    <Volume>2.662</Volume>
+    <Weight>7.387</Weight>
+    <Height>19.66</Height>
+    <Width>50.73</Width>
+    <OrderOpenTime>2025-12-03T07:59:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>34</Id>
-    <OrderType>Pizza</OrderType>
-    <VerbalDescription>Pizza order #35</VerbalDescription>
-    <Latitude>31.77667</Latitude>
-    <Longitude>35.20528</Longitude>
+    <OrderType>Falafel</OrderType>
+    <VerbalDescription>Falafel order #35</VerbalDescription>
+    <Latitude>31.766509</Latitude>
+    <Longitude>35.225938</Longitude>
     <CustomerFullName>Customer 35</CustomerFullName>
-    <CustomerMobile>058-1396168</CustomerMobile>
-    <Volume>0.673</Volume>
-    <Weight>3.793</Weight>
-    <Height>30.58</Height>
-    <Width>25.86</Width>
-    <OrderOpenTime>2025-11-14T09:35:57</OrderOpenTime>
+    <CustomerMobile>054-3646785</CustomerMobile>
+    <Volume>2.141</Volume>
+    <Weight>6.284</Weight>
+    <Height>14.64</Height>
+    <Width>5.14</Width>
+    <OrderOpenTime>2025-11-21T17:21:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>35</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #36</VerbalDescription>
-    <Latitude>31.757919</Latitude>
-    <Longitude>35.218139</Longitude>
+    <Latitude>31.759164</Latitude>
+    <Longitude>35.143</Longitude>
     <CustomerFullName>Customer 36</CustomerFullName>
-    <CustomerMobile>050-7433346</CustomerMobile>
-    <Volume>0.732</Volume>
-    <Weight>3.868</Weight>
-    <Height>52.49</Height>
-    <Width>42.21</Width>
-    <OrderOpenTime>2025-11-19T16:11:57</OrderOpenTime>
+    <CustomerMobile>054-3898275</CustomerMobile>
+    <Volume>1.513</Volume>
+    <Weight>4.347</Weight>
+    <Height>7.01</Height>
+    <Width>8.34</Width>
+    <OrderOpenTime>2025-11-25T10:17:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>36</Id>
-    <OrderType>Pizza</OrderType>
-    <VerbalDescription>Pizza order #37</VerbalDescription>
-    <Latitude>31.766509</Latitude>
-    <Longitude>35.225938</Longitude>
+    <OrderType>Falafel</OrderType>
+    <VerbalDescription>Falafel order #37</VerbalDescription>
+    <Latitude>31.784637</Latitude>
+    <Longitude>35.215046</Longitude>
     <CustomerFullName>Customer 37</CustomerFullName>
-    <CustomerMobile>052-9693482</CustomerMobile>
-    <Volume>0.137</Volume>
-    <Weight>4.705</Weight>
-    <Height>34.81</Height>
-    <Width>7.05</Width>
-    <OrderOpenTime>2025-11-23T00:27:57</OrderOpenTime>
+    <CustomerMobile>054-3350885</CustomerMobile>
+    <Volume>2.037</Volume>
+    <Weight>7.125</Weight>
+    <Height>8.16</Height>
+    <Width>50.92</Width>
+    <OrderOpenTime>2025-11-21T01:47:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>37</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #38</VerbalDescription>
-    <Latitude>31.787128</Latitude>
-    <Longitude>35.190108</Longitude>
+    <Latitude>31.759164</Latitude>
+    <Longitude>35.143</Longitude>
     <CustomerFullName>Customer 38</CustomerFullName>
-    <CustomerMobile>052-8966639</CustomerMobile>
-    <Volume>1.653</Volume>
-    <Weight>1.457</Weight>
-    <Height>38.34</Height>
-    <Width>27.81</Width>
-    <OrderOpenTime>2025-11-18T14:44:57</OrderOpenTime>
+    <CustomerMobile>054-8713370</CustomerMobile>
+    <Volume>1.382</Volume>
+    <Weight>8.265</Weight>
+    <Height>44.98</Height>
+    <Width>51.12</Width>
+    <OrderOpenTime>2025-11-23T01:04:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>38</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #39</VerbalDescription>
-    <Latitude>31.759164</Latitude>
-    <Longitude>35.143</Longitude>
+    <Latitude>31.7815</Latitude>
+    <Longitude>35.2176</Longitude>
     <CustomerFullName>Customer 39</CustomerFullName>
-    <CustomerMobile>052-2823410</CustomerMobile>
-    <Volume>0.632</Volume>
-    <Weight>7.676</Weight>
-    <Fragile>true</Fragile>
-    <Height>11.46</Height>
-    <Width>50.42</Width>
-    <OrderOpenTime>2025-11-20T12:37:57</OrderOpenTime>
+    <CustomerMobile>054-3811865</CustomerMobile>
+    <Volume>0.836</Volume>
+    <Weight>5.578</Weight>
+    <Height>46.36</Height>
+    <Width>30.27</Width>
+    <OrderOpenTime>2025-12-02T17:24:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>39</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #40</VerbalDescription>
-    <Latitude>31.759164</Latitude>
-    <Longitude>35.143</Longitude>
+    <Latitude>31.757919</Latitude>
+    <Longitude>35.218139</Longitude>
     <CustomerFullName>Customer 40</CustomerFullName>
-    <CustomerMobile>050-8008364</CustomerMobile>
-    <Volume>2.832</Volume>
-    <Weight>7.737</Weight>
-    <Height>47.33</Height>
-    <Width>6.58</Width>
-    <OrderOpenTime>2025-11-27T16:40:57</OrderOpenTime>
+    <CustomerMobile>050-7038827</CustomerMobile>
+    <Volume>3.098</Volume>
+    <Weight>6.72</Weight>
+    <Height>19.6</Height>
+    <Width>37.42</Width>
+    <OrderOpenTime>2025-11-23T02:57:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>40</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #41</VerbalDescription>
-    <Latitude>31.766509</Latitude>
-    <Longitude>35.225938</Longitude>
+    <Latitude>31.77667</Latitude>
+    <Longitude>35.20528</Longitude>
     <CustomerFullName>Customer 41</CustomerFullName>
-    <CustomerMobile>052-8176945</CustomerMobile>
-    <Volume>1.236</Volume>
-    <Weight>1.582</Weight>
-    <Fragile>true</Fragile>
-    <Height>17.56</Height>
-    <Width>14.85</Width>
-    <OrderOpenTime>2025-11-24T14:15:57</OrderOpenTime>
+    <CustomerMobile>052-2177418</CustomerMobile>
+    <Volume>1.114</Volume>
+    <Weight>9.99</Weight>
+    <Height>41.16</Height>
+    <Width>49.74</Width>
+    <OrderOpenTime>2025-12-02T06:27:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>41</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #42</VerbalDescription>
-    <Latitude>31.7815</Latitude>
-    <Longitude>35.2176</Longitude>
+    <Latitude>31.766509</Latitude>
+    <Longitude>35.225938</Longitude>
     <CustomerFullName>Customer 42</CustomerFullName>
-    <CustomerMobile>052-8849241</CustomerMobile>
-    <Volume>0.971</Volume>
-    <Weight>5.45</Weight>
-    <Fragile>true</Fragile>
-    <Height>9.18</Height>
-    <Width>44.44</Width>
-    <OrderOpenTime>2025-11-19T03:58:57</OrderOpenTime>
+    <CustomerMobile>050-9975605</CustomerMobile>
+    <Volume>2.966</Volume>
+    <Weight>5.32</Weight>
+    <Height>23</Height>
+    <Width>5.79</Width>
+    <OrderOpenTime>2025-11-26T12:08:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>42</Id>
     <OrderType>Pizza</OrderType>
     <VerbalDescription>Pizza order #43</VerbalDescription>
-    <Latitude>31.7847</Latitude>
-    <Longitude>35.2073</Longitude>
+    <Latitude>31.7815</Latitude>
+    <Longitude>35.2176</Longitude>
     <CustomerFullName>Customer 43</CustomerFullName>
-    <CustomerMobile>054-3143080</CustomerMobile>
-    <Volume>1.118</Volume>
-    <Weight>0.909</Weight>
-    <Height>40.77</Height>
-    <Width>53.72</Width>
-    <OrderOpenTime>2025-11-16T04:41:57</OrderOpenTime>
+    <CustomerMobile>054-5401589</CustomerMobile>
+    <Volume>1.685</Volume>
+    <Weight>6.16</Weight>
+    <Height>6.12</Height>
+    <Width>47.88</Width>
+    <OrderOpenTime>2025-11-25T10:24:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>43</Id>
-    <OrderType>Pizza</OrderType>
-    <VerbalDescription>Pizza order #44</VerbalDescription>
+    <OrderType>Falafel</OrderType>
+    <VerbalDescription>Falafel order #44</VerbalDescription>
     <Latitude>31.759164</Latitude>
     <Longitude>35.143</Longitude>
     <CustomerFullName>Customer 44</CustomerFullName>
-    <CustomerMobile>054-7533023</CustomerMobile>
-    <Volume>1.462</Volume>
-    <Weight>1.231</Weight>
-    <Fragile>true</Fragile>
-    <Height>28.69</Height>
-    <Width>46.19</Width>
-    <OrderOpenTime>2025-11-14T03:36:57</OrderOpenTime>
+    <CustomerMobile>050-9502033</CustomerMobile>
+    <Volume>2.921</Volume>
+    <Weight>1.246</Weight>
+    <Height>35.72</Height>
+    <Width>53.73</Width>
+    <OrderOpenTime>2025-12-02T11:07:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>44</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #45</VerbalDescription>
-    <Latitude>31.7815</Latitude>
-    <Longitude>35.2176</Longitude>
+    <Latitude>31.7847</Latitude>
+    <Longitude>35.2073</Longitude>
     <CustomerFullName>Customer 45</CustomerFullName>
-    <CustomerMobile>058-8501685</CustomerMobile>
-    <Volume>0.822</Volume>
-    <Weight>6.807</Weight>
-    <Height>11.53</Height>
-    <Width>29.41</Width>
-    <OrderOpenTime>2025-11-16T13:50:57</OrderOpenTime>
+    <CustomerMobile>058-8658974</CustomerMobile>
+    <Volume>1.469</Volume>
+    <Weight>7.682</Weight>
+    <Height>16.45</Height>
+    <Width>40.79</Width>
+    <OrderOpenTime>2025-11-23T13:54:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>45</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #46</VerbalDescription>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #46</VerbalDescription>
     <Latitude>31.757919</Latitude>
     <Longitude>35.218139</Longitude>
     <CustomerFullName>Customer 46</CustomerFullName>
-    <CustomerMobile>050-7989235</CustomerMobile>
-    <Volume>1.047</Volume>
-    <Weight>6.063</Weight>
-    <Height>16.63</Height>
-    <Width>27.9</Width>
-    <OrderOpenTime>2025-11-19T13:47:57</OrderOpenTime>
+    <CustomerMobile>052-5955760</CustomerMobile>
+    <Volume>2.479</Volume>
+    <Weight>4.77</Weight>
+    <Height>44.26</Height>
+    <Width>35.12</Width>
+    <OrderOpenTime>2025-11-22T04:12:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>46</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #47</VerbalDescription>
-    <Latitude>31.7847</Latitude>
-    <Longitude>35.2073</Longitude>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #47</VerbalDescription>
+    <Latitude>31.766509</Latitude>
+    <Longitude>35.225938</Longitude>
     <CustomerFullName>Customer 47</CustomerFullName>
-    <CustomerMobile>052-4986621</CustomerMobile>
-    <Volume>1.909</Volume>
-    <Weight>6.042</Weight>
-    <Height>43.38</Height>
-    <Width>25.91</Width>
-    <OrderOpenTime>2025-11-22T14:32:57</OrderOpenTime>
+    <CustomerMobile>058-2164707</CustomerMobile>
+    <Volume>0.378</Volume>
+    <Weight>8.229</Weight>
+    <Height>13.65</Height>
+    <Width>7.84</Width>
+    <OrderOpenTime>2025-11-21T10:47:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>47</Id>
-    <OrderType>Pizza</OrderType>
-    <VerbalDescription>Pizza order #48</VerbalDescription>
-    <Latitude>31.784637</Latitude>
-    <Longitude>35.215046</Longitude>
+    <OrderType>Falafel</OrderType>
+    <VerbalDescription>Falafel order #48</VerbalDescription>
+    <Latitude>31.759164</Latitude>
+    <Longitude>35.143</Longitude>
     <CustomerFullName>Customer 48</CustomerFullName>
-    <CustomerMobile>052-7836996</CustomerMobile>
-    <Volume>1.83</Volume>
-    <Weight>6.299</Weight>
-    <Height>47.71</Height>
-    <Width>54.87</Width>
-    <OrderOpenTime>2025-11-19T10:48:57</OrderOpenTime>
+    <CustomerMobile>052-7835702</CustomerMobile>
+    <Volume>1.657</Volume>
+    <Weight>4.003</Weight>
+    <Height>40.34</Height>
+    <Width>6.63</Width>
+    <OrderOpenTime>2025-11-26T02:36:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>48</Id>
     <OrderType>Falafel</OrderType>
     <VerbalDescription>Falafel order #49</VerbalDescription>
-    <Latitude>31.766509</Latitude>
-    <Longitude>35.225938</Longitude>
+    <Latitude>31.759164</Latitude>
+    <Longitude>35.143</Longitude>
     <CustomerFullName>Customer 49</CustomerFullName>
-    <CustomerMobile>050-6388371</CustomerMobile>
-    <Volume>0.261</Volume>
-    <Weight>9.012</Weight>
-    <Height>47.93</Height>
-    <Width>25.5</Width>
-    <OrderOpenTime>2025-11-20T11:31:57</OrderOpenTime>
+    <CustomerMobile>052-4422346</CustomerMobile>
+    <Volume>1.095</Volume>
+    <Weight>6.769</Weight>
+    <Height>35.02</Height>
+    <Width>12.59</Width>
+    <OrderOpenTime>2025-11-29T10:04:12</OrderOpenTime>
   </Order>
   <Order>
     <Id>49</Id>
-    <OrderType>Falafel</OrderType>
-    <VerbalDescription>Falafel order #50</VerbalDescription>
-    <Latitude>31.759164</Latitude>
-    <Longitude>35.143</Longitude>
+    <OrderType>Pizza</OrderType>
+    <VerbalDescription>Pizza order #50</VerbalDescription>
+    <Latitude>31.757919</Latitude>
+    <Longitude>35.218139</Longitude>
     <CustomerFullName>Customer 50</CustomerFullName>
-    <CustomerMobile>050-5733667</CustomerMobile>
-    <Volume>1.682</Volume>
-    <Weight>3.242</Weight>
-    <Height>29.46</Height>
-    <Width>16.52</Width>
-    <OrderOpenTime>2025-11-16T08:55:57</OrderOpenTime>
+    <CustomerMobile>050-3184164</CustomerMobile>
+    <Volume>2.721</Volume>
+    <Weight>6.422</Weight>
+    <Height>45.16</Height>
+    <Width>42.91</Width>
+    <OrderOpenTime>2025-12-03T13:26:12</OrderOpenTime>
   </Order>
 </Orders>

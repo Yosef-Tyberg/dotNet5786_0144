@@ -45,7 +45,8 @@ internal static class Program
 {
     // The DAL instance used by the test program. It is created once and reused.
     //static readonly IDal s_dal = new DalList(); // stage2
-    static readonly IDal s_dal = new DalXml(); //stage 3 
+    //static readonly IDal s_dal = new DalXml(); //stage 3 
+    static readonly IDal s_dal = Factory.Get; // stage4
     // Main entry point: repeatedly show main menu and handle user's top-level choice.
     private static void Main()
     {
@@ -84,7 +85,7 @@ internal static class Program
                     // Initialize (populate) the data source using an Initialization helper.
                     try
                     {
-                        Initialization.Do(s_dal);
+                        Initialization.Do();
                         Console.WriteLine("Initialization complete.");
                     }
                     catch (Exception ex)
