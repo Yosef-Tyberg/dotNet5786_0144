@@ -1,8 +1,10 @@
+using BL.Helpers;
+
 namespace BO;
 
 /// <summary>
 /// Business layer Order entity representing a customer order in the delivery system.
-/// Contains all properties from the data layer Order entity plus calculated properties.
+/// Contains data properties, some of which are populated by the Business Logic layer.
 /// </summary>
 public class Order
 {
@@ -72,26 +74,19 @@ public class Order
     public DateTime OrderOpenTime { get; set; }
 
     /// <summary>
-    /// Time elapsed since the order was opened until now.
+    /// Time elapsed since the order was opened. Set by the BL.
     /// </summary>
-    public TimeSpan TimeOpenedDuration
-    {
-        get => DateTime.Now - OrderOpenTime;
-    }
+    public TimeSpan TimeOpenedDuration { get; set; }
 
     /// <summary>
-    /// Package density (weight/volume ratio) in kg per cubic unit.
-    /// Calculated from Weight and Volume.
+    /// Package density (weight/volume ratio). Set by the BL.
     /// </summary>
-    public double PackageDensity
-    {
-        get => Volume > 0 ? Weight / Volume : 0;
-    }
+    public double PackageDensity { get; set; }
 
     /// <summary>
     /// Returns a string representation of the Order entity.
     /// </summary>
-    public override string ToString() => BL.Helpers.Tools.ToStringProperty(this);
+    public override string ToString() => this.ToStringProperty();
 }
 
 /// <summary>

@@ -1,8 +1,10 @@
+using BL.Helpers;
+
 namespace BO;
 
 /// <summary>
 /// Business layer Courier entity representing a courier in the delivery system.
-/// Contains all properties from the data layer Courier entity plus calculated properties.
+/// Contains data properties, some of which are populated by the Business Logic layer.
 /// </summary>
 public class Courier
 {
@@ -52,27 +54,19 @@ public class Courier
     public double? PersonalMaxDeliveryDistance { get; set; }
 
     /// <summary>
-    /// Duration the courier has been employed at the company.
-    /// Calculated from EmploymentStartTime to the current date.
+    /// Duration the courier has been employed. Set by the BL.
     /// </summary>
-    public TimeSpan EmploymentDuration
-    {
-        get => DateTime.Now - EmploymentStartTime;
-    }
+    public TimeSpan EmploymentDuration { get; set; }
 
     /// <summary>
-    /// Years the courier has been employed at the company.
-    /// Calculated from EmploymentStartTime to the current date.
+    /// Years the courier has been employed. Set by the BL.
     /// </summary>
-    public double YearsEmployed
-    {
-        get => EmploymentDuration.TotalDays / 365.25;
-    }
+    public double YearsEmployed { get; set; }
 
     /// <summary>
     /// Returns a string representation of the Courier entity.
     /// </summary>
-    public override string ToString() => BL.Helpers.Tools.ToStringProperty(this);
+    public override string ToString() => this.ToStringProperty();
 }
 
 /// <summary>
