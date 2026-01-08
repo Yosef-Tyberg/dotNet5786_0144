@@ -17,8 +17,7 @@ internal sealed class Bl : IBl
     /// <inheritdoc />
     public IDelivery Delivery { get; } = new DeliveryImplementation();
 
-    /// <inheritdoc />
-    public IDeliveryTracking DeliveryTracking { get; } = new DeliveryTrackingImplementation();
+
 
     /// <inheritdoc />
     public IAdmin Admin { get; } = new AdminImplementation();

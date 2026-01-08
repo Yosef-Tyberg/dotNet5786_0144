@@ -21,10 +21,6 @@ public interface IBl
     /// </summary>
     IDelivery Delivery { get; }
 
-    /// <summary>
-    /// Gets the interface for retrieving real-time tracking information for deliveries.
-    /// </summary>
-    IDeliveryTracking DeliveryTracking { get; }
 
     /// <summary>
     /// Gets the interface for Admin activities.

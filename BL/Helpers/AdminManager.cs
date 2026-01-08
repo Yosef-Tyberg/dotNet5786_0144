@@ -192,6 +192,7 @@ internal static class AdminManager //stage 4
     /// The flag that signs whether simulator is running
     /// 
     private static volatile bool s_stop = false;
+    /*
 
     [MethodImpl(MethodImplOptions.Synchronized)] //stage 7                                                 
     public static void ThrowOnSimulatorIsRunning()

@@ -190,4 +190,10 @@ internal static class CourierManager
             throw Tools.ConvertDalException(ex);
         }
     }
+
+
+    public static void PeriodicCouriersUpdate(DateTime oldClock, DateTime newClock)
+    {
+        // The logic for this method is currently on hold per user request.
+    }
 }

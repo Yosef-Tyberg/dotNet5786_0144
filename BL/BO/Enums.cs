@@ -72,31 +72,6 @@ public enum OrderTypes
     Falafel
 }
 
-/// <summary>
-/// Represents the different stages of an active delivery.
-/// </summary>
-public enum DeliveryStatus
-{
-    /// <summary>
-    /// The order has been created but not yet assigned to a courier.
-    /// </summary>
-    Created,
-    
-    /// <summary>
-    /// The order has been assigned to a courier.
-    /// </summary>
-    Assigned,
-
-    /// <summary>
-    /// The courier has picked up the package.
-    /// </summary>
-    PickedUp,
-
-    /// <summary>
-    /// The courier has successfully delivered the package.
-    /// </summary>
-    Delivered
-}
 
 /// <summary>
 /// Represents the scheduling status of a delivery.
