@@ -23,6 +23,11 @@ public interface IBl
 
 
     /// <summary>
+    /// Gets the interface for tracking Orders.
+    /// </summary>
+    IOrderTracking OrderTracking { get; }
+
+    /// <summary>
     /// Gets the interface for Admin activities.
     /// </summary>
     IAdmin Admin { get; }
