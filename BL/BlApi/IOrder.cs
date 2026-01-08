@@ -27,14 +27,14 @@ public interface IOrder
     /// </summary>
     /// <param name="orderId">The ID of the order to update.</param>
     /// <param name="updatedOrder">A BO.Order object with the new details.</param>
-    void Update(int orderId, BO.Order updatedOrder);
+    void Update(BO.Order updatedOrder);
     
     /// <summary>
     /// Adds a new order to the system.
     /// </summary>
     /// <param name="newOrder">The BO.Order object for the new order.</param>
     /// <returns>The ID of the newly created order.</returns>
-    int Create(BO.Order newOrder);
+    void Create(BO.Order newOrder);
 
     #endregion
 

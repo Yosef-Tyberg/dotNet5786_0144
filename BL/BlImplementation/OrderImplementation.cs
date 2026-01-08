@@ -22,10 +22,10 @@ internal sealed class OrderImplementation : IOrder
     public BO.Order Read(int orderId) => OrderManager.Read(orderId);
 
     /// <inheritdoc />
-    public void Update(int orderId, BO.Order updatedOrder) => OrderManager.Update(orderId, updatedOrder);
+    public void Update(BO.Order updatedOrder) => OrderManager.Update(updatedOrder);
 
     /// <inheritdoc />
-    public int Create(BO.Order newOrder) => OrderManager.Create(newOrder);
+    public void Create(BO.Order newOrder) => OrderManager.Create(newOrder);
 
     /// <inheritdoc />
     public IEnumerable<BO.OrderInList> GetAvailableOrders(int courierId) =>
@@ -33,4 +33,7 @@ internal sealed class OrderImplementation : IOrder
 
     /// <inheritdoc />
     public void TakeOrder(int orderId, int courierId) => OrderManager.TakeOrder(orderId, courierId);
+    
+    /// <inheritdoc />
+    public void Delete(int orderId) => OrderManager.Delete(orderId);
 }

@@ -79,7 +79,7 @@ internal static class OrderManager
         }
         catch (Exception ex)
         {
-            throw Tools.ConvertDalException(ex, "Convert BO Order to DO Order");
+            throw Tools.ConvertDalException(ex);
         }
     }
 
@@ -138,7 +138,7 @@ internal static class OrderManager
         }
         catch (Exception ex)
         {
-            throw Tools.ConvertDalException(ex, "Convert DO Order to BO Order");
+            throw Tools.ConvertDalException(ex);
         }
     }
 
@@ -164,7 +164,7 @@ internal static class OrderManager
         }
         catch (Exception ex)
         {
-            throw Tools.ConvertDalException(ex, "Convert BO Order to OrderInList");
+            throw Tools.ConvertDalException(ex);
         }
     }
     
@@ -172,7 +172,7 @@ internal static class OrderManager
     /// Retrieves all orders from the data layer and converts them to a list of BO Orders.
     /// </summary>
     /// <param name="filter">An optional filter to apply to the orders.</param>
-    /// <returns>An IEnumerable of BO.OrderInList.</returns>
+    /// <returns>An IEnumerable of BO.Order.</returns>
     public static IEnumerable<BO.Order> ReadAll(Func<DO.Order, bool>? filter = null)
     {
         try
@@ -206,13 +206,12 @@ internal static class OrderManager
     /// Creates a new order.
     /// </summary>
     /// <param name="newOrder">The BO.Order object for the new order.</param>
-    /// <returns>The ID of the newly created order.</returns>
-    public static int Create(BO.Order newOrder)
+    public static void Create(BO.Order newOrder)
     {
         OrderValidation(newOrder);
         try
         {
-            return s_dal.Order.Create(ConvertBoToDo(newOrder));
+            s_dal.Order.Create(ConvertBoToDo(newOrder));
         }
         catch (Exception ex)
         {
@@ -223,18 +222,33 @@ internal static class OrderManager
     /// <summary>
     /// Updates an existing order.
     /// </summary>
-    /// <param name="orderId">The ID of the order to update.</param>
     /// <param name="updatedOrder">A BO.Order object with the new details.</param>
-    public static void Update(int orderId, BO.Order updatedOrder)
+    public static void Update(BO.Order updatedOrder)
     {
         OrderValidation(updatedOrder);
         try
         {
             // Verify that the order has not been assigned to a courier
-            if (DeliveryManager.IsOrderTaken(orderId))
-                throw new BO.BlCannotUpdateException(
-                    $"Order ID '{orderId}' cannot be updated as it is already assigned to a courier.");
-            s_dal.Order.Update(orderId, ConvertBoToDo(updatedOrder));
+            if (DeliveryManager.IsOrderTaken(updatedOrder.Id))
+                throw new BO.BlOrderAlreadyAssignedException(
+                    $"Order ID '{updatedOrder.Id}' cannot be updated as it is already assigned to a courier.");
+            s_dal.Order.Update(ConvertBoToDo(updatedOrder));
+        }
+        catch (Exception ex)
+        {
+            throw Tools.ConvertDalException(ex);
+        }
+    }
+    
+    /// <summary>
+    /// Deletes an order by its ID.
+    /// </summary>
+    /// <param name="orderId">The ID of the order to delete.</param>
+    public static void Delete(int orderId)
+    {
+        try
+        {
+            s_dal.Order.Delete(orderId);
         }
         catch (Exception ex)
         {
@@ -246,13 +260,13 @@ internal static class OrderManager
     /// Retrieves a list of orders available for pickup, tailored to the courier's capabilities.
     /// </summary>
     /// <param name="courierId">The ID of the courier looking for orders.</param>
-    /// <returns>An IEnumerable of BO.OrderInList that the courier can deliver.</returns>
+    /// <returns>An IEnumerable of BO.Order that the courier can deliver.</returns>
     public static IEnumerable<BO.Order> GetAvailableOrders(int courierId)
     {
         try
         {
             // The courier must exist to get available orders.
-            BO.Courier boCourier = CourierManager.Read(courierId);
+            BO.Courier boCourier = CourierManager.ReadCourier(courierId);
 
             return ReadAll(order => !DeliveryManager.IsOrderTaken(order.Id));
         }
@@ -275,7 +289,7 @@ internal static class OrderManager
             // Verify that the order exists and is not already taken
             Read(orderId);
             if (DeliveryManager.IsOrderTaken(orderId))
-                throw new BO.BlCannotUpdateException(
+                throw new BO.BlOrderAlreadyAssignedException(
                     $"Order ID '{orderId}' is already assigned and cannot be taken again.");
             
             // Create a new delivery
