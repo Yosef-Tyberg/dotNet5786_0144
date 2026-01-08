@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BL.Helpers;
+namespace Helpers;
 
 /// <summary>
 /// Manager class for Order entity operations, providing conversion methods

@@ -200,6 +200,7 @@ internal static class AdminManager //stage 4
             throw new BO.BLTemporaryNotAvailableException("Cannot perform the operation since Simulator is running");
     }
 
+    /*
     [MethodImpl(MethodImplOptions.Synchronized)] //stage 7                                                 
     internal static void Start(int interval)
     {
@@ -211,7 +212,7 @@ internal static class AdminManager //stage 4
             s_thread.Start();
         }
     }
-
+    */
     [MethodImpl(MethodImplOptions.Synchronized)] //stage 7                                                 
     internal static void Stop()
     {
@@ -226,7 +227,7 @@ internal static class AdminManager //stage 4
 
     private static Task? _simulateTask = null;
 
-    private static void clockRunner()
+    /*private static void clockRunner()
     {
         while (!s_stop)
         {
@@ -247,6 +248,6 @@ internal static class AdminManager //stage 4
             catch (ThreadInterruptedException) { }
         }
     }
-
+    */
     #endregion Stage 7 base
 }

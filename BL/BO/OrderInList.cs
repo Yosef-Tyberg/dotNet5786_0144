@@ -29,5 +29,5 @@ public class OrderInList
     /// <summary>
     /// Returns a string representation of the OrderInList entity.
     /// </summary>
-    public override string ToString() => BL.Helpers.Tools.ToStringProperty(this);
+    public override string ToString() => Helpers.Tools.ToStringProperty(this);
 }

@@ -1,4 +1,3 @@
-using BL.Helpers;
 
 namespace BO;
 
@@ -66,6 +65,6 @@ public class Courier
     /// <summary>
     /// Returns a string representation of the Courier entity.
     /// </summary>
-    public override string ToString() => this.ToStringProperty();
+    public override string ToString() => Helpers.Tools.ToStringProperty(this);
 }
 

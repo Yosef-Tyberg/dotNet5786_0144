@@ -1,4 +1,4 @@
-using BL.Helpers;
+
 
 namespace BO;
 
@@ -25,5 +25,5 @@ public class ProgressUpdate
     /// <summary>
     /// Returns a string representation of the ProgressUpdate.
     /// </summary>
-    public override string ToString() => this.ToStringProperty();
+    public override string ToString() => Helpers.Tools.ToStringProperty(this);
 }

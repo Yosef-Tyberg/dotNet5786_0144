@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 
-namespace BL.Helpers;
+namespace Helpers;
 
 /// <summary>
 /// Manager class for Courier entity operations, providing conversion methods
@@ -132,7 +132,7 @@ internal static class CourierManager
         }
         catch (Exception ex)
         {
-            throw Tools.ConvertDalException(ex, "Convert BO Courier to DO Courier");
+            throw Tools.ConvertDalException(ex);
         }
     }
 
@@ -161,7 +161,7 @@ internal static class CourierManager
         }
         catch (Exception ex)
         {
-            throw Tools.ConvertDalException(ex, "Convert DO Courier to BO Courier");
+            throw Tools.ConvertDalException(ex);
         }
     }
 
@@ -187,7 +187,7 @@ internal static class CourierManager
         }
         catch (Exception ex)
         {
-            throw Tools.ConvertDalException(ex, "Convert BO Courier to CourierInList");
+            throw Tools.ConvertDalException(ex);
         }
     }
 }

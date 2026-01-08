@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace BL.Helpers;
+namespace Helpers;
 
 /// <summary>
 /// Provides helper methods for delivery tracking logic.

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using BO;
 using DO;
 
-namespace BL.Helpers;
+namespace Helpers;
 
 /// <summary>
 /// Utility helper methods for the Business Layer.
@@ -24,14 +24,14 @@ internal static class Tools
     /// <param name="dalException">The DAL exception to convert.</param>
     /// <param name="operationName">Description of the operation for error messaging.</param>
     /// <returns>An appropriate BO exception.</returns>
-    internal static Exception ConvertDalException(Exception dalException, string operationName)
+    internal static Exception ConvertDalException(Exception dalException)
     {
         return dalException switch
         {
-            DalDoesNotExistException ex => new BlDoesNotExistException($"{operationName}: {ex.Message}", ex),
-            DalAlreadyExistsException ex => new BlAlreadyExistsException($"{operationName}: {ex.Message}", ex),
-            DalInvalidInputException ex => new BlInvalidInputException($"{operationName}: {ex.Message}", ex),
-            _ => new BlInvalidInputException($"{operationName} failed: {dalException.Message}", dalException)
+            DalDoesNotExistException ex => new BlDoesNotExistException($"{ex.Message}", ex),
+            DalAlreadyExistsException ex => new BlAlreadyExistsException($"{ex.Message}", ex),
+            DalInvalidInputException ex => new BlInvalidInputException($"{ex.Message}", ex),
+            _ => new BlInvalidInputException($"{dalException.Message}", dalException)
         };
     }
 

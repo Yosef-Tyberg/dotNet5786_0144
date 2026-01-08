@@ -1,4 +1,3 @@
-using BL.Helpers;
 
 namespace BO;
 
@@ -53,88 +52,35 @@ public class Delivery
     /// </summary>
     public TimeSpan DeliveryDuration { get; set; }
 
-        /// <summary>
+    /// <summary>
+    /// Average speed during the delivery (in km/h). Set by the BL.
+    /// </summary>
 
-        /// Average speed during the delivery (in km/h). Set by the BL.
-
-        /// </summary>
-
-        public double AverageSpeed { get; set; }
+    public double AverageSpeed { get; set; }
 
     
-
-            /// <summary>
-
-    
-
-            /// The schedule status of the delivery.
+    /// <summary>
+    /// The schedule status of the delivery.
+    /// </summary>
+    public ScheduleStatus ScheduleStatus { get; set; }
 
     
+    /// <summary>
+    /// An estimated delivery date and time.
+    /// </summary>
+    public DateTime ExpectedDeliveryTime { get; set; }
 
-            /// </summary>
+    /// <summary>
+    /// The latest allowable delivery date and time.
+    /// </summary>
+    public DateTime MaximumDeliveryTime { get; set; }    
 
-    
+    /// <summary>   
+    /// Returns a string representation of the Delivery entity.  
+    /// </summary>
+    public override string ToString() => Helpers.Tools.ToStringProperty(this);
 
-            public ScheduleStatus ScheduleStatus { get; set; }
-
-    
-            /// <summary>
-
-    
-
-            /// An estimated delivery date and time.
-
-    
-
-            /// </summary>
-
-    
-
-            public DateTime ExpectedDeliveryTime { get; set; }
-
-    
-
-        
-
-    
-
-            /// <summary>
-
-    
-
-            /// The latest allowable delivery date and time.
-
-    
-
-            /// </summary>
-
-    
-
-            public DateTime MaximumDeliveryTime { get; set; }
-
-    
-
-        
-
-    
-
-            /// <summary>
-
-    
-
-            /// Returns a string representation of the Delivery entity.
-
-    
-
-            /// </summary>
-
-    
-
-            public override string ToString() => this.ToStringProperty();
-
-    
-
-        }
+}
 
     
 

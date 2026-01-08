@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BL.Helpers;
+namespace Helpers;
 
 /// <summary>
 /// Manager class for Delivery entity operations, providing conversion methods
@@ -56,7 +56,7 @@ internal static class DeliveryManager
 
             return boDelivery;
         }
-        catch (DO.DoesNotExistException ex)
+        catch (DO.DalDoesNotExistException ex)
         {
             throw new BO.BlDoesNotExistException($"Delivery with ID {deliveryId} not found.", ex);
         }
@@ -121,7 +121,7 @@ internal static class DeliveryManager
         }
         catch (Exception ex)
         {
-            throw Tools.ConvertDalException(ex, "Convert BO Delivery to DO Delivery");
+            throw Tools.ConvertDalException(ex);
         }
     }
 
@@ -149,7 +149,7 @@ internal static class DeliveryManager
         }
         catch (Exception ex)
         {
-            throw Tools.ConvertDalException(ex, "Convert DO Delivery to BO Delivery");
+            throw Tools.ConvertDalException(ex);
         }
     }
 
@@ -176,7 +176,7 @@ internal static class DeliveryManager
         }
         catch (Exception ex)
         {
-            throw Tools.ConvertDalException(ex, "Convert BO Delivery to DeliveryInList");
+            throw Tools.ConvertDalException(ex);
         }
     }
     
@@ -197,7 +197,7 @@ internal static class DeliveryManager
     /// <param name="courierId">The ID of the courier.</param>
     public static void Create(int orderId, int courierId)
     {
-        BO.Courier courier = CourierManager.Read(courierId);
+        BO.Courier courier = CourierManager.ReadCourier(courierId);
 
         // Determine the delivery type based on the courier's vehicle
         DO.DeliveryTypes deliveryType = (DO.DeliveryTypes)courier.DeliveryType;
