@@ -65,6 +65,50 @@ internal static class OrderTrackingManager
             .Select(d => DeliveryManager.ConvertBoToDeliveryInList(DeliveryManager.ConvertDoToBo(d)))
             .ToList();
 
+        // Calculate Timing Properties
+        var config = AdminManager.GetConfig();
+        DateTime? maxDeliveryTime = doOrder.OrderOpenTime?.Add(config.MaxDeliveryTimeSpan);
+        DateTime? expectedDeliveryTime = null;
+
+        if (status == BO.OrderStatus.InProgress && activeDelivery != null && assignedCourier != null)
+        {
+            double distance;
+            switch (assignedCourier.DeliveryType)
+            {
+                case BO.DeliveryTypes.Car:
+                case BO.DeliveryTypes.Motorcycle:
+                    distance = Helpers.Tools.GetDrivingDistance(config.Latitude, config.Longitude, doOrder.Latitude, doOrder.Longitude);
+                    break;
+                case BO.DeliveryTypes.Bicycle:
+                case BO.DeliveryTypes.Foot:
+                    distance = Helpers.Tools.GetWalkingDistance(config.Latitude, config.Longitude, doOrder.Latitude, doOrder.Longitude);
+                    break;
+                default:
+                    distance = Helpers.Tools.CalculateDistance(config.Latitude, config.Longitude, doOrder.Latitude, doOrder.Longitude);
+                    break;
+            }
+            
+            double speed = assignedCourier.DeliveryType switch
+            {
+                BO.DeliveryTypes.Car => config.AvgCarSpeedKmh,
+                BO.DeliveryTypes.Motorcycle => config.AvgMotorcycleSpeedKmh,
+                BO.DeliveryTypes.Bicycle => config.AvgBicycleSpeedKmh,
+                BO.DeliveryTypes.Foot => config.AvgWalkingSpeedKmh,
+                _ => config.AvgCarSpeedKmh
+            };
+
+            if (speed > 0)
+            {
+                double travelHours = distance / speed;
+                // If the delivery hasn't been picked up yet (StartTime in future), calculate from Now.
+                // Otherwise, calculate from the actual pickup time.
+                DateTime baseTime = (activeDelivery.DeliveryStartTime > AdminManager.Now) 
+                    ? AdminManager.Now 
+                    : (activeDelivery.DeliveryStartTime ?? AdminManager.Now);
+                expectedDeliveryTime = baseTime.AddHours(travelHours);
+            }
+        }
+
         return new BO.OrderTracking
         {
             Id = doOrder.Id,
@@ -73,7 +117,10 @@ internal static class OrderTrackingManager
             DeliveryHistory = history,
             VerbalDescription = doOrder.VerbalDescription,
             CustomerFullName = doOrder.CustomerFullName,
-            OrderOpenTime = doOrder.OrderOpenTime
+            OrderOpenTime = doOrder.OrderOpenTime,
+            ExpectedDeliveryTime = expectedDeliveryTime,
+            MaxDeliveryTime = maxDeliveryTime
         };
     }
+
 }

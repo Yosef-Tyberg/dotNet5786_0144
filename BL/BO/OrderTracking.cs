@@ -41,6 +41,16 @@ public class OrderTracking
     public DateTime? OrderOpenTime { get; set; }
 
     /// <summary>
+    /// The estimated time of delivery based on distance and courier speed.
+    /// </summary>
+    public DateTime? ExpectedDeliveryTime { get; set; }
+
+    /// <summary>
+    /// The maximum allowable time for delivery based on the order creation time and company policy.
+    /// </summary>
+    public DateTime? MaxDeliveryTime { get; set; }
+
+    /// <summary>
     /// Returns a string representation of the OrderTracking entity.
     /// </summary>
     public override string ToString() => Helpers.Tools.ToStringProperty(this);

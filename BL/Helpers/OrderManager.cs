@@ -49,6 +49,11 @@ internal static class OrderManager
 
         if (boOrder.Width <= 0)
             throw new BO.BlInvalidInputException($"Width {boOrder.Width} must be positive.");
+
+        var config = AdminManager.GetConfig();
+        var distance = Tools.GetAerialDistance((double)config.Latitude, (double)config.Longitude, boOrder.Latitude, boOrder.Longitude);
+        if (distance > config.MaxGeneralDeliveryDistanceKm)
+            throw new BO.BlInvalidInputException($"Order location is too far from the company's location. a maximum of {config.MaxGeneralDeliveryDistanceKm}km is allowed");
     }
 
     /// <summary>

@@ -92,8 +92,26 @@ internal static class DeliveryManager
         var delivery = s_dal.Delivery.ReadAll().FirstOrDefault(d => d.CourierId == courierId && d.DeliveryStartTime < AdminManager.Now && d.DeliveryEndTime == null);
         if(delivery == null)
             throw new BO.BlCourierHasNoActiveDeliveryException("Courier has no picked-up delivery to deliver.");
-        
-        delivery = delivery with { DeliveryEndTime = AdminManager.Now, DeliveryEndType = DO.DeliveryEndTypes.Delivered };
+
+        var order = s_dal.Order.Read(delivery.OrderId);
+        var config = AdminManager.GetConfig();
+        double distance;
+        switch ((BO.DeliveryTypes)delivery.DeliveryType)
+        {
+            case BO.DeliveryTypes.Car:
+            case BO.DeliveryTypes.Motorcycle:
+                distance = Tools.GetDrivingDistance(config.Latitude, config.Longitude, order.Latitude, order.Longitude);
+                break;
+            case BO.DeliveryTypes.Bicycle:
+            case BO.DeliveryTypes.Foot:
+                distance = Tools.GetWalkingDistance(config.Latitude, config.Longitude, order.Latitude, order.Longitude);
+                break;
+            default:
+                distance = Tools.CalculateDistance(config.Latitude, config.Longitude, order.Latitude, order.Longitude);
+                break;
+        }
+
+        delivery = delivery with { DeliveryEndTime = AdminManager.Now, DeliveryEndType = DO.DeliveryEndTypes.Delivered, ActualDistance = distance };
         
         s_dal.Delivery.Update(delivery);
     }
@@ -198,6 +216,15 @@ internal static class DeliveryManager
     public static void Create(int orderId, int courierId)
     {
         BO.Courier courier = CourierManager.ReadCourier(courierId);
+
+        if (courier.PersonalMaximumDistance.HasValue)
+        {
+            var order = s_dal.Order.Read(orderId);
+            var config = AdminManager.GetConfig();
+            var distance = Tools.CalculateDistance(config.Latitude, config.Longitude, order.Latitude, order.Longitude);
+            if (distance > courier.PersonalMaximumDistance)
+                throw new BO.BlInvalidInputException($"Order location is too far for this courier. a maximum of {courier.PersonalMaximumDistance}km is allowed");
+        }
 
         // Determine the delivery type based on the courier's vehicle
         DO.DeliveryTypes deliveryType = (DO.DeliveryTypes)courier.DeliveryType;

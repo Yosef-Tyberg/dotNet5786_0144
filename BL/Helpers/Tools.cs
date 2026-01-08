@@ -7,6 +7,10 @@ using System.Text;
 using System.Threading.Tasks;
 using BO;
 using DO;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 
 namespace Helpers;
 
@@ -16,6 +20,8 @@ namespace Helpers;
 /// </summary>
 internal static class Tools
 {
+    private static readonly HttpClient s_httpClient = new();
+
     #region Exception Conversion Methods
 
     /// <summary>
@@ -142,7 +148,7 @@ internal static class Tools
                              {
                                  null => "null",
                                  string str => $"\"{str}\"",
-                                 _ when item.GetType().Namespace == "BO" 
+                                 _ when item.GetType().Namespace == "BO"
                                      => $"{item.GetType().Name}(Id={GetIdProperty(item)})",
                                  _ => item.ToString() ?? "null"
                              };
@@ -196,7 +202,7 @@ internal static class Tools
     /// <param name="lat2">Latitude of the second point.</param>
     /// <param name="lon2">Longitude of the second point.</param>
     /// <returns>The distance in kilometers.</returns>
-    public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+    public static double GetAerialDistance(double lat1, double lon1, double lat2, double lon2)
     {
         const double R = 6371; // Earth's radius in kilometers
         var dLat = ToRadians(lat2 - lat1);
@@ -211,6 +217,113 @@ internal static class Tools
     private static double ToRadians(double angle)
     {
         return Math.PI * angle / 180.0;
+    }
+
+    /// <summary>
+    /// gets the coordinate of a given address
+    /// </summary>
+    /// <param name="address"></param>
+    /// <returns>a tuple of two doubles, the first is that latitude and the second is the logitude</returns>
+    /// <exception cref="BlInvalidInputException"></exception>
+    public static (double, double) GetCoordinates(string address)
+    {
+        try
+        {
+            // The Nominatim API endpoint for searching a structured query
+            string url = $"https://nominatim.openstreetmap.org/search?q={Uri.EscapeDataString(address)}&format=json&limit=1";
+            s_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("My-C#-App");
+            string json = s_httpClient.GetStringAsync(url).Result;
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            var results = JsonSerializer.Deserialize<List<NominatimResult>>(json, options);
+
+            if (results?.Count > 0)
+            {
+                var bestResult = results[0];
+                return (double.Parse(bestResult.Lat), double.Parse(bestResult.Lon));
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new BlInvalidInputException("Error getting coordinates", ex);
+        }
+        throw new BlInvalidInputException("address not found");
+    }
+
+    /// <summary>
+    /// gets the driving distance between two locations
+    /// </summary>
+    /// <param name="lat1"></param>
+    /// <param name="lon1"></param>
+    /// <param name="lat2"></param>
+    /// <param name="lon2"></param>
+    /// <returns>the driving distance in km</returns>
+    /// <exception cref="BlInvalidInputException"></exception>
+    public static double GetDrivingDistance(double lat1, double lon1, double lat2, double lon2)
+    {
+        return GetRouteDistance(lat1, lon1, lat2, lon2, "driving");
+    }
+
+    /// <summary>
+    /// gets the walking distance between two locations
+    /// </summary>
+    /// <param name="lat1"></param>
+    /// <param name="lon1"></param>
+    /// <param name="lat2"></param>
+    /// <param name="lon2"></param>
+    /// <returns>the walking distance in km</returns>
+    /// <exception cref="BlInvalidInputException"></exception>
+    public static double GetWalkingDistance(double lat1, double lon1, double lat2, double lon2)
+    {
+        return GetRouteDistance(lat1, lon1, lat2, lon2, "foot");
+    }
+
+    private static double GetRouteDistance(double lat1, double lon1, double lat2, double lon2, string profile)
+    {
+        try
+        {
+            string url = $"http://router.project-osrm.org/route/v1/{profile}/{lon1},{lat1};{lon2},{lat2}?overview=false";
+            s_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("My-C#-App");
+            string json = s_httpClient.GetStringAsync(url).Result;
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            var result = JsonSerializer.Deserialize<OsrmResponse>(json, options);
+
+            if (result?.Routes?.Count > 0)
+            {
+                return result.Routes[0].Distance / 1000; // Convert meters to kilometers
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new BlInvalidInputException("Error getting distance", ex);
+        }
+        throw new BlInvalidInputException("could not find a route");
+    }
+    #endregion
+
+    #region Helper Classes for JSON Deserialization
+
+    private class NominatimResult
+    {
+        public string Lat { get; set; } = string.Empty;
+        public string Lon { get; set; } = string.Empty;
+    }
+
+    private class OsrmResponse
+    {
+        public List<OsrmRoute> Routes { get; set; } = new();
+    }
+
+    private class OsrmRoute
+    {
+        public double Distance { get; set; }
     }
 
     #endregion
