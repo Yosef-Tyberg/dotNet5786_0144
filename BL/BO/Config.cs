@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BL.BO;
+namespace BO;
 
 public class Config
 {
-    public DateTime Clock { get; set; }
-
     /// <inheritdoc />
     public int AdminId { get; set; }
 

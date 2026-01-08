@@ -98,3 +98,49 @@ public enum DeliveryStatus
     Delivered
 }
 
+/// <summary>
+/// Represents the scheduling status of a delivery.
+/// </summary>
+public enum ScheduleStatus
+{
+    /// <summary>
+    /// An open or active order with enough time to deliver within the maximum delivery time window.
+    /// </summary>
+    OnTime,
+    /// <summary>
+    /// An open or active order with less than the risk time window, with time left before maximum delivery time.
+    /// </summary>
+    AtRisk,
+    /// <summary>
+    /// An open or active order exceeding the maximum delivery time, or closed after the maximum delivery time.
+    /// </summary>
+    Late
+}
+
+/// <summary>
+/// Represents the status of an order based on its latest delivery.
+/// </summary>
+public enum OrderStatus
+{
+    /// <summary>
+    /// Not assigned to any courier, and not yet closed.
+    /// </summary>
+    Open,
+    /// <summary>
+    /// Currently handled by a courier.
+    /// </summary>
+    InProgress,
+    /// <summary>
+    /// Order closed, customer received it, last delivery ended as "Delivered".
+    /// </summary>
+    Delivered,
+    /// <summary>
+    /// Order closed, last delivery ended as "Customer Refused".
+    /// </summary>
+    Refused,
+    /// <summary>
+    /// Order closed, last delivery ended as "Cancelled".
+    /// </summary>
+    Cancelled
+}
+

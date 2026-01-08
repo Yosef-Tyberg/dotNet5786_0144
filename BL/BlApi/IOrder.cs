@@ -12,14 +12,14 @@ public interface IOrder
     /// </summary>
     /// <param name="filter">Optional predicate to filter the orders.</param>
     /// <returns>An IEnumerable of BO.OrderInList.</returns>
-    IEnumerable<BO.OrderInList> GetOrderList(Func<BO.OrderInList, bool>? filter = null);
+    IEnumerable<BO.OrderInList> ReadAll(Func<BO.OrderInList, bool>? filter = null);
 
     /// <summary>
     /// Retrieves the full details of a specific order.
     /// </summary>
     /// <param name="orderId">The ID of the order to retrieve.</param>
     /// <returns>A BO.Order object.</returns>
-    BO.Order GetOrderDetails(int orderId);
+    BO.Order Read(int orderId);
 
     /// <summary>
     /// Updates the details of an existing order.
@@ -27,14 +27,14 @@ public interface IOrder
     /// </summary>
     /// <param name="orderId">The ID of the order to update.</param>
     /// <param name="updatedOrder">A BO.Order object with the new details.</param>
-    void UpdateOrder(int orderId, BO.Order updatedOrder);
+    void Update(int orderId, BO.Order updatedOrder);
     
     /// <summary>
     /// Adds a new order to the system.
     /// </summary>
     /// <param name="newOrder">The BO.Order object for the new order.</param>
     /// <returns>The ID of the newly created order.</returns>
-    int AddOrder(BO.Order newOrder);
+    int Create(BO.Order newOrder);
 
     #endregion
 

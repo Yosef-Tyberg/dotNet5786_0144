@@ -61,7 +61,7 @@ public class DeliveryTracking
     /// <summary>
     /// A historical log of all progress updates for this delivery.
     /// </summary>
-    public IEnumerable<BO.ProgressUpdate>? ProgressUpdates { get; set; }
+    public IEnumerable<ProgressUpdate>? ProgressUpdates { get; set; }
     
     /// <summary>
     /// Returns a string representation of the DeliveryTracking entity.

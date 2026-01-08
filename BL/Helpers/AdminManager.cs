@@ -34,16 +34,17 @@ internal static class AdminManager //stage 4
         //after each clock update
         //for example, Periodic students' updates:
         // - Go through all students to update properties that are affected by the clock update
-        // - (students become not active after 5 years etc.)
+        // - (couriers become not active after a certain time of inactivity etc.)
 
-        //TO_DO: //stage 4
-        StudentManager.PeriodicStudentsUpdates(oldClock, newClock); //stage 4. to be removed in stage 7 and replaced as below
-        //...
-
+        DeliveryManager.PeriodicDeliveriesUpdate(oldClock, newClock);
+        CourierManager.PeriodicCouriersUpdate(oldClock, newClock);
+        
         //TO_DO: //stage 7
         //if (_periodicTask is null || _periodicTask.IsCompleted) //stage 7
-        //    _periodicTask = Task.Run(() => StudentManager.PeriodicStudentsUpdates(oldClock, newClock));
-        //...
+        //    _periodicTask = Task.Run(() => {
+        //          DeliveryManager.PeriodicDeliveriesUpdate(oldClock, newClock);
+        //          CourierManager.PeriodicCouriersUpdate(oldClock, newClock);
+        //      });
 
         //Calling all the observers of clock update
         ClockUpdatedObservers?.Invoke(); //prepared for stage 5
@@ -56,10 +57,19 @@ internal static class AdminManager //stage 4
     internal static BO.Config GetConfig() //stage 4
     => new BO.Config()
     {
-        MaxRange = s_dal.Config.MaxRange
-        //TO_DO: //stage 4
-        //add an assignment for each configuration property
-        //...
+        AdminId = s_dal.Config.AdminId,
+        AdminPassword = s_dal.Config.AdminPassword,
+        AvgCarSpeedKmh = s_dal.Config.AvgCarSpeedKmh,
+        AvgMotorcycleSpeedKmh = s_dal.Config.AvgMotorcycleSpeedKmh,
+        AvgBicycleSpeedKmh = s_dal.Config.AvgBicycleSpeedKmh,
+        AvgWalkingSpeedKmh = s_dal.Config.AvgWalkingSpeedKmh,
+        MaxGeneralDeliveryDistanceKm = s_dal.Config.MaxGeneralDeliveryDistanceKm,
+        MaxDeliveryTimeSpan = s_dal.Config.MaxDeliveryTimeSpan,
+        RiskRange = s_dal.Config.RiskRange,
+        InactivityRange = s_dal.Config.InactivityRange,
+        CompanyFullAddress = s_dal.Config.CompanyFullAddress,
+        Latitude = s_dal.Config.Latitude,
+        Longitude = s_dal.Config.Longitude
     };
 
     /// <summary>
@@ -70,14 +80,71 @@ internal static class AdminManager //stage 4
     {
         bool configChanged = false; // stage 5
 
-        if (s_dal.Config.MaxRange != configuration.MaxRange) //stage 4
+        if (s_dal.Config.AdminId != configuration.AdminId)
         {
-            s_dal.Config.MaxRange = configuration.MaxRange;
+            s_dal.Config.AdminId = configuration.AdminId;
             configChanged = true;
         }
-        //TO_DO: //stage 4
-        //add a condition+assignment for each configuration property
-        //...
+        if (s_dal.Config.AdminPassword != configuration.AdminPassword)
+        {
+            s_dal.Config.AdminPassword = configuration.AdminPassword;
+            configChanged = true;
+        }
+        if (s_dal.Config.AvgCarSpeedKmh != configuration.AvgCarSpeedKmh)
+        {
+            s_dal.Config.AvgCarSpeedKmh = configuration.AvgCarSpeedKmh;
+            configChanged = true;
+        }
+        if (s_dal.Config.AvgMotorcycleSpeedKmh != configuration.AvgMotorcycleSpeedKmh)
+        {
+            s_dal.Config.AvgMotorcycleSpeedKmh = configuration.AvgMotorcycleSpeedKmh;
+            configChanged = true;
+        }
+        if (s_dal.Config.AvgBicycleSpeedKmh != configuration.AvgBicycleSpeedKmh)
+        {
+            s_dal.Config.AvgBicycleSpeedKmh = configuration.AvgBicycleSpeedKmh;
+            configChanged = true;
+        }
+        if (s_dal.Config.AvgWalkingSpeedKmh != configuration.AvgWalkingSpeedKmh)
+        {
+            s_dal.Config.AvgWalkingSpeedKmh = configuration.AvgWalkingSpeedKmh;
+            configChanged = true;
+        }
+        if (s_dal.Config.MaxGeneralDeliveryDistanceKm != configuration.MaxGeneralDeliveryDistanceKm)
+        {
+            s_dal.Config.MaxGeneralDeliveryDistanceKm = configuration.MaxGeneralDeliveryDistanceKm;
+            configChanged = true;
+        }
+        if (s_dal.Config.MaxDeliveryTimeSpan != configuration.MaxDeliveryTimeSpan)
+        {
+            s_dal.Config.MaxDeliveryTimeSpan = configuration.MaxDeliveryTimeSpan;
+            configChanged = true;
+        }
+        if (s_dal.Config.RiskRange != configuration.RiskRange)
+        {
+            s_dal.Config.RiskRange = configuration.RiskRange;
+            configChanged = true;
+        }
+        if (s_dal.Config.InactivityRange != configuration.InactivityRange)
+        {
+            s_dal.Config.InactivityRange = configuration.InactivityRange;
+            configChanged = true;
+        }
+        if (s_dal.Config.CompanyFullAddress != configuration.CompanyFullAddress)
+        {
+            s_dal.Config.CompanyFullAddress = configuration.CompanyFullAddress;
+            configChanged = true;
+        }
+        if (s_dal.Config.Latitude != configuration.Latitude)
+        {
+            s_dal.Config.Latitude = configuration.Latitude;
+            configChanged = true;
+        }
+        if (s_dal.Config.Longitude != configuration.Longitude)
+        {
+            s_dal.Config.Longitude = configuration.Longitude;
+            configChanged = true;
+        }
 
         //Calling all the observers of configuration update
         if (configChanged) // stage 5

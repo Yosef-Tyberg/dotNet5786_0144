@@ -14,6 +14,90 @@ internal static class DeliveryManager
 {
     private static DalApi.IDal s_dal = DalApi.Factory.Get;
 
+    public static IEnumerable<BO.DeliveryInList> ReadAllDeliveriesForList(Func<BO.DeliveryInList, bool>? filter = null)
+    {
+        var doDeliveries = s_dal.Delivery.ReadAll();
+        var boDeliveries = doDeliveries.Select(d => ConvertDoToBo(d));
+        var deliveryInList = boDeliveries.Select(ConvertBoToDeliveryInList);
+
+        return filter == null ? deliveryInList : deliveryInList.Where(filter);
+    }
+
+    public static BO.Delivery ReadDelivery(int deliveryId)
+    {
+        try
+        {
+            var doDelivery = s_dal.Delivery.Read(deliveryId);
+            var boDelivery = ConvertDoToBo(doDelivery);
+
+            //add business logic
+            if(boDelivery.DeliveryEndTime is not null)
+            {
+                boDelivery.DeliveryDuration = (TimeSpan)(boDelivery.DeliveryEndTime - boDelivery.DeliveryStartTime);
+                boDelivery.AverageSpeed = boDelivery.ActualDistance is not null ? (double)boDelivery.ActualDistance / boDelivery.DeliveryDuration.TotalHours : 0;
+            }
+            
+            var order = s_dal.Order.Read(boDelivery.OrderId);
+            var config = AdminManager.GetConfig();
+            var deliveryDeadline = order.OrderOpenTime + config.MaxDeliveryTimeSpan;
+
+            if ((boDelivery.DeliveryEndTime == null && AdminManager.Now > deliveryDeadline) || (boDelivery.DeliveryEndTime != null && boDelivery.DeliveryEndTime > deliveryDeadline))
+            {
+                boDelivery.ScheduleStatus = BO.ScheduleStatus.Late;
+            }
+            else if (boDelivery.DeliveryEndTime == null && (deliveryDeadline - AdminManager.Now) < config.RiskRange)
+            {
+                boDelivery.ScheduleStatus = BO.ScheduleStatus.AtRisk;
+            }
+            else
+            {
+                boDelivery.ScheduleStatus = BO.ScheduleStatus.OnTime;
+            }
+
+            return boDelivery;
+        }
+        catch (DO.DoesNotExistException ex)
+        {
+            throw new BO.BlDoesNotExistException($"Delivery with ID {deliveryId} not found.", ex);
+        }
+    }
+
+    public static BO.Delivery GetMyCurrentDelivery(int courierId)
+    {
+        // Find an active delivery for the courier (not yet delivered)
+        var delivery = s_dal.Delivery.ReadAll()
+            .FirstOrDefault(d => d.CourierId == courierId && d.DeliveryEndTime == null);
+
+        if (delivery == null)
+        {
+            return null; // No active delivery
+        }
+
+        return ReadDelivery(delivery.Id);
+    }
+    
+    public static void PickUp(int courierId)
+    {
+        var delivery = s_dal.Delivery.ReadAll().FirstOrDefault(d => d.CourierId == courierId && d.DeliveryStartTime > AdminManager.Now && d.DeliveryEndTime == null);
+        if(delivery == null)
+            throw new BO.BlCourierHasNoActiveDeliveryException("Courier has no scheduled delivery to pick up.");
+        
+        delivery = delivery with { DeliveryStartTime = AdminManager.Now };
+        
+        s_dal.Delivery.Update(delivery);
+    }
+
+    public static void Deliver(int courierId)
+    {
+        var delivery = s_dal.Delivery.ReadAll().FirstOrDefault(d => d.CourierId == courierId && d.DeliveryStartTime < AdminManager.Now && d.DeliveryEndTime == null);
+        if(delivery == null)
+            throw new BO.BlCourierHasNoActiveDeliveryException("Courier has no picked-up delivery to deliver.");
+        
+        delivery = delivery with { DeliveryEndTime = AdminManager.Now, DeliveryEndType = DO.DeliveryEndTypes.Delivered };
+        
+        s_dal.Delivery.Update(delivery);
+    }
+
     /// <summary>
     /// Converts a business layer Delivery entity to its data layer equivalent.
     /// </summary>
@@ -94,5 +178,47 @@ internal static class DeliveryManager
         {
             throw Tools.ConvertDalException(ex, "Convert BO Delivery to DeliveryInList");
         }
+    }
+    
+    /// <summary>
+    /// Checks if an order is already assigned to a delivery.
+    /// </summary>
+    /// <param name="orderId">The ID of the order to check.</param>
+    /// <returns>True if the order is taken, false otherwise.</returns>
+    public static bool IsOrderTaken(int orderId)
+    {
+        return s_dal.Delivery.ReadAll().Any(d => d.OrderId == orderId);
+    }
+    
+    /// <summary>
+    /// Creates a new delivery for a given order and courier.
+    /// </summary>
+    /// <param name="orderId">The ID of the order.</param>
+    /// <param name="courierId">The ID of the courier.</param>
+    public static void Create(int orderId, int courierId)
+    {
+        BO.Courier courier = CourierManager.Read(courierId);
+
+        // Determine the delivery type based on the courier's vehicle
+        DO.DeliveryTypes deliveryType = (DO.DeliveryTypes)courier.DeliveryType;
+        
+        var newDelivery = new DO.Delivery(
+            Id: 0, 
+            OrderId: orderId,
+            CourierId: courierId,
+            DeliveryType: deliveryType,
+            // The delivery starts in the future, when the courier decides to pick it up
+            DeliveryStartTime: AdminManager.Now.Add(AdminManager.GetConfig().MaxDeliveryTimeSpan),
+            ActualDistance: null,
+            DeliveryEndType: null,
+            DeliveryEndTime: null
+        );
+
+        s_dal.Delivery.Create(newDelivery);
+    }
+    
+    public static void PeriodicDeliveriesUpdate(DateTime oldClock, DateTime newClock)
+    {
+        // The logic for this method is currently on hold per user request.
     }
 }

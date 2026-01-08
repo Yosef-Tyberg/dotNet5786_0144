@@ -56,10 +56,33 @@ Every class in the `BO` folder must follow these constraints:
 - **Enums:** All BL-level enums must reside in `BO.Enums.cs`.
 - **Exceptions:** All BL-level custom exceptions must reside in `BO.Exceptions.cs`.
 - **Error Handling:**
+    - Any exception caught within the BL must be re-thrown as a custom `BO` exception (defined in `BO.Exceptions.cs`).
     - Wrap all DAL calls in `try/catch`.
-    - Catch specific `DO` exceptions and re-throw them as corresponding `BO` exceptions.
-    - **Requirement:** Assign the caught `DO` exception to the `InnerException` property of the new `BO` exception to preserve the stack trace.
+    - When catching a `DO` exception, re-throw it as its corresponding `BO` exception, nesting the original `DO` exception in the `InnerException` property. For all other caught exceptions, do not nest them.
+    - Use the dedicated `BO.InvalidNullInputException` for `null` arguments passed to public methods where `null` is not a valid value.
 
 ### 2.6. Helper Classes
 - **Generic Tools:** Any generic/template method must be added to `BL/Helpers/Tools.cs`.
 - **Specific Helpers:** Methods specific to an entity (e.g., mapping a Courier) go into `BL/Helpers/[Entity]Manager.cs`.
+
+### 2.7. System Clock Access
+- All access to the system clock from within the BL must go only through the `AdminManager.Now` property. Never directly through the DAL.
+
+## 3. Delivery Completion Types
+- **Delivered**: The order was delivered (regardless of timing) and closed.
+- **Customer Refused**: The courier arrived, but the customer refused to accept the order. The package is returned to the dispatch center and the order is closed.
+- **Canceled**: The order was canceled after creation.
+  - **Before Delivery**: An order awaiting assignment is closed with a "dummy" delivery (start = end time), a type "Canceled", and a courier ID of 0.
+  - **During Delivery**: An active order where the admin requests the courier to return to dispatch. The order closes with an updated end time.
+- **Recipient Not Found**: The courier arrives, but the recipient is absent. The package returns to dispatch, the delivery closes, and the order reopens for another delivery attempt.
+- **Failed**: A route calculation error occurs when creating the delivery. The delivery closes, and the order remains open.
+
+## 4. Order Lifecycle and Timing
+### 4.1. Order Lifecycle Timestamps
+- **Order Opening Time**: Time the admin creates the order. Stored in `DO.Order`.
+- **Delivery Start Time**: When a courier collects an order. Set by the system clock at the moment of pickup.
+- **Delivery Ending Time**: When the delivery is finished, triggering order closure or reopening.
+
+### 4.2. Business Layer Timestamp Properties
+- **Expected Delivery Time**: An estimated delivery date and time, based on delivery type (means of transportation), distance from the company address, and average speed (from config).
+- **Maximum Delivery Time**: Latest allowable delivery date and time, calculated as `OrderOpeningTime + MaxDeliveryTimeSpan`.
