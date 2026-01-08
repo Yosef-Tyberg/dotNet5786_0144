@@ -41,7 +41,7 @@ internal static class CourierManager
             throw new BO.BlInvalidEmailException($"Courier email '{boCourier.Email}' is not a valid format.");
     }
 
-    public static BO.Courier Read(int courierId)
+    public static BO.Courier ReadCourier(int courierId)
     {
         try
         {
@@ -53,7 +53,7 @@ internal static class CourierManager
 
             return boCourier;
         }
-        catch (DO.DoesNotExistException ex)
+        catch (DO.DalDoesNotExistException ex)
         {
             throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.", ex);
         }
@@ -75,7 +75,7 @@ internal static class CourierManager
         {
             s_dal.Courier.Create(ConvertBoToDo(courier));
         }
-        catch (DO.AlreadyExistsException ex)
+        catch (DO.DalAlreadyExistsException ex)
         {
             throw new BO.BlAlreadyExistsException($"Courier with ID {courier.Id} already exists.", ex);
         }
@@ -88,7 +88,7 @@ internal static class CourierManager
             // We might want to check if the courier has active deliveries before deleting
             s_dal.Courier.Delete(courierId);
         }
-        catch (DO.DoesNotExistException ex)
+        catch (DO.DalDoesNotExistException ex)
         {
             throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.", ex);
         }
@@ -102,7 +102,7 @@ internal static class CourierManager
             s_dal.Courier.Read(courier.Id); // Check for existence
             s_dal.Courier.Update(ConvertBoToDo(courier));
         }
-        catch (DO.DoesNotExistException ex)
+        catch (DO.DalDoesNotExistException ex)
         {
             throw new BO.BlDoesNotExistException($"Courier with ID {courier.Id} not found.", ex);
         }
@@ -189,10 +189,5 @@ internal static class CourierManager
         {
             throw Tools.ConvertDalException(ex, "Convert BO Courier to CourierInList");
         }
-    }
-    
-    public static void PeriodicCouriersUpdate(DateTime oldClock, DateTime newClock)
-    {
-        // The logic for this method is currently on hold per user request.
     }
 }
