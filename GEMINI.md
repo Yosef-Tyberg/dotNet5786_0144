@@ -86,3 +86,19 @@ Every class in the `BO` folder must follow these constraints:
 ### 4.2. Business Layer Timestamp Properties
 - **Expected Delivery Time**: An estimated delivery date and time, based on delivery type (means of transportation), distance from the company address, and average speed (from config).
 - **Maximum Delivery Time**: Latest allowable delivery date and time, calculated as `OrderOpeningTime + MaxDeliveryTimeSpan`.
+
+## 5. Distance Calculation Rules
+
+### 5.1. Aerial Distance
+- **Method:** `Tools.GetAerialDistance`
+- **Usage:**
+    - **Order Validation:** When creating or updating an order, the aerial distance from the company headquarters to the order's destination is calculated. This distance must not exceed `MaxGeneralDeliveryDistanceKm` defined in the configuration.
+    - **Delivery Validation:** When a courier accepts an order, the aerial distance from the company headquarters to the order's destination is calculated. This distance must not exceed the courier's `PersonalMaxDeliveryDistance`.
+
+### 5.2. Actual Traveled Distance
+- **Methods:**
+    - `Tools.GetDrivingDistance`: For `Car` and `Motorcycle` deliveries.
+    - `Tools.GetWalkingDistance`: For `Bicycle` and `OnFoot` deliveries.
+- **Usage:**
+    - **Delivery Completion:** When a delivery is completed, the actual distance traveled is calculated using one of the methods above, based on the delivery type. This value is stored in the `ActualDistance` property of the delivery. The distance is calculated from the company headquarters to the order's destination.
+    - **Time Estimation:** These methods are also used for estimating the delivery time.

@@ -100,14 +100,15 @@ internal static class DeliveryManager
         {
             case BO.DeliveryTypes.Car:
             case BO.DeliveryTypes.Motorcycle:
-                distance = Tools.GetDrivingDistance(config.Latitude, config.Longitude, order.Latitude, order.Longitude);
+                distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
                 break;
             case BO.DeliveryTypes.Bicycle:
-            case BO.DeliveryTypes.Foot:
-                distance = Tools.GetWalkingDistance(config.Latitude, config.Longitude, order.Latitude, order.Longitude);
+            case BO.DeliveryTypes.OnFoot:
+                distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
                 break;
             default:
-                distance = Tools.CalculateDistance(config.Latitude, config.Longitude, order.Latitude, order.Longitude);
+                // Fallback to aerial distance if delivery type is not specified
+                distance = Tools.GetAerialDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
                 break;
         }
 
@@ -221,7 +222,7 @@ internal static class DeliveryManager
         {
             var order = s_dal.Order.Read(orderId);
             var config = AdminManager.GetConfig();
-            var distance = Tools.CalculateDistance(config.Latitude, config.Longitude, order.Latitude, order.Longitude);
+            var distance = Tools.GetAerialDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
             if (distance > courier.PersonalMaximumDistance)
                 throw new BO.BlInvalidInputException($"Order location is too far for this courier. a maximum of {courier.PersonalMaximumDistance}km is allowed");
         }
