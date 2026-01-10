@@ -218,13 +218,13 @@ internal static class DeliveryManager
     {
         BO.Courier courier = CourierManager.ReadCourier(courierId);
 
-        if (courier.PersonalMaximumDistance.HasValue)
+        if (courier.PersonalMaxDeliveryDistance.HasValue)
         {
             var order = s_dal.Order.Read(orderId);
             var config = AdminManager.GetConfig();
             var distance = Tools.GetAerialDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
-            if (distance > courier.PersonalMaximumDistance)
-                throw new BO.BlInvalidInputException($"Order location is too far for this courier. a maximum of {courier.PersonalMaximumDistance}km is allowed");
+            if (distance > courier.PersonalMaxDeliveryDistance)
+                throw new BO.BlInvalidInputException($"Order location is too far for this courier. a maximum of {courier.PersonalMaxDeliveryDistance}km is allowed");
         }
 
         // Determine the delivery type based on the courier's vehicle

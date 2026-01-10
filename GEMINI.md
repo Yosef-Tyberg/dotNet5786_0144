@@ -102,3 +102,7 @@ Every class in the `BO` folder must follow these constraints:
 - **Usage:**
     - **Delivery Completion:** When a delivery is completed, the actual distance traveled is calculated using one of the methods above, based on the delivery type. This value is stored in the `ActualDistance` property of the delivery. The distance is calculated from the company headquarters to the order's destination.
     - **Time Estimation:** These methods are also used for estimating the delivery time.
+
+## 6. Delivery Entity Definition
+- **Role:** The Delivery object is a linking class between an Order and a Courier.
+- **Creation:** The Delivery object is created when the courier picks it up from the company.

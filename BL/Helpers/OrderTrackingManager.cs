@@ -67,7 +67,7 @@ internal static class OrderTrackingManager
 
         // Calculate Timing Properties
         var config = AdminManager.GetConfig();
-        DateTime? maxDeliveryTime = doOrder.OrderOpenTime?.Add(config.MaxDeliveryTimeSpan);
+        DateTime? maxDeliveryTime = doOrder.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
         DateTime? expectedDeliveryTime = null;
 
         if (status == BO.OrderStatus.InProgress && activeDelivery != null && assignedCourier != null)
@@ -77,15 +77,14 @@ internal static class OrderTrackingManager
             {
                 case BO.DeliveryTypes.Car:
                 case BO.DeliveryTypes.Motorcycle:
-                    distance = Helpers.Tools.GetDrivingDistance(config.Latitude, config.Longitude, doOrder.Latitude, doOrder.Longitude);
+                    distance = Helpers.Tools.GetDrivingDistance((double)config.Latitude, (double)config.Longitude, doOrder.Latitude, doOrder.Longitude);
                     break;
                 case BO.DeliveryTypes.Bicycle:
-                case BO.DeliveryTypes.Foot:
-                    distance = Helpers.Tools.GetWalkingDistance(config.Latitude, config.Longitude, doOrder.Latitude, doOrder.Longitude);
+                case BO.DeliveryTypes.OnFoot:
+                    distance = Helpers.Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, doOrder.Latitude, doOrder.Longitude);
                     break;
                 default:
-                    distance = Helpers.Tools.CalculateDistance(config.Latitude, config.Longitude, doOrder.Latitude, doOrder.Longitude);
-                    break;
+                    throw new BO.BlMissingPropertyException($"Invalid or missing delivery type for courier {assignedCourier.Id}");
             }
             
             double speed = assignedCourier.DeliveryType switch
@@ -93,19 +92,14 @@ internal static class OrderTrackingManager
                 BO.DeliveryTypes.Car => config.AvgCarSpeedKmh,
                 BO.DeliveryTypes.Motorcycle => config.AvgMotorcycleSpeedKmh,
                 BO.DeliveryTypes.Bicycle => config.AvgBicycleSpeedKmh,
-                BO.DeliveryTypes.Foot => config.AvgWalkingSpeedKmh,
+                BO.DeliveryTypes.OnFoot => config.AvgWalkingSpeedKmh,
                 _ => config.AvgCarSpeedKmh
             };
 
             if (speed > 0)
             {
                 double travelHours = distance / speed;
-                // If the delivery hasn't been picked up yet (StartTime in future), calculate from Now.
-                // Otherwise, calculate from the actual pickup time.
-                DateTime baseTime = (activeDelivery.DeliveryStartTime > AdminManager.Now) 
-                    ? AdminManager.Now 
-                    : (activeDelivery.DeliveryStartTime ?? AdminManager.Now);
-                expectedDeliveryTime = baseTime.AddHours(travelHours);
+                expectedDeliveryTime = activeDelivery.DeliveryStartTime.AddHours(travelHours);
             }
         }
 
