@@ -9,8 +9,8 @@
 ## 2. Business Layer (BL) Rules
 
 ### 2.1. Strict Namespacing
-- To avoid collisions between layers, **NEVER** use `using` statements for `BO` or `DO` namespaces within any file inside the `BL` folder.
-- **Code Reference:** Always use full qualification: `BO.EntityName` or `DO.EntityName`.
+- To avoid collisions between layers, **NEVER** use `using` statements for `BO` or `DO` namespaces within any file inside the `BL` folder. The `using Helpers;` statement is permitted as it does not cause naming conflicts.
+- **Code Reference:** Always use full qualification for data entities: `BO.EntityName` or `DO.EntityName`.
 
 ### 2.2. Directory Structure
 - `BL/BO/`: Business Object entities (Partial PDS).
@@ -69,23 +69,28 @@ Every class in the `BO` folder must follow these constraints:
 - All access to the system clock from within the BL must go only through the `AdminManager.Now` property. Never directly through the DAL.
 
 ## 3. Delivery Completion Types
-- **Delivered**: The order was delivered (regardless of timing) and closed.
-- **Customer Refused**: The courier arrived, but the customer refused to accept the order. The package is returned to the dispatch center and the order is closed.
-- **Canceled**: The order was canceled after creation.
-  - **Before Delivery**: An order awaiting assignment is closed with a "dummy" delivery (start = end time), a type "Canceled", and a courier ID of 0.
-  - **During Delivery**: An active order where the admin requests the courier to return to dispatch. The order closes with an updated end time.
-- **Recipient Not Found**: The courier arrives, but the recipient is absent. The package returns to dispatch, the delivery closes, and the order reopens for another delivery attempt.
-- **Failed**: A route calculation error occurs when creating the delivery. The delivery closes, and the order remains open.
+The `DeliveryEndTypes` enum defines how a delivery concludes. This affects the final `OrderStatus`.
+- **Delivered**: The order was delivered successfully. The Order Status becomes `Delivered`.
+- **CustomerRefused**: The courier arrived, but the customer refused the order. The package returns to dispatch, and the Order Status becomes `Refused` (Closed).
+- **Cancelled**: The order was cancelled. The Order Status becomes `Cancelled`.
+  - **Before Pickup**: An order awaiting assignment is closed via a "dummy" delivery (Start Time = End Time, CourierId = 0, EndType = `Cancelled`).
+  - **During Delivery**: The courier is recalled. The delivery is closed with EndType `Cancelled`.
+- **RecipientNotFound**: The courier arrived, but the recipient was absent. The delivery is closed. The Order Status reverts to `Open`, and the order returns to the dispatch pool to be available for a new delivery attempt by any courier.
+- **Failed**: Technical or route failure. The delivery closes, and the order remains `Open`.
 
 ## 4. Order Lifecycle and Timing
 ### 4.1. Order Lifecycle Timestamps
 - **Order Opening Time**: Time the admin creates the order. Stored in `DO.Order`.
-- **Delivery Start Time**: When a courier collects an order. Set by the system clock at the moment of pickup.
+- **Delivery Start Time**: When a courier collects an order. Set by the `AdminManager.Now` (System Clock) at the moment of pickup.
 - **Delivery Ending Time**: When the delivery is finished, triggering order closure or reopening.
 
 ### 4.2. Business Layer Timestamp Properties
 - **Expected Delivery Time**: An estimated delivery date and time, based on delivery type (means of transportation), distance from the company address, and average speed (from config).
 - **Maximum Delivery Time**: Latest allowable delivery date and time, calculated as `OrderOpeningTime + MaxDeliveryTimeSpan`.
+- **Schedule Status**: Calculated in the BL (`BO.Delivery`) based on `Config` settings. Relevant for active or completed deliveries:
+  - **OnTime**: The delivery is active with sufficient time, or completed before the deadline.
+  - **AtRisk**: The delivery is active, and the remaining time is less than `Config.RiskRange`.
+  - **Late**: The delivery is active but exceeded `Maximum Delivery Time`, or was completed after the deadline.
 
 ## 5. Distance Calculation Rules
 
@@ -106,3 +111,24 @@ Every class in the `BO` folder must follow these constraints:
 ## 6. Delivery Entity Definition
 - **Role:** The Delivery object is a linking class between an Order and a Courier.
 - **Creation:** The Delivery object is created when the courier picks it up from the company.
+- **Single Active Task Rule:** A courier may only handle **one** delivery at a time. A courier cannot pick up a new order if they have a delivery with a `null` EndTime.
+
+## 7. Order Status Logic
+The `BO.OrderStatus` is derived from the history of deliveries associated with that order:
+- **Open**: No deliveries exist, or the last delivery ended in `RecipientNotFound` / `Failed`.
+- **InProgress**: The last delivery has a `Start Time` but no `End Time`.
+- **Delivered / Refused / Cancelled**: Determined by the `DeliveryEndType` of the last completed delivery.
+
+## 8. Data Visibility & Permissions
+- **Admin**: Can view the full delivery history of all orders and couriers.
+- **Courier**: Can view only their own delivery history and open orders within their allowed range.
+
+## 9. Functional Requirements
+### 9.1. Statistics & Analysis
+- **Courier Statistics**: The system must provide statistical data for couriers (e.g., delivery counts, performance metrics) to support the Admin's "Manage Couriers" view.
+
+### 9.2. List Management
+- **Filtering & Grouping**: List retrieval operations (for Orders, Couriers, Deliveries) must support filtering, sorting, and grouping capabilities (e.g., by Status, Area, or Type) to satisfy Admin and Courier interface requirements.
+
+### 9.3. Simulation Control
+- **Clock Management**: The BL must support operations to initialize and advance the System Clock to facilitate simulation scenarios.

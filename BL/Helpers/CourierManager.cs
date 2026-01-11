@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 
+
 namespace Helpers;
 
 /// <summary>
@@ -41,17 +42,18 @@ internal static class CourierManager
             throw new BO.BlInvalidEmailException($"Courier email '{boCourier.Email}' is not a valid format.");
     }
 
+    /// <summary>
+    /// Retrieves a single courier and calculates their employment duration.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier to retrieve.</param>
+    /// <returns>A BO.Courier object with calculated properties.</returns>
+    /// <exception cref="BO.BlDoesNotExistException">Thrown if the courier is not found.</exception>
     public static BO.Courier ReadCourier(int courierId)
     {
         try
         {
             DO.Courier doCourier = s_dal.Courier.Read(courierId);
-            BO.Courier boCourier = ConvertDoToBo(doCourier);
-
-            boCourier.EmploymentDuration = AdminManager.Now - boCourier.EmploymentStartTime;
-            boCourier.YearsEmployed = boCourier.EmploymentDuration.TotalDays / 365.25;
-
-            return boCourier;
+            return ConvertDoToBo(doCourier);
         }
         catch (DO.DalDoesNotExistException ex)
         {
@@ -59,15 +61,22 @@ internal static class CourierManager
         }
     }
 
-    public static IEnumerable<BO.CourierInList> ReadAllCouriersForList(Func<BO.CourierInList, bool>? filter = null)
+    /// <summary>
+    /// Retrieves a list of all couriers, converted to full business objects, with optional filtering.
+    /// </summary>
+    /// <param name="filter">An optional predicate to filter the BO.Courier objects.</param>
+    /// <returns>An IEnumerable of BO.Courier.</returns>
+    public static IEnumerable<BO.Courier> ReadAll(Func<BO.Courier, bool>? filter = null)
     {
-        var doCouriers = s_dal.Courier.ReadAll();
-        var boCouriers = doCouriers.Select(doCourier => ReadCourier(doCourier.Id));
-        var courierInList = boCouriers.Select(ConvertBoToCourierInList);
-
-        return filter == null ? courierInList : courierInList.Where(filter);
+        var boCouriers = s_dal.Courier.ReadAll().Select(ConvertDoToBo);
+        return filter == null ? boCouriers : boCouriers.Where(filter);
     }
 
+    /// <summary>
+    /// Creates a new courier in the data source.
+    /// </summary>
+    /// <param name="courier">The courier to create.</param>
+    /// <exception cref="BO.BlAlreadyExistsException">Thrown if a courier with the same ID already exists.</exception>
     public static void CreateCourier(BO.Courier courier)
     {
         CourierValidation(courier);
@@ -81,6 +90,11 @@ internal static class CourierManager
         }
     }
 
+    /// <summary>
+    /// Deletes a courier from the data source.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier to delete.</param>
+    /// <exception cref="BO.BlDoesNotExistException">Thrown if the courier is not found.</exception>
     public static void DeleteCourier(int courierId)
     {
         try
@@ -94,12 +108,16 @@ internal static class CourierManager
         }
     }
 
+    /// <summary>
+    /// Updates an existing courier's details.
+    /// </summary>
+    /// <param name="courier">The courier with updated details.</param>
+    /// <exception cref="BO.BlDoesNotExistException">Thrown if the courier is not found.</exception>
     public static void UpdateCourier(BO.Courier courier)
     {
         CourierValidation(courier);
         try
         {
-            s_dal.Courier.Read(courier.Id); // Check for existence
             s_dal.Courier.Update(ConvertBoToDo(courier));
         }
         catch (DO.DalDoesNotExistException ex)
@@ -107,6 +125,45 @@ internal static class CourierManager
             throw new BO.BlDoesNotExistException($"Courier with ID {courier.Id} not found.", ex);
         }
     }
+
+    /// <summary>
+    /// Updates a courier's own details.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier to update.</param>
+    /// <param name="fullName">Optional new full name.</param>
+    /// <param name="phoneNum">Optional new phone number.</param>
+    /// <param name="email">Optional new email.</param>
+    /// <param name="password">Optional new password.</param>
+    /// <param name="maxDistance">Optional new max delivery distance.</param>
+    public static void UpdateMyDetails(int courierId, string? fullName = null, string? phoneNum = null, string? email = null, string? password = null, double? maxDistance = null)
+    {
+        try
+        {
+            // Read the courier once. This gives us a BO object.
+            var courier = ReadCourier(courierId);
+
+            // Update properties using the ?? operator for conciseness
+            courier.FullName = fullName ?? courier.FullName;
+            courier.MobilePhone = phoneNum ?? courier.MobilePhone;
+            courier.Email = email ?? courier.Email;
+            courier.Password = password ?? courier.Password;
+            courier.PersonalMaxDeliveryDistance = maxDistance ?? courier.PersonalMaxDeliveryDistance;
+
+            // Since we modified the BO object, we should re-validate it.
+            CourierValidation(courier);
+            
+            // Now, call the DAL update directly.
+            s_dal.Courier.Update(ConvertBoToDo(courier));
+        }
+        catch (DO.DalDoesNotExistException ex)
+        {
+            // The exception could come from ReadCourier or the s_dal.Courier.Update call.
+            // The message is appropriate for both cases.
+            throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.", ex);
+        }
+    }
+
+    
 
     /// <summary>
     /// Converts a business layer Courier entity to its data layer equivalent.
@@ -146,7 +203,7 @@ internal static class CourierManager
     {
         try
         {
-            return new BO.Courier
+            var boCourier = new BO.Courier
             {
                 Id = doCourier.Id,
                 FullName = doCourier.FullName,
@@ -158,6 +215,11 @@ internal static class CourierManager
                 EmploymentStartTime = doCourier.EmploymentStartTime,
                 PersonalMaxDeliveryDistance = doCourier.PersonalMaxDeliveryDistance
             };
+
+            boCourier.EmploymentDuration = AdminManager.Now - boCourier.EmploymentStartTime;
+            boCourier.YearsEmployed = boCourier.EmploymentDuration.TotalDays / 365.25;
+            
+            return boCourier;
         }
         catch (Exception ex)
         {
@@ -191,7 +253,77 @@ internal static class CourierManager
         }
     }
 
+    /// <summary>
+    /// Retrieves the delivery history for a specific courier.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier.</param>
+    /// <returns>An IEnumerable of the courier's deliveries.</returns>
+    public static IEnumerable<BO.DeliveryInList> GetMyDeliveryHistory(int courierId)
+    {
+        ReadCourier(courierId); // Validate courier exists
+        return DeliveryManager.ReadAllDeliveriesForList(d => d.CourierId == courierId);
+    }
+    
+    /// <summary>
+    /// Retrieves all open orders that are within a courier's maximum delivery distance.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier.</param>
+    /// <returns>An IEnumerable of open orders available to the courier.</returns>
+    public static IEnumerable<BO.OrderInList> GetOpenOrders(int courierId)
+    {
+        var courier = ReadCourier(courierId);
+        var openOrders = OrderManager.ReadAll().Where(o => o.OrderStatus == BO.OrderStatus.Open);
 
+        var HQLatitude = (double)AdminManager.GetConfig().Latitude;
+        var HQLongitude = (double)AdminManager.GetConfig().Longitude;
+
+        return openOrders.Where(order =>
+        {
+            var destLat = order.Latitude;
+            var destLon = order.Longitude;
+            var distance = Tools.GetAerialDistance(HQLatitude, HQLongitude, destLat, destLon);
+            return distance <= courier.PersonalMaxDeliveryDistance;
+        }).Select(OrderManager.ConvertBoToOrderInList);
+    }
+
+    /// <summary>
+    /// Calculates and retrieves statistics for a specific courier.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier.</param>
+    /// <returns>A BO.CourierStatistics object.</returns>
+    public static BO.CourierStatistics GetMyStatistics(int courierId)
+    {
+        var deliveries = GetMyDeliveryHistory(courierId).ToList();
+        if (!deliveries.Any())
+        {
+            return new BO.CourierStatistics(); // Return empty stats if no deliveries
+        }
+
+        var completedDeliveries = deliveries
+            .Where(d => d.ScheduleStatus is BO.ScheduleStatus.OnTime or BO.ScheduleStatus.Late)
+            .Select(d => DeliveryManager.ReadDelivery(d.Id)) // Read full delivery for details
+            .ToList();
+
+        var totalDeliveries = completedDeliveries.Count;
+        var onTimeDeliveries = completedDeliveries.Count(d => d.ScheduleStatus == BO.ScheduleStatus.OnTime);
+        var successfulDeliveries = completedDeliveries.Count(d => d.DeliveryEndType == BO.DeliveryEndTypes.Delivered);
+
+        return new BO.CourierStatistics
+        {
+            TotalDeliveries = totalDeliveries,
+            TotalDistance = completedDeliveries.Sum(d => (double)d.ActualDistance),
+            AverageDeliveryTime = TimeSpan.FromMinutes(completedDeliveries.Average(d => ((TimeSpan)(d.DeliveryEndTime - d.DeliveryStartTime)).TotalMinutes)),
+            OnTimeDeliveries = onTimeDeliveries,
+            LateDeliveries = totalDeliveries - onTimeDeliveries,
+            SuccessRate = totalDeliveries > 0 ? (double)successfulDeliveries / totalDeliveries * 100 : 0
+        };
+    }
+
+    /// <summary>
+    /// Placeholder for periodic updates to couriers. Logic is currently on hold.
+    /// </summary>
+    /// <param name="oldClock">The previous system time.</param>
+    /// <param name="newClock">The new (current) system time.</param>
     public static void PeriodicCouriersUpdate(DateTime oldClock, DateTime newClock)
     {
         // The logic for this method is currently on hold per user request.

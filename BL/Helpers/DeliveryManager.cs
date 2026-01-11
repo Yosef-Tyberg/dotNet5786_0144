@@ -190,6 +190,7 @@ internal static class DeliveryManager
                 OrderId = boDelivery.OrderId,
                 CourierId = boDelivery.CourierId,
                 DeliveryStartTime = boDelivery.DeliveryStartTime,
+                ScheduleStatus = boDelivery.ScheduleStatus,
                 DeliveryEndType = boDelivery.DeliveryEndType
             };
         }
@@ -206,7 +207,7 @@ internal static class DeliveryManager
     /// <returns>True if the order is taken, false otherwise.</returns>
     public static bool IsOrderTaken(int orderId)
     {
-        return s_dal.Delivery.ReadAll().Any(d => d.OrderId == orderId);
+        return s_dal.Delivery.ReadAll().Any(d => d.OrderId == orderId && d.DeliveryEndTime == null);
     }
     
     /// <summary>

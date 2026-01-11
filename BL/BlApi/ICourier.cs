@@ -13,7 +13,7 @@ public interface ICourier
     /// </summary>
     /// <param name="filter">Optional predicate to filter couriers.</param>
     /// <returns>An IEnumerable of BO.CourierInList.</returns>
-    IEnumerable<BO.CourierInList> ReadAll(Func<BO.CourierInList, bool>? filter = null);
+    IEnumerable<BO.CourierInList> ReadAll(Func<BO.Courier, bool>? filter = null);
 
     /// <summary>
     /// Retrieves the full details of a specific courier.
@@ -37,9 +37,8 @@ public interface ICourier
     /// <summary>
     /// Updates the details of an existing courier.
     /// </summary>
-    /// <param name="courierId">The ID of the courier to update.</param>
     /// <param name="newDetails">A BO.Courier object containing the updated information.</param>
-    void Update(int courierId, BO.Courier newDetails);
+    void Update(BO.Courier newDetails);
 
     #endregion
 
@@ -50,10 +49,11 @@ public interface ICourier
     /// </summary>
     /// <param name="courierId">The ID of the courier updating their details.</param>
     /// <param name="fullName">Optional new full name.</param>
+    /// <param name="phoneNum">Optional new phone number.</param>
     /// <param name="email">Optional new email.</param>
     /// <param name="password">Optional new password.</param>
     /// <param name="maxDistance">Optional new max delivery distance.</param>
-    void UpdateMyDetails(int courierId, string? fullName = null, string? email = null, string? password = null, double? maxDistance = null);
+    void UpdateMyDetails(int courierId, string? fullName = null, string? phoneNum = null, string? email = null, string? password = null, double? maxDistance = null);
     
     /// <summary>
     /// Retrieves the delivery history for a specific courier.
@@ -61,6 +61,20 @@ public interface ICourier
     /// <param name="courierId">The ID of the courier.</param>
     /// <returns>An IEnumerable of BO.DeliveryInList representing the courier's past deliveries.</returns>
     IEnumerable<BO.DeliveryInList> GetMyDeliveryHistory(int courierId);
+
+    /// <summary>
+    /// Retrieves a list of open orders that are within the courier's allowed range.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier.</param>
+    /// <returns>An IEnumerable of BO.OrderInList representing the open orders.</returns>
+    IEnumerable<BO.OrderInList> GetOpenOrders(int courierId);
+
+    /// <summary>
+    /// Retrieves statistical data for a specific courier.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier.</param>
+    /// <returns>A BO.CourierStatistics object.</returns>
+    BO.CourierStatistics GetMyStatistics(int courierId);
 
     #endregion
 }

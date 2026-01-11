@@ -164,6 +164,7 @@ internal static class OrderManager
                 Id = boOrder.Id,
                 OrderType = boOrder.OrderType,
                 CustomerFullName = boOrder.CustomerFullName,
+                OrderStatus = boOrder.OrderStatus,
                 OrderOpenTime = boOrder.OrderOpenTime
             };
         }

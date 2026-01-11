@@ -27,6 +27,11 @@ public class OrderInList
     public DateTime OrderOpenTime { get; set; }
 
     /// <summary>
+    /// The current status of the order.
+    /// </summary>
+    public OrderStatus OrderStatus { get; set; }
+
+    /// <summary>
     /// Returns a string representation of the OrderInList entity.
     /// </summary>
     public override string ToString() => Helpers.Tools.ToStringProperty(this);

@@ -27,6 +27,11 @@ public class DeliveryInList
     public DateTime DeliveryStartTime { get; set; }
 
     /// <summary>
+    /// The schedule status of the delivery.
+    /// </summary>
+    public ScheduleStatus ScheduleStatus { get; set; }
+
+    /// <summary>
     /// Result/status of the delivery.
     /// Null if delivery is still in progress.
     /// </summary>
