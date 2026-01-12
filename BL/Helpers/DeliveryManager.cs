@@ -303,9 +303,5 @@ internal static class DeliveryManager
 
         s_dal.Delivery.Create(newDelivery);
     }
-    
-    public static void PeriodicDeliveriesUpdate(DateTime oldClock, DateTime newClock)
-    {
-        // The logic for this method is currently on hold per user request.
-    }
 }
+

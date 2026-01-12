@@ -258,7 +258,7 @@ internal static class CourierManager
     /// </summary>
     /// <param name="courierId">The ID of the courier.</param>
     /// <returns>An IEnumerable of the courier's deliveries.</returns>
-    public static IEnumerable<BO.DeliveryInList> GetMyDeliveryHistory(int courierId)
+    public static IEnumerable<BO.DeliveryInList> GetCourierDeliveryHistory(int courierId)
     {
         ReadCourier(courierId); // Validate courier exists
         var boDeliveries = DeliveryManager.ReadAll(d => d.CourierId == courierId);
@@ -292,9 +292,9 @@ internal static class CourierManager
     /// </summary>
     /// <param name="courierId">The ID of the courier.</param>
     /// <returns>A BO.CourierStatistics object.</returns>
-    public static BO.CourierStatistics GetMyStatistics(int courierId)
+    public static BO.CourierStatistics GetCourierStatistics(int courierId)
     {
-        var deliveries = GetMyDeliveryHistory(courierId).ToList();
+        var deliveries = GetCourierDeliveryHistory(courierId).ToList();
         if (!deliveries.Any())
         {
             return new BO.CourierStatistics(); // Return empty stats if no deliveries
@@ -320,13 +320,4 @@ internal static class CourierManager
         };
     }
 
-    /// <summary>
-    /// Placeholder for periodic updates to couriers. Logic is currently on hold.
-    /// </summary>
-    /// <param name="oldClock">The previous system time.</param>
-    /// <param name="newClock">The new (current) system time.</param>
-    public static void PeriodicCouriersUpdate(DateTime oldClock, DateTime newClock)
-    {
-        // The logic for this method is currently on hold per user request.
-    }
-}
+

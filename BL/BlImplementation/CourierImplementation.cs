@@ -49,9 +49,9 @@ internal sealed class CourierImplementation : ICourier
     }
 
     /// <inheritdoc />
-    public IEnumerable<BO.DeliveryInList> GetMyDeliveryHistory(int courierId)
+    public IEnumerable<BO.DeliveryInList> GetCourierDeliveryHistory(int courierId)
     {
-        return CourierManager.GetMyDeliveryHistory(courierId);
+        return CourierManager.GetCourierDeliveryHistory(courierId);
     }
 
     /// <inheritdoc />
@@ -61,8 +61,8 @@ internal sealed class CourierImplementation : ICourier
     }
 
     /// <inheritdoc />
-    public BO.CourierStatistics GetMyStatistics(int courierId)
+    public BO.CourierStatistics GetCourierStatistics(int courierId)
     {
-        return CourierManager.GetMyStatistics(courierId);
+        return CourierManager.GetCourierStatistics(courierId);
     }
 }

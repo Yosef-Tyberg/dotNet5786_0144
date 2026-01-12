@@ -40,6 +40,20 @@ public interface ICourier
     /// <param name="newDetails">A BO.Courier object containing the updated information.</param>
     void Update(BO.Courier newDetails);
 
+    /// <summary>
+    /// Retrieves the delivery history for a specific courier.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier.</param>
+    /// <returns>An IEnumerable of BO.DeliveryInList representing the courier's past deliveries.</returns>
+    IEnumerable<BO.DeliveryInList> GetCourierDeliveryHistory(int courierId);
+
+    /// <summary>
+    /// Retrieves statistical data for a specific courier.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier.</param>
+    /// <returns>A BO.CourierStatistics object.</returns>
+    BO.CourierStatistics GetCourierStatistics(int courierId);
+
     #endregion
 
     #region Courier Methods
@@ -56,25 +70,11 @@ public interface ICourier
     void UpdateMyDetails(int courierId, string? fullName = null, string? phoneNum = null, string? email = null, string? password = null, double? maxDistance = null);
     
     /// <summary>
-    /// Retrieves the delivery history for a specific courier.
-    /// </summary>
-    /// <param name="courierId">The ID of the courier.</param>
-    /// <returns>An IEnumerable of BO.DeliveryInList representing the courier's past deliveries.</returns>
-    IEnumerable<BO.DeliveryInList> GetMyDeliveryHistory(int courierId);
-
-    /// <summary>
     /// Retrieves a list of open orders that are within the courier's allowed range.
     /// </summary>
     /// <param name="courierId">The ID of the courier.</param>
     /// <returns>An IEnumerable of BO.OrderInList representing the open orders.</returns>
     IEnumerable<BO.OrderInList> GetOpenOrders(int courierId);
-
-    /// <summary>
-    /// Retrieves statistical data for a specific courier.
-    /// </summary>
-    /// <param name="courierId">The ID of the courier.</param>
-    /// <returns>A BO.CourierStatistics object.</returns>
-    BO.CourierStatistics GetMyStatistics(int courierId);
 
     #endregion
 }
