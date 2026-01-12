@@ -172,65 +172,65 @@ internal static class DeliveryManager
                     : 0;
             }
             
-                        var order = OrderManager.Read(boDelivery.OrderId);
-                        var config = AdminManager.GetConfig();
-                        
-                        boDelivery.MaximumDeliveryTime = order.OrderOpenTime + config.MaxDeliveryTimeSpan;
+            var order = OrderManager.Read(boDelivery.OrderId);
+            var config = AdminManager.GetConfig();
             
-                        double distance;
-                        double speed;
-                        switch (boDelivery.DeliveryType)
-                        {
-                            case BO.DeliveryTypes.Car:
-                                distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
-                                speed = config.AvgCarSpeedKmh;
-                                break;
-                            case BO.DeliveryTypes.Motorcycle:
-                                distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
-                                speed = config.AvgMotorcycleSpeedKmh;
-                                break;
-                            case BO.DeliveryTypes.Bicycle:
-                                distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
-                                speed = config.AvgBicycleSpeedKmh;
-                                break;
-                            case BO.DeliveryTypes.OnFoot:
-                                distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
-                                speed = config.AvgWalkingSpeedKmh;
-                                break;
-                            default:
-                                throw new BO.BlMissingPropertyException($"Could not calculate properties for unrecognized delivery type: {boDelivery.DeliveryType}");
-                        }
-            
-                        if (speed > 0)
-                        {
-                            var estimatedHours = distance / speed;
-                            boDelivery.ExpectedDeliveryTime = boDelivery.DeliveryStartTime.AddHours(estimatedHours);
-                        }
-                        else
-                        {
-                            boDelivery.ExpectedDeliveryTime = boDelivery.MaximumDeliveryTime;
-                        }
-            
-                        if ((boDelivery.DeliveryEndTime == null && AdminManager.Now > boDelivery.MaximumDeliveryTime) || (boDelivery.DeliveryEndTime != null && boDelivery.DeliveryEndTime > boDelivery.MaximumDeliveryTime))
-                        {
-                            boDelivery.ScheduleStatus = BO.ScheduleStatus.Late;
-                        }
-                        else if (boDelivery.DeliveryEndTime == null && (boDelivery.MaximumDeliveryTime - AdminManager.Now) < config.RiskRange)
-                        {
-                            boDelivery.ScheduleStatus = BO.ScheduleStatus.AtRisk;
-                        }
-                        else
-                        {
-                            boDelivery.ScheduleStatus = BO.ScheduleStatus.OnTime;
-                        }
-            
-                        return boDelivery;
-                    }
-                    catch (Exception ex)
-                    {
-                        throw Tools.ConvertDalException(ex);
-                    }
-                }
+            boDelivery.MaximumDeliveryTime = order.OrderOpenTime + config.MaxDeliveryTimeSpan;
+
+            double distance;
+            double speed;
+            switch (boDelivery.DeliveryType)
+            {
+                case BO.DeliveryTypes.Car:
+                    distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
+                    speed = config.AvgCarSpeedKmh;
+                    break;
+                case BO.DeliveryTypes.Motorcycle:
+                    distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
+                    speed = config.AvgMotorcycleSpeedKmh;
+                    break;
+                case BO.DeliveryTypes.Bicycle:
+                    distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
+                    speed = config.AvgBicycleSpeedKmh;
+                    break;
+                case BO.DeliveryTypes.OnFoot:
+                    distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
+                    speed = config.AvgWalkingSpeedKmh;
+                    break;
+                default:
+                    throw new BO.BlMissingPropertyException($"Could not calculate properties for unrecognized delivery type: {boDelivery.DeliveryType}");
+            }
+
+            if (speed > 0)
+            {
+                var estimatedHours = distance / speed;
+                boDelivery.ExpectedDeliveryTime = boDelivery.DeliveryStartTime.AddHours(estimatedHours);
+            }
+            else
+            {
+                boDelivery.ExpectedDeliveryTime = boDelivery.MaximumDeliveryTime;
+            }
+
+            if ((boDelivery.DeliveryEndTime == null && AdminManager.Now > boDelivery.MaximumDeliveryTime) || (boDelivery.DeliveryEndTime != null && boDelivery.DeliveryEndTime > boDelivery.MaximumDeliveryTime))
+            {
+                boDelivery.ScheduleStatus = BO.ScheduleStatus.Late;
+            }
+            else if (boDelivery.DeliveryEndTime == null && (boDelivery.MaximumDeliveryTime - AdminManager.Now) < config.RiskRange)
+            {
+                boDelivery.ScheduleStatus = BO.ScheduleStatus.AtRisk;
+            }
+            else
+            {
+                boDelivery.ScheduleStatus = BO.ScheduleStatus.OnTime;
+            }
+
+            return boDelivery;
+        }
+        catch (Exception ex)
+        {
+            throw Tools.ConvertDalException(ex);
+        }
+    }
     /// <summary>
     /// Converts a business layer Delivery entity to a summary list view.
     /// Summary entities are derived from full BO entities (not directly from DO)
@@ -302,6 +302,28 @@ internal static class DeliveryManager
         );
 
         s_dal.Delivery.Create(newDelivery);
+
     }
+
+            
+
+    /// <summary>
+
+    /// a method for periodic updates of the delivery
+
+    /// </summary>
+
+    /// <param name="oldClock"></param>
+
+    /// <param name="newClock"></param>
+
+    public static void PeriodicDeliveriesUpdate(DateTime oldClock, DateTime newClock)
+
+    {
+
+        //implementation will be added in the future
+
+    }
+
 }
 

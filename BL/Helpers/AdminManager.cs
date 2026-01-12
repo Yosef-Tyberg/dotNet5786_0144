@@ -38,6 +38,7 @@ internal static class AdminManager //stage 4
 
         DeliveryManager.PeriodicDeliveriesUpdate(oldClock, newClock);
         CourierManager.PeriodicCouriersUpdate(oldClock, newClock);
+        OrderManager.PeriodicOrdersUpdate(oldClock, newClock);
         
         //TO_DO: //stage 7
         //if (_periodicTask is null || _periodicTask.IsCompleted) //stage 7

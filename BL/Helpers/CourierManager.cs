@@ -275,16 +275,31 @@ internal static class CourierManager
         var courier = ReadCourier(courierId);
         var openOrders = OrderManager.ReadAll().Where(o => o.OrderStatus == BO.OrderStatus.Open);
 
-        var HQLatitude = (double)AdminManager.GetConfig().Latitude;
-        var HQLongitude = (double)AdminManager.GetConfig().Longitude;
+        var config = AdminManager.GetConfig();
+        var hqLatitude = (double)config.Latitude;
+        var hqLongitude = (double)config.Longitude;
 
-        return openOrders.Where(order =>
+        return openOrders
+            .Where(order => IsOrderInCourierRange(order, courier, hqLatitude, hqLongitude))
+            .Select(OrderManager.ConvertBoToOrderInList);
+    }
+
+    /// <summary>
+    /// Determines if an order is within a courier's maximum delivery range.
+    /// </summary>
+    /// <param name="order">The order to check.</param>
+    /// <param name="courier">The courier.</param>
+    /// <param name="hqLatitude">The latitude of the headquarters.</param>
+    /// <param name="hqLongitude">The longitude of the headquarters.</param>
+    /// <returns>True if the order is in range, false otherwise.</returns>
+    private static bool IsOrderInCourierRange(BO.Order order, BO.Courier courier, double hqLatitude, double hqLongitude)
+    {
+        if (!courier.PersonalMaxDeliveryDistance.HasValue)
         {
-            var destLat = order.Latitude;
-            var destLon = order.Longitude;
-            var distance = Tools.GetAerialDistance(HQLatitude, HQLongitude, destLat, destLon);
-            return distance <= courier.PersonalMaxDeliveryDistance;
-        }).Select(OrderManager.ConvertBoToOrderInList);
+            return false;
+        }
+        var distance = Tools.GetAerialDistance(hqLatitude, hqLongitude, order.Latitude, order.Longitude);
+        return distance <= courier.PersonalMaxDeliveryDistance.Value;
     }
 
     /// <summary>
@@ -319,5 +334,17 @@ internal static class CourierManager
             SuccessRate = totalDeliveries > 0 ? (double)successfulDeliveries / totalDeliveries * 100 : 0
         };
     }
+
+    /// <summary>
+    /// a method for periodic updates of the courier
+    /// </summary>
+    /// <param name="oldClock"></param>
+    /// <param name="newClock"></param>
+    public static void PeriodicCouriersUpdate(DateTime oldClock, DateTime newClock)
+    {
+        //implementation will be added in the future
+    }
+}
+
 
 
