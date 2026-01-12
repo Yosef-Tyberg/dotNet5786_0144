@@ -261,7 +261,8 @@ internal static class CourierManager
     public static IEnumerable<BO.DeliveryInList> GetMyDeliveryHistory(int courierId)
     {
         ReadCourier(courierId); // Validate courier exists
-        return DeliveryManager.ReadAllDeliveriesForList(d => d.CourierId == courierId);
+        var boDeliveries = DeliveryManager.ReadAll(d => d.CourierId == courierId);
+        return boDeliveries.Select(DeliveryManager.ConvertBoToDeliveryInList);
     }
     
     /// <summary>

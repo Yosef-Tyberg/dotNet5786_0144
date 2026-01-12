@@ -25,7 +25,6 @@ public interface IOrder
     /// Updates the details of an existing order.
     /// Can only be done before the order is assigned to a courier.
     /// </summary>
-    /// <param name="orderId">The ID of the order to update.</param>
     /// <param name="updatedOrder">A BO.Order object with the new details.</param>
     void Update(BO.Order updatedOrder);
     
@@ -33,8 +32,13 @@ public interface IOrder
     /// Adds a new order to the system.
     /// </summary>
     /// <param name="newOrder">The BO.Order object for the new order.</param>
-    /// <returns>The ID of the newly created order.</returns>
     void Create(BO.Order newOrder);
+    
+    /// <summary>
+    /// Deletes an order by its ID.
+    /// </summary>
+    /// <param name="orderId">The ID of the order to delete.</param>
+    void Delete(int orderId);
 
     #endregion
 
@@ -48,12 +52,23 @@ public interface IOrder
     IEnumerable<BO.OrderInList> GetAvailableOrders(int courierId);
 
     /// <summary>
-    /// Allows a courier to take/assign an order for delivery.
-    /// This will create a new Delivery entity.
+    * Allows a courier to take/assign an order for delivery.
+    * This will create a new Delivery entity.
     /// </summary>
     /// <param name="orderId">The ID of the order to take.</param>
     /// <param name="courierId">The ID of the courier taking the order.</param>
     void TakeOrder(int orderId, int courierId);
 
+    #endregion
+    
+    #region General Methods
+    
+    /// <summary>
+    /// gets the tracking information for an order
+    /// </summary>
+    /// <param name="orderId">the id of the order to get the tracking information for</param>
+    /// <returns>the tracking information for the order</returns>
+    public BO.OrderTracking GetOrderTracking(int orderId);
+    
     #endregion
 }

@@ -13,7 +13,8 @@ internal sealed class DeliveryImplementation : IDelivery
     /// <inheritdoc />
     public IEnumerable<BO.DeliveryInList> ReadAll(Func<BO.DeliveryInList, bool>? filter = null)
     {
-        return DeliveryManager.ReadAllDeliveriesForList(filter);
+        var deliveries = DeliveryManager.ReadAll().Select(DeliveryManager.ConvertBoToDeliveryInList);
+        return filter == null ? deliveries : deliveries.Where(filter);
     }
 
     /// <inheritdoc />

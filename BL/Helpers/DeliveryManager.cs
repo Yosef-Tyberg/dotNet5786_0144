@@ -14,13 +14,16 @@ internal static class DeliveryManager
 {
     private static DalApi.IDal s_dal = DalApi.Factory.Get;
 
-    public static IEnumerable<BO.DeliveryInList> ReadAllDeliveriesForList(Func<BO.DeliveryInList, bool>? filter = null)
+    public static IEnumerable<BO.Delivery> ReadAll(Func<DO.Delivery, bool>? filter = null)
     {
-        var doDeliveries = s_dal.Delivery.ReadAll();
-        var boDeliveries = doDeliveries.Select(d => ConvertDoToBo(d));
-        var deliveryInList = boDeliveries.Select(ConvertBoToDeliveryInList);
-
-        return filter == null ? deliveryInList : deliveryInList.Where(filter);
+        try
+        {
+            return s_dal.Delivery.ReadAll(filter).Select(ConvertDoToBo);
+        }
+        catch (Exception ex)
+        {
+            throw Tools.ConvertDalException(ex);
+        }
     }
 
     public static BO.Delivery ReadDelivery(int deliveryId)
@@ -28,33 +31,7 @@ internal static class DeliveryManager
         try
         {
             var doDelivery = s_dal.Delivery.Read(deliveryId);
-            var boDelivery = ConvertDoToBo(doDelivery);
-
-            //add business logic
-            if(boDelivery.DeliveryEndTime is not null)
-            {
-                boDelivery.DeliveryDuration = (TimeSpan)(boDelivery.DeliveryEndTime - boDelivery.DeliveryStartTime);
-                boDelivery.AverageSpeed = boDelivery.ActualDistance is not null ? (double)boDelivery.ActualDistance / boDelivery.DeliveryDuration.TotalHours : 0;
-            }
-            
-            var order = s_dal.Order.Read(boDelivery.OrderId);
-            var config = AdminManager.GetConfig();
-            var deliveryDeadline = order.OrderOpenTime + config.MaxDeliveryTimeSpan;
-
-            if ((boDelivery.DeliveryEndTime == null && AdminManager.Now > deliveryDeadline) || (boDelivery.DeliveryEndTime != null && boDelivery.DeliveryEndTime > deliveryDeadline))
-            {
-                boDelivery.ScheduleStatus = BO.ScheduleStatus.Late;
-            }
-            else if (boDelivery.DeliveryEndTime == null && (deliveryDeadline - AdminManager.Now) < config.RiskRange)
-            {
-                boDelivery.ScheduleStatus = BO.ScheduleStatus.AtRisk;
-            }
-            else
-            {
-                boDelivery.ScheduleStatus = BO.ScheduleStatus.OnTime;
-            }
-
-            return boDelivery;
+            return ConvertDoToBo(doDelivery);
         }
         catch (DO.DalDoesNotExistException ex)
         {
@@ -154,7 +131,7 @@ internal static class DeliveryManager
     {
         try
         {
-            return new BO.Delivery
+            var boDelivery = new BO.Delivery
             {
                 Id = doDelivery.Id,
                 OrderId = doDelivery.OrderId,
@@ -165,6 +142,32 @@ internal static class DeliveryManager
                 DeliveryEndType = doDelivery.DeliveryEndType.HasValue ? (BO.DeliveryEndTypes?)doDelivery.DeliveryEndType.Value : null,
                 DeliveryEndTime = doDelivery.DeliveryEndTime
             };
+            
+            //add business logic
+            if(boDelivery.DeliveryEndTime is not null)
+            {
+                boDelivery.DeliveryDuration = (TimeSpan)(boDelivery.DeliveryEndTime - boDelivery.DeliveryStartTime);
+                boDelivery.AverageSpeed = boDelivery.ActualDistance is not null ? (double)boDelivery.ActualDistance / boDelivery.DeliveryDuration.TotalHours : 0;
+            }
+            
+            var order = OrderManager.Read(boDelivery.OrderId);
+            var config = AdminManager.GetConfig();
+            var deliveryDeadline = order.OrderOpenTime + config.MaxDeliveryTimeSpan;
+
+            if ((boDelivery.DeliveryEndTime == null && AdminManager.Now > deliveryDeadline) || (boDelivery.DeliveryEndTime != null && boDelivery.DeliveryEndTime > deliveryDeadline))
+            {
+                boDelivery.ScheduleStatus = BO.ScheduleStatus.Late;
+            }
+            else if (boDelivery.DeliveryEndTime == null && (deliveryDeadline - AdminManager.Now) < config.RiskRange)
+            {
+                boDelivery.ScheduleStatus = BO.ScheduleStatus.AtRisk;
+            }
+            else
+            {
+                boDelivery.ScheduleStatus = BO.ScheduleStatus.OnTime;
+            }
+
+            return boDelivery;
         }
         catch (Exception ex)
         {

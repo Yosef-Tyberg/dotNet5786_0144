@@ -135,7 +135,9 @@ internal static class OrderManager
                     DO.DeliveryEndTypes.Delivered => BO.OrderStatus.Delivered,
                     DO.DeliveryEndTypes.CustomerRefused => BO.OrderStatus.Refused,
                     DO.DeliveryEndTypes.Cancelled => BO.OrderStatus.Cancelled,
-                    _ => BO.OrderStatus.InProgress
+                    DO.DeliveryEndTypes.RecipientNotFound => BO.OrderStatus.Open,
+                    DO.DeliveryEndTypes.Failed => BO.OrderStatus.Open,
+                    _ => BO.OrderStatus.Open
                 };
             }
             
@@ -254,6 +256,10 @@ internal static class OrderManager
     {
         try
         {
+            // Verify that the order has not been assigned to a courier
+            if (DeliveryManager.IsOrderTaken(orderId))
+                throw new BO.BlOrderAlreadyAssignedException(
+                    $"Order ID '{orderId}' cannot be deleted as it is already assigned to a courier.");
             s_dal.Order.Delete(orderId);
         }
         catch (Exception ex)
@@ -305,5 +311,114 @@ internal static class OrderManager
         {
             throw Tools.ConvertDalException(ex);
         }
+    }
+    
+    /// <summary>
+    /// gets the tracking information for an order
+    /// </summary>
+    /// <param name="orderId">the id of the order to get the tracking information for</param>
+    /// <returns>the tracking information for the order</returns>
+    public static BO.OrderTracking GetOrderTracking(int orderId)
+    {
+        DO.Order doOrder;
+        try
+        {
+            doOrder = s_dal.Order.Read(orderId);
+        }
+        catch (DO.DalDoesNotExistException ex)
+        {
+            throw new BO.BlDoesNotExistException($"Order with ID {orderId} not found.", ex);
+        }
+
+        var deliveries = DeliveryManager.ReadAll(d => d.OrderId == orderId);
+
+        // Calculate Status
+        BO.OrderStatus status = BO.OrderStatus.Open;
+        BO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d.DeliveryEndTime == null);
+
+        if (activeDelivery != null)
+        {
+            status = BO.OrderStatus.InProgress;
+        }
+        else if (deliveries.Any())
+        {
+            var lastEnded = deliveries.OrderByDescending(d => d.DeliveryEndTime).First();
+            status = lastEnded.DeliveryEndType switch
+            {
+                BO.DeliveryEndTypes.Delivered => BO.OrderStatus.Delivered,
+                BO.DeliveryEndTypes.CustomerRefused => BO.OrderStatus.Refused,
+                BO.DeliveryEndTypes.Cancelled => BO.OrderStatus.Cancelled,
+                // Failed or RecipientNotFound implies the order is back to Open
+                _ => BO.OrderStatus.Open
+            };
+        }
+
+        // Get Assigned Courier (only if InProgress)
+        BO.CourierInList? assignedCourier = null;
+        if (status == BO.OrderStatus.InProgress && activeDelivery != null)
+        {
+            try
+            {
+                var doCourier = s_dal.Courier.Read(activeDelivery.CourierId);
+                assignedCourier = CourierManager.ConvertBoToCourierInList(CourierManager.ConvertDoToBo(doCourier));
+            }
+            catch (DO.DalDoesNotExistException) { /* Courier might have been deleted, ignore */ }
+        }
+
+        // Map Delivery History
+        IEnumerable<BO.DeliveryInList> history = deliveries
+            .OrderBy(d => d.DeliveryStartTime)
+            .Select(DeliveryManager.ConvertBoToDeliveryInList);
+
+        // Calculate Timing Properties
+        var config = AdminManager.GetConfig();
+        DateTime? maxDeliveryTime = doOrder.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
+        DateTime? expectedDeliveryTime = null;
+
+        if (status == BO.OrderStatus.InProgress && activeDelivery != null && assignedCourier != null)
+        {
+            double distance;
+            switch (assignedCourier.DeliveryType)
+            {
+                case BO.DeliveryTypes.Car:
+                case BO.DeliveryTypes.Motorcycle:
+                    distance = Helpers.Tools.GetDrivingDistance((double)config.Latitude, (double)config.Longitude, doOrder.Latitude, doOrder.Longitude);
+                    break;
+                case BO.DeliveryTypes.Bicycle:
+                case BO.DeliveryTypes.OnFoot:
+                    distance = Helpers.Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, doOrder.Latitude, doOrder.Longitude);
+                    break;
+                default:
+                    throw new BO.BlMissingPropertyException($"Invalid or missing delivery type for courier {assignedCourier.Id}");
+            }
+            
+            double speed = assignedCourier.DeliveryType switch
+            {
+                BO.DeliveryTypes.Car => config.AvgCarSpeedKmh,
+                BO.DeliveryTypes.Motorcycle => config.AvgMotorcycleSpeedKmh,
+                BO.DeliveryTypes.Bicycle => config.AvgBicycleSpeedKmh,
+                BO.DeliveryTypes.OnFoot => config.AvgWalkingSpeedKmh,
+                _ => config.AvgCarSpeedKmh
+            };
+
+            if (speed > 0)
+            {
+                double travelHours = distance / speed;
+                expectedDeliveryTime = activeDelivery.DeliveryStartTime.AddHours(travelHours);
+            }
+        }
+
+        return new BO.OrderTracking
+        {
+            Id = doOrder.Id,
+            Status = status,
+            AssignedCourier = assignedCourier,
+            DeliveryHistory = history,
+            VerbalDescription = doOrder.VerbalDescription,
+            CustomerFullName = doOrder.CustomerFullName,
+            OrderOpenTime = doOrder.OrderOpenTime,
+            ExpectedDeliveryTime = expectedDeliveryTime,
+            MaxDeliveryTime = maxDeliveryTime
+        };
     }
 }
