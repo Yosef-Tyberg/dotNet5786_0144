@@ -51,15 +51,7 @@ public interface IOrder
     /// <returns>An IEnumerable of BO.OrderInList that the courier can deliver.</returns>
     IEnumerable<BO.OrderInList> GetAvailableOrders(int courierId);
 
-    /// <summary>
-    * Allows a courier to take/assign an order for delivery.
-    * This will create a new Delivery entity.
-    /// </summary>
-    /// <param name="orderId">The ID of the order to take.</param>
-    /// <param name="courierId">The ID of the courier taking the order.</param>
-    void TakeOrder(int orderId, int courierId);
 
-    #endregion
     
     #region General Methods
     

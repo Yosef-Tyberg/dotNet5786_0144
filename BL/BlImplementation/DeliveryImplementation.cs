@@ -24,15 +24,15 @@ internal sealed class DeliveryImplementation : IDelivery
     }
 
     /// <inheritdoc />
-    public void PickUp(int courierId)
+    public void PickUp(int courierId, int orderId)
     {
-        DeliveryManager.PickUp(courierId);
+        DeliveryManager.PickUp(courierId, orderId);
     }
 
     /// <inheritdoc />
-    public void Deliver(int courierId)
+    public void Deliver(int courierId, BO.DeliveryEndTypes endType)
     {
-        DeliveryManager.Deliver(courierId);
+        DeliveryManager.Deliver(courierId, endType);
     }
 
     /// <inheritdoc />

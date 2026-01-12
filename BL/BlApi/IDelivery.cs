@@ -29,16 +29,18 @@ public interface IDelivery
     #region Courier Methods
 
     /// <summary>
-    /// Allows a courier to update the status of their current delivery to 'Picked Up'.
+    /// Allows a courier to pick up a specific order, which creates a new delivery record and marks the delivery as started.
     /// </summary>
     /// <param name="courierId">The ID of the courier performing the action.</param>
-    void PickUp(int courierId);
+    /// <param name="orderId">The ID of the order being picked up.</param>
+    void PickUp(int courierId, int orderId);
 
     /// <summary>
-    /// Allows a courier to update the status of their current delivery to 'Delivered'.
+    /// Allows a courier to update the status of their current delivery to 'Delivered' or another final state.
     /// </summary>
     /// <param name="courierId">The ID of the courier performing the action.</param>
-    void Deliver(int courierId);
+    /// <param name="endType">The final status of the delivery.</param>
+    void Deliver(int courierId, BO.DeliveryEndTypes endType);
 
     /// <summary>
     /// Retrieves the details of the currently active delivery for a specific courier.

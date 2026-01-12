@@ -117,7 +117,7 @@ internal static class OrderManager
                 PackageDensity = doOrder.Volume > 0 ? doOrder.Weight / doOrder.Volume : 0
             };
 
-            var lastDelivery = s_dal.Delivery.ReadAll().Where(d => d.OrderId == doOrder.Id)
+            var lastDelivery = DeliveryManager.ReadAll(d => d.OrderId == doOrder.Id)
                 .OrderByDescending(d => d.DeliveryEndTime).FirstOrDefault();
 
             if (lastDelivery == null)
@@ -132,11 +132,11 @@ internal static class OrderManager
             {
                 boOrder.OrderStatus = lastDelivery.DeliveryEndType switch
                 {
-                    DO.DeliveryEndTypes.Delivered => BO.OrderStatus.Delivered,
-                    DO.DeliveryEndTypes.CustomerRefused => BO.OrderStatus.Refused,
-                    DO.DeliveryEndTypes.Cancelled => BO.OrderStatus.Cancelled,
-                    DO.DeliveryEndTypes.RecipientNotFound => BO.OrderStatus.Open,
-                    DO.DeliveryEndTypes.Failed => BO.OrderStatus.Open,
+                    BO.DeliveryEndTypes.Delivered => BO.OrderStatus.Delivered,
+                    BO.DeliveryEndTypes.CustomerRefused => BO.OrderStatus.Refused,
+                    BO.DeliveryEndTypes.Cancelled => BO.OrderStatus.Cancelled,
+                    BO.DeliveryEndTypes.RecipientNotFound => BO.OrderStatus.Open,
+                    BO.DeliveryEndTypes.Failed => BO.OrderStatus.Open,
                     _ => BO.OrderStatus.Open
                 };
             }
@@ -288,31 +288,7 @@ internal static class OrderManager
         }
     }
     
-    /// <summary>
-    /// Allows a courier to take/assign an order for delivery.
-    /// This will create a new Delivery entity.
-    /// </summary>
-    /// <param name="orderId">The ID of the order to take.</param>
-    /// <param name="courierId">The ID of the courier taking the order.</param>
-    public static void TakeOrder(int orderId, int courierId)
-    {
-        try
-        {
-            // Verify that the order exists and is not already taken
-            Read(orderId);
-            if (DeliveryManager.IsOrderTaken(orderId))
-                throw new BO.BlOrderAlreadyAssignedException(
-                    $"Order ID '{orderId}' is already assigned and cannot be taken again.");
-            
-            // Create a new delivery
-            DeliveryManager.Create(orderId, courierId);
-        }
-        catch (Exception ex)
-        {
-            throw Tools.ConvertDalException(ex);
-        }
-    }
-    
+
     /// <summary>
     /// gets the tracking information for an order
     /// </summary>
@@ -359,8 +335,8 @@ internal static class OrderManager
         {
             try
             {
-                var doCourier = s_dal.Courier.Read(activeDelivery.CourierId);
-                assignedCourier = CourierManager.ConvertBoToCourierInList(CourierManager.ConvertDoToBo(doCourier));
+                var boCourier = CourierManager.ReadCourier(activeDelivery.CourierId);
+                assignedCourier = CourierManager.ConvertBoToCourierInList(boCourier);
             }
             catch (DO.DalDoesNotExistException) { /* Courier might have been deleted, ignore */ }
         }

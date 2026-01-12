@@ -31,10 +31,7 @@ internal sealed class OrderImplementation : IOrder
     public IEnumerable<BO.OrderInList> GetAvailableOrders(int courierId) =>
         OrderManager.GetAvailableOrders(courierId).Select(OrderManager.ConvertBoToOrderInList);
 
-    /// <inheritdoc />
-    public void TakeOrder(int orderId, int courierId) => OrderManager.TakeOrder(orderId, courierId);
-    
-    /// <inheritdoc />
+
     public void Delete(int orderId) => OrderManager.Delete(orderId);
     
     /// <inheritdoc />
