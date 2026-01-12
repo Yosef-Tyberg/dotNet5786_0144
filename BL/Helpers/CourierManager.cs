@@ -292,7 +292,7 @@ internal static class CourierManager
     /// <param name="hqLatitude">The latitude of the headquarters.</param>
     /// <param name="hqLongitude">The longitude of the headquarters.</param>
     /// <returns>True if the order is in range, false otherwise.</returns>
-    private static bool IsOrderInCourierRange(BO.Order order, BO.Courier courier, double hqLatitude, double hqLongitude)
+    internal static bool IsOrderInCourierRange(BO.Order order, BO.Courier courier, double hqLatitude, double hqLongitude)
     {
         if (!courier.PersonalMaxDeliveryDistance.HasValue)
         {
@@ -309,7 +309,7 @@ internal static class CourierManager
     /// <returns>A BO.CourierStatistics object.</returns>
     public static BO.CourierStatistics GetCourierStatistics(int courierId)
     {
-        var deliveries = GetCourierDeliveryHistory(courierId).ToList();
+        var deliveries = GetCourierDeliveryHistory(courierId);
         if (!deliveries.Any())
         {
             return new BO.CourierStatistics(); // Return empty stats if no deliveries
@@ -345,6 +345,3 @@ internal static class CourierManager
         //implementation will be added in the future
     }
 }
-
-
-

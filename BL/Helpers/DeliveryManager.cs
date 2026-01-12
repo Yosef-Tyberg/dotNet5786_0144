@@ -92,26 +92,29 @@ internal static class DeliveryManager
         double? distance = delivery.ActualDistance; // Preserve existing distance if any
         if (endType == BO.DeliveryEndTypes.Delivered)
         {
-            var order = OrderManager.Read(delivery.OrderId);
-            var config = AdminManager.GetConfig();
-            switch ((BO.DeliveryTypes)delivery.DeliveryType)
-            {
-                case BO.DeliveryTypes.Car:
-                case BO.DeliveryTypes.Motorcycle:
-                    distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
-                    break;
-                case BO.DeliveryTypes.Bicycle:
-                case BO.DeliveryTypes.OnFoot:
-                    distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
-                    break;
-                default:
-                    throw new BO.BlMissingPropertyException($"Could not calculate properties for unrecognized delivery type: {(BO.DeliveryTypes)delivery.DeliveryType}");
-            }
+            distance = CalculateActualDistance(delivery);
         }
 
         delivery = delivery with { DeliveryEndTime = AdminManager.Now, DeliveryEndType = (DO.DeliveryEndTypes)endType, ActualDistance = distance };
         
         s_dal.Delivery.Update(delivery);
+    }
+
+    /// <summary>
+    /// Calculates the actual distance for a delivery.
+    /// </summary>
+    /// <param name="delivery">The delivery for which to calculate the distance.</param>
+    /// <returns>The calculated distance.</returns>
+    private static double CalculateActualDistance(DO.Delivery delivery)
+    {
+        var order = OrderManager.Read(delivery.OrderId);
+        var config = AdminManager.GetConfig();
+        return (BO.DeliveryTypes)delivery.DeliveryType switch
+        {
+            BO.DeliveryTypes.Car or BO.DeliveryTypes.Motorcycle => Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude),
+            BO.DeliveryTypes.Bicycle or BO.DeliveryTypes.OnFoot => Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude),
+            _ => throw new BO.BlMissingPropertyException($"Could not calculate properties for unrecognized delivery type: {(BO.DeliveryTypes)delivery.DeliveryType}"),
+        };
     }
 
     /// <summary>
@@ -177,86 +180,205 @@ internal static class DeliveryManager
             
             boDelivery.MaximumDeliveryTime = order.OrderOpenTime + config.MaxDeliveryTimeSpan;
 
-            double distance;
-            double speed;
-            switch (boDelivery.DeliveryType)
-            {
-                case BO.DeliveryTypes.Car:
-                    distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
-                    speed = config.AvgCarSpeedKmh;
-                    break;
-                case BO.DeliveryTypes.Motorcycle:
-                    distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
-                    speed = config.AvgMotorcycleSpeedKmh;
-                    break;
-                case BO.DeliveryTypes.Bicycle:
-                    distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
-                    speed = config.AvgBicycleSpeedKmh;
-                    break;
-                case BO.DeliveryTypes.OnFoot:
-                    distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
-                    speed = config.AvgWalkingSpeedKmh;
-                    break;
-                default:
-                    throw new BO.BlMissingPropertyException($"Could not calculate properties for unrecognized delivery type: {boDelivery.DeliveryType}");
-            }
 
-            if (speed > 0)
-            {
-                var estimatedHours = distance / speed;
-                boDelivery.ExpectedDeliveryTime = boDelivery.DeliveryStartTime.AddHours(estimatedHours);
-            }
-            else
-            {
-                boDelivery.ExpectedDeliveryTime = boDelivery.MaximumDeliveryTime;
-            }
 
-            if ((boDelivery.DeliveryEndTime == null && AdminManager.Now > boDelivery.MaximumDeliveryTime) || (boDelivery.DeliveryEndTime != null && boDelivery.DeliveryEndTime > boDelivery.MaximumDeliveryTime))
-            {
-                boDelivery.ScheduleStatus = BO.ScheduleStatus.Late;
-            }
-            else if (boDelivery.DeliveryEndTime == null && (boDelivery.MaximumDeliveryTime - AdminManager.Now) < config.RiskRange)
-            {
-                boDelivery.ScheduleStatus = BO.ScheduleStatus.AtRisk;
-            }
-            else
-            {
-                boDelivery.ScheduleStatus = BO.ScheduleStatus.OnTime;
-            }
+            boDelivery.ExpectedDeliveryTime = CalculateExpectedDeliveryTime(boDelivery, order, config);
+
+
+
+            boDelivery.ScheduleStatus = DetermineScheduleStatus(boDelivery, config.RiskRange);
+
+
 
             return boDelivery;
+
         }
+
         catch (Exception ex)
+
         {
+
             throw Tools.ConvertDalException(ex);
+
         }
+
     }
+
+
+
     /// <summary>
-    /// Converts a business layer Delivery entity to a summary list view.
-    /// Summary entities are derived from full BO entities (not directly from DO)
-    /// to ensure calculated properties and validations are preserved.
+
+    /// Calculates the expected delivery time for a given delivery.
+
     /// </summary>
-    /// <param name="boDelivery">The BO Delivery to convert.</param>
-    /// <returns>A DeliveryInList summary entity.</returns>
-    /// <exception cref="BO.BlInvalidInputException">Thrown when conversion fails.</exception>
-    public static BO.DeliveryInList ConvertBoToDeliveryInList(BO.Delivery boDelivery)
+
+    /// <param name="delivery">The delivery.</param>
+
+    /// <param name="order">The associated order.</param>
+
+    /// <param name="config">The application configuration.</param>
+
+    /// <returns>The calculated expected delivery time.</returns>
+
+    private static DateTime CalculateExpectedDeliveryTime(BO.Delivery delivery, BO.Order order, BO.Config config)
+
     {
+
+        double distance;
+
+        double speed;
+
+        switch (delivery.DeliveryType)
+
+        {
+
+            case BO.DeliveryTypes.Car:
+
+                distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
+
+                speed = config.AvgCarSpeedKmh;
+
+                break;
+
+            case BO.DeliveryTypes.Motorcycle:
+
+                distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
+
+                speed = config.AvgMotorcycleSpeedKmh;
+
+                break;
+
+            case BO.DeliveryTypes.Bicycle:
+
+                distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
+
+                speed = config.AvgBicycleSpeedKmh;
+
+                break;
+
+            case BO.DeliveryTypes.OnFoot:
+
+                distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
+
+                speed = config.AvgWalkingSpeedKmh;
+
+                break;
+
+            default:
+
+                throw new BO.BlMissingPropertyException($"Could not calculate properties for unrecognized delivery type: {delivery.DeliveryType}");
+
+        }
+
+        if (speed > 0)
+
+        {
+
+            var estimatedHours = distance / speed;
+
+            return delivery.DeliveryStartTime.AddHours(estimatedHours);
+
+        }
+
+        throw new BO.BlMissingPropertyException($"speed must be greater than 0");
+    }
+
+
+
+    /// <summary>
+
+    /// Determines the schedule status of a delivery.
+
+    /// </summary>
+
+    /// <param name="delivery">The delivery to check.</param>
+
+    /// <param name="riskRange">The time span defining the risk range.</param>
+
+    /// <returns>The calculated schedule status.</returns>
+
+    private static BO.ScheduleStatus DetermineScheduleStatus(BO.Delivery delivery, TimeSpan riskRange)
+
+    {
+
+        if ((delivery.DeliveryEndTime == null && AdminManager.Now > delivery.MaximumDeliveryTime) || (delivery.DeliveryEndTime != null && delivery.DeliveryEndTime > delivery.MaximumDeliveryTime))
+
+        {
+
+            return BO.ScheduleStatus.Late;
+
+        }
+
+
+
+        if (delivery.DeliveryEndTime == null && (delivery.MaximumDeliveryTime - AdminManager.Now) < riskRange)
+
+        {
+
+            return BO.ScheduleStatus.AtRisk;
+
+        }
+
+
+
+        return BO.ScheduleStatus.OnTime;
+
+    }
+
+
+
+    /// <summary>
+
+    /// Converts a business layer Delivery entity to a summary list view.
+
+    /// Summary entities are derived from full BO entities (not directly from DO)
+
+    /// to ensure calculated properties and validations are preserved.
+
+    /// </summary>
+
+    /// <param name="boDelivery">The BO Delivery to convert.</param>
+
+    /// <returns>A DeliveryInList summary entity.</returns>
+
+    /// <exception cref="BO.BlInvalidInputException">Thrown when conversion fails.</exception>
+
+    public static BO.DeliveryInList ConvertBoToDeliveryInList(BO.Delivery boDelivery)
+
+    {
+
         try
+
         {
+
             return new BO.DeliveryInList
+
             {
+
                 Id = boDelivery.Id,
+
                 OrderId = boDelivery.OrderId,
+
                 CourierId = boDelivery.CourierId,
+
                 DeliveryStartTime = boDelivery.DeliveryStartTime,
+
                 ScheduleStatus = boDelivery.ScheduleStatus,
+
                 DeliveryEndType = boDelivery.DeliveryEndType
+
             };
+
         }
+
         catch (Exception ex)
+
         {
+
             throw Tools.ConvertDalException(ex);
+
         }
+
     }
     
     /// <summary>
@@ -277,14 +399,12 @@ internal static class DeliveryManager
     public static void Create(int orderId, int courierId)
     {
         BO.Courier courier = CourierManager.ReadCourier(courierId);
+        var order = OrderManager.Read(orderId);
+        var config = AdminManager.GetConfig();
 
-        if (courier.PersonalMaxDeliveryDistance.HasValue)
+        if (!CourierManager.IsOrderInCourierRange(order, courier, (double)config.Latitude, (double)config.Longitude))
         {
-            var order = OrderManager.Read(orderId);
-            var config = AdminManager.GetConfig();
-            var distance = Tools.GetAerialDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
-            if (distance > courier.PersonalMaxDeliveryDistance)
-                throw new BO.BlInvalidInputException($"Order location is too far for this courier. a maximum of {courier.PersonalMaxDeliveryDistance}km is allowed");
+            throw new BO.BlInvalidInputException($"Order location is too far for this courier. a maximum of {courier.PersonalMaxDeliveryDistance}km is allowed");
         }
 
         // Determine the delivery type based on the courier's vehicle
@@ -302,28 +422,16 @@ internal static class DeliveryManager
         );
 
         s_dal.Delivery.Create(newDelivery);
-
     }
-
-            
 
     /// <summary>
-
     /// a method for periodic updates of the delivery
-
     /// </summary>
-
     /// <param name="oldClock"></param>
-
     /// <param name="newClock"></param>
-
     public static void PeriodicDeliveriesUpdate(DateTime oldClock, DateTime newClock)
-
     {
-
         //implementation will be added in the future
-
     }
-
 }
 
