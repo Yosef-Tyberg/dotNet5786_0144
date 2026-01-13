@@ -43,9 +43,9 @@ internal sealed class CourierImplementation : ICourier
     }
 
     /// <inheritdoc />
-    public void UpdateMyDetails(int courierId, string? fullName = null, string? phoneNum = null, string? email = null, string? password = null, double? maxDistance = null)
+    public void UpdateMyDetails(int courierId, string? fullName = null, string? phoneNum = null, string? email = null, string? password = null, double? maxDistance = null, BO.DeliveryTypes? deliveryType = null)
     {
-        CourierManager.UpdateMyDetails(courierId, fullName, phoneNum, email, password, maxDistance);
+        CourierManager.UpdateMyDetails(courierId, fullName, phoneNum, email, password, maxDistance, deliveryType);
     }
 
     /// <inheritdoc />

@@ -79,7 +79,6 @@ internal static class CourierManager
     /// <exception cref="BO.BlAlreadyExistsException">Thrown if a courier with the same ID already exists.</exception>
     public static void CreateCourier(BO.Courier courier)
     {
-        CourierValidation(courier);
         try
         {
             s_dal.Courier.Create(ConvertBoToDo(courier));
@@ -115,10 +114,34 @@ internal static class CourierManager
     /// <exception cref="BO.BlDoesNotExistException">Thrown if the courier is not found.</exception>
     public static void UpdateCourier(BO.Courier courier)
     {
-        CourierValidation(courier);
         try
         {
-            s_dal.Courier.Update(ConvertBoToDo(courier));
+            // Read the existing courier from the database.
+            var existingCourier = ReadCourier(courier.Id);
+
+            // Check if courier has an active delivery
+            if (DeliveryManager.GetMyCurrentDelivery(courier.Id) != null)
+            {
+                // If any property besides the allowed ones is changed, throw exception
+                if (existingCourier.Active != courier.Active ||
+                    existingCourier.DeliveryType != courier.DeliveryType)
+                {
+                    throw new BO.BlDeliveryInProgressException(
+                        $"Cannot update certain courier properties for courier ID '{courier.Id}' while a delivery is in progress.");
+                }
+            }
+            
+            // Update only the properties that an admin is allowed to change.
+            existingCourier.FullName = courier.FullName;
+            existingCourier.MobilePhone = courier.MobilePhone;
+            existingCourier.Email = courier.Email;
+            existingCourier.Password = courier.Password;
+            existingCourier.Active = courier.Active;
+            existingCourier.PersonalMaxDeliveryDistance = courier.PersonalMaxDeliveryDistance;
+            existingCourier.DeliveryType = courier.DeliveryType;
+
+            // Save the updated courier to the database.
+            s_dal.Courier.Update(ConvertBoToDo(existingCourier));
         }
         catch (DO.DalDoesNotExistException ex)
         {
@@ -135,12 +158,23 @@ internal static class CourierManager
     /// <param name="email">Optional new email.</param>
     /// <param name="password">Optional new password.</param>
     /// <param name="maxDistance">Optional new max delivery distance.</param>
-    public static void UpdateMyDetails(int courierId, string? fullName = null, string? phoneNum = null, string? email = null, string? password = null, double? maxDistance = null)
+    public static void UpdateMyDetails(int courierId, string? fullName = null, string? phoneNum = null, string? email = null, string? password = null, double? maxDistance = null, BO.DeliveryTypes? deliveryType = null)
     {
         try
         {
-            // Read the courier once. This gives us a BO object.
-            var courier = ReadCourier(courierId);
+            var courier = ReadCourier(courierId); // Read once at the beginning
+
+            // Check if courier has an active delivery
+            if (DeliveryManager.GetMyCurrentDelivery(courierId) != null)
+            {
+                // If in delivery, only allow certain fields to be updated.
+                // DeliveryType is not one of them.
+                if (deliveryType.HasValue && courier.DeliveryType != deliveryType)
+                {
+                    throw new BO.BlDeliveryInProgressException(
+                        $"Cannot update DeliveryType for courier ID '{courierId}' while a delivery is in progress.");
+                }
+            }
 
             // Update properties using the ?? operator for conciseness
             courier.FullName = fullName ?? courier.FullName;
@@ -148,10 +182,8 @@ internal static class CourierManager
             courier.Email = email ?? courier.Email;
             courier.Password = password ?? courier.Password;
             courier.PersonalMaxDeliveryDistance = maxDistance ?? courier.PersonalMaxDeliveryDistance;
+            courier.DeliveryType = deliveryType ?? courier.DeliveryType;
 
-            // Since we modified the BO object, we should re-validate it.
-            CourierValidation(courier);
-            
             // Now, call the DAL update directly.
             s_dal.Courier.Update(ConvertBoToDo(courier));
         }
@@ -173,6 +205,7 @@ internal static class CourierManager
     /// <exception cref="BO.BlInvalidInputException">Thrown when conversion fails.</exception>
     public static DO.Courier ConvertBoToDo(BO.Courier boCourier)
     {
+        CourierValidation(boCourier);
         try
         {
             return new DO.Courier(

@@ -134,16 +134,7 @@ internal static class AdminManager //stage 4
         if (s_dal.Config.CompanyFullAddress != configuration.CompanyFullAddress)
         {
             s_dal.Config.CompanyFullAddress = configuration.CompanyFullAddress;
-            configChanged = true;
-        }
-        if (s_dal.Config.Latitude != configuration.Latitude)
-        {
-            s_dal.Config.Latitude = configuration.Latitude;
-            configChanged = true;
-        }
-        if (s_dal.Config.Longitude != configuration.Longitude)
-        {
-            s_dal.Config.Longitude = configuration.Longitude;
+            (s_dal.Config.Latitude, s_dal.Config.Longitude) = Tools.GetCoordinates(configuration.CompanyFullAddress!);
             configChanged = true;
         }
 

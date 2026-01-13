@@ -18,7 +18,9 @@ internal static class OrderManager
     /// Validates a business layer Order entity.
     /// </summary>
     /// <param name="boOrder">The BO Order to validate.</param>
-    public static void OrderValidation(BO.Order boOrder)
+    /// <param name="lat">The latitude of the order's address.</param>
+    /// <param name="lon">The longitude of the order's address.</param>
+    public static void OrderValidation(BO.Order boOrder, double lat, double lon)
     {
         if (boOrder == null)
             throw new BO.BlInvalidNullInputException("Order object cannot be null.");
@@ -31,12 +33,6 @@ internal static class OrderManager
 
         if (string.IsNullOrWhiteSpace(boOrder.CustomerMobile))
             throw new BO.BlInvalidInputException("Order customer mobile cannot be empty.");
-
-        if (boOrder.Latitude < -90 || boOrder.Latitude > 90)
-            throw new BO.BlInvalidInputException($"Latitude {boOrder.Latitude} is out of range.");
-
-        if (boOrder.Longitude < -180 || boOrder.Longitude > 180)
-            throw new BO.BlInvalidInputException($"Longitude {boOrder.Longitude} is out of range.");
 
         if (boOrder.Volume <= 0)
             throw new BO.BlInvalidInputException($"Volume {boOrder.Volume} must be positive.");
@@ -53,10 +49,8 @@ internal static class OrderManager
         if (string.IsNullOrWhiteSpace(boOrder.FullOrderAddress))
             throw new BO.BlInvalidAddressException("Order address cannot be empty.");
 
-        Tools.GetCoordinates(boOrder.FullOrderAddress);
-
         var config = AdminManager.GetConfig();
-        var distance = Tools.GetAerialDistance((double)config.Latitude, (double)config.Longitude, boOrder.Latitude, boOrder.Longitude);
+        var distance = Tools.GetAerialDistance((double)config.Latitude, (double)config.Longitude, lat, lon);
         if (distance > config.MaxGeneralDeliveryDistanceKm)
             throw new BO.BlInvalidInputException($"Order location is too far from the company's location. a maximum of {config.MaxGeneralDeliveryDistanceKm}km is allowed");
     }
@@ -69,6 +63,10 @@ internal static class OrderManager
     /// <exception cref="BO.BlInvalidInputException">Thrown when conversion fails.</exception>
     public static DO.Order ConvertBoToDo(BO.Order boOrder)
     {
+        var (lat, lon) = Tools.GetCoordinates(boOrder.FullOrderAddress!);
+        OrderValidation(boOrder, lat, lon);
+        boOrder.Latitude = lat;
+        boOrder.Longitude = lon;
         try
         {
             return new DO.Order(
@@ -231,7 +229,6 @@ internal static class OrderManager
     /// <param name="newOrder">The BO.Order object for the new order.</param>
     public static void Create(BO.Order newOrder)
     {
-        OrderValidation(newOrder);
         try
         {
             s_dal.Order.Create(ConvertBoToDo(newOrder));
@@ -242,20 +239,46 @@ internal static class OrderManager
         }
     }
     
-    /// <summary>
-    /// Updates an existing order.
-    /// </summary>
-    /// <param name="updatedOrder">A BO.Order object with the new details.</param>
     public static void Update(BO.Order updatedOrder)
     {
-        OrderValidation(updatedOrder);
         try
         {
-            // Verify that the order has not been assigned to a courier
+            // Verify that the order does not have a delivery in progress
             if (DeliveryManager.IsOrderTaken(updatedOrder.Id))
-                throw new BO.BlOrderAlreadyAssignedException(
-                    $"Order ID '{updatedOrder.Id}' cannot be updated as it is already assigned to a courier.");
-            s_dal.Order.Update(ConvertBoToDo(updatedOrder));
+                throw new BO.BlDeliveryInProgressException(
+                    $"Order ID '{updatedOrder.Id}' cannot be updated as it is currently being delivered.");
+            
+            // Read the original order from DAL to preserve immutable properties
+            DO.Order originalOrder = s_dal.Order.Read(updatedOrder.Id);
+
+            var (lat, lon) = (originalOrder.Latitude, originalOrder.Longitude);
+            // If address changed, get new coordinates
+            if (originalOrder.FullOrderAddress != updatedOrder.FullOrderAddress)
+            {
+                (lat, lon) = Tools.GetCoordinates(updatedOrder.FullOrderAddress!);
+            }
+            
+            OrderValidation(updatedOrder, lat, lon);
+
+            // Construct the updated DO.Order, preserving immutable fields from original
+            DO.Order doOrderToUpdate = new DO.Order(
+                Id: originalOrder.Id, // Preserve original ID
+                OrderType: (DO.OrderTypes)updatedOrder.OrderType,
+                VerbalDescription: updatedOrder.VerbalDescription,
+                Latitude: lat,
+                Longitude: lon,
+                CustomerFullName: updatedOrder.CustomerFullName,
+                CustomerMobile: updatedOrder.CustomerMobile,
+                Volume: updatedOrder.Volume,
+                Weight: updatedOrder.Weight,
+                Fragile: updatedOrder.Fragile,
+                Height: updatedOrder.Height,
+                Width: updatedOrder.Width,
+                OrderOpenTime: originalOrder.OrderOpenTime, // Preserve original open time
+                FullOrderAddress: updatedOrder.FullOrderAddress
+            );
+
+            s_dal.Order.Update(doOrderToUpdate);
         }
         catch (Exception ex)
         {

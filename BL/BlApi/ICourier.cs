@@ -67,7 +67,7 @@ public interface ICourier
     /// <param name="email">Optional new email.</param>
     /// <param name="password">Optional new password.</param>
     /// <param name="maxDistance">Optional new max delivery distance.</param>
-    void UpdateMyDetails(int courierId, string? fullName = null, string? phoneNum = null, string? email = null, string? password = null, double? maxDistance = null);
+    void UpdateMyDetails(int courierId, string? fullName = null, string? phoneNum = null, string? email = null, string? password = null, double? maxDistance = null, BO.DeliveryTypes? deliveryType = null);
     
     /// <summary>
     /// Retrieves a list of open orders that are within the courier's allowed range.

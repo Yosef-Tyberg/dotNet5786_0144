@@ -111,7 +111,7 @@ The `DeliveryEndTypes` enum defines how a delivery concludes. This affects the f
     - `Tools.GetDrivingDistance`: For `Car` and `Motorcycle` deliveries.
     - `Tools.GetWalkingDistance`: For `Bicycle` and `OnFoot` deliveries.
 - **Usage:**
-    - **Delivery Completion:** When a delivery is completed, the actual distance traveled is calculated using one of the methods above, based on the delivery type. This value is stored in the `ActualDistance` property of the delivery. The distance is calculated from the company headquarters to the order's destination.
+    - **Delivery Creation:** When a delivery is created, the actual distance traveled is calculated using one of the methods above, based on the delivery type. This value is stored in the `ActualDistance` property of the delivery. The distance is calculated from the company headquarters to the order's destination.
     - **Time Estimation:** These methods are also used for estimating the delivery time.
 
 ## 6. Delivery Entity Definition

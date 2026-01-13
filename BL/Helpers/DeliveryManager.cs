@@ -89,13 +89,7 @@ internal static class DeliveryManager
         if(delivery == null)
             throw new BO.BlCourierHasNoActiveDeliveryException("Courier has no picked-up delivery to deliver.");
 
-        double? distance = delivery.ActualDistance; // Preserve existing distance if any
-        if (endType == BO.DeliveryEndTypes.Delivered)
-        {
-            distance = CalculateActualDistance(delivery);
-        }
-
-        delivery = delivery with { DeliveryEndTime = AdminManager.Now, DeliveryEndType = (DO.DeliveryEndTypes)endType, ActualDistance = distance };
+        delivery = delivery with { DeliveryEndTime = AdminManager.Now, DeliveryEndType = (DO.DeliveryEndTypes)endType };
         
         s_dal.Delivery.Update(delivery);
     }
@@ -270,7 +264,7 @@ internal static class DeliveryManager
 
         }
 
-        if (speed > 0)
+        if (speed >= 1)
 
         {
 
@@ -280,7 +274,7 @@ internal static class DeliveryManager
 
         }
 
-        throw new BO.BlMissingPropertyException($"speed must be greater than 0");
+        throw new BO.BlMissingPropertyException($"speed must be >= 1");
     }
 
 
@@ -410,7 +404,7 @@ internal static class DeliveryManager
         // Determine the delivery type based on the courier's vehicle
         DO.DeliveryTypes deliveryType = (DO.DeliveryTypes)courier.DeliveryType;
         
-        var newDelivery = new DO.Delivery(
+        var tempDelivery = new DO.Delivery(
             Id: 0, 
             OrderId: orderId,
             CourierId: courierId,
@@ -420,6 +414,10 @@ internal static class DeliveryManager
             DeliveryEndType: null,
             DeliveryEndTime: null
         );
+        
+        double distance = CalculateActualDistance(tempDelivery);
+
+        var newDelivery = tempDelivery with { ActualDistance = distance };
 
         s_dal.Delivery.Create(newDelivery);
     }
