@@ -40,6 +40,14 @@ public interface IOrder
     /// <param name="orderId">The ID of the order to delete.</param>
     void Delete(int orderId);
 
+    /// <summary>
+    /// Cancels an order.
+    /// If the order is not yet assigned, a dummy delivery is created.
+    /// If the order is in progress, the delivery is cancelled.
+    /// </summary>
+    /// <param name="orderId">The ID of the order to cancel.</param>
+    void Cancel(int orderId);
+
     #endregion
 
     #region Courier Methods

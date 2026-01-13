@@ -68,12 +68,15 @@ Every class in the `BO` folder must follow these constraints:
 ### 2.7. System Clock Access
 - All access to the system clock from within the BL must go only through the `AdminManager.Now` property. Never directly through the DAL.
 
+### 2.8. Manager Method Usage
+- Where appropriate, other manager methods should be used instead of direct DL access.
+
 ## 3. Delivery Completion Types
 The `DeliveryEndTypes` enum defines how a delivery concludes. This affects the final `OrderStatus`.
 - **Delivered**: The order was delivered successfully. The Order Status becomes `Delivered`.
 - **CustomerRefused**: The courier arrived, but the customer refused the order. The package returns to dispatch, and the Order Status becomes `Refused` (Closed).
 - **Cancelled**: The order was cancelled. The Order Status becomes `Cancelled`.
-  - **Before Pickup**: An order awaiting assignment is closed via a "dummy" delivery (Start Time = End Time, CourierId = 0, EndType = `Cancelled`).
+  - **Before Pickup**: An order awaiting assignment is closed via a "dummy" delivery (Start Time = End Time, CourierId = 0, EndType = `Cancelled`). This functionality is supported in the deliveryImplementation/manager classes.
   - **During Delivery**: The courier is recalled. The delivery is closed with EndType `Cancelled`.
 - **RecipientNotFound**: The courier arrived, but the recipient was absent. The delivery is closed. The Order Status reverts to `Open`, and the order returns to the dispatch pool to be available for a new delivery attempt by any courier.
 - **Failed**: Technical or route failure. The delivery closes, and the order remains `Open`.
@@ -91,6 +94,9 @@ The `DeliveryEndTypes` enum defines how a delivery concludes. This affects the f
   - **OnTime**: The delivery is active with sufficient time, or completed before the deadline.
   - **AtRisk**: The delivery is active, and the remaining time is less than `Config.RiskRange`.
   - **Late**: The delivery is active but exceeded `Maximum Delivery Time`, or was completed after the deadline.
+
+### 4.3. Courier Activity
+- An active courier's `Active` property should be set to false if a timespan greater than `Config.InactivityRange` has passed since the courier was last involved in a delivery. This includes deliveries in progress.
 
 ## 5. Distance Calculation Rules
 

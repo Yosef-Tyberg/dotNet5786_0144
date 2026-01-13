@@ -286,7 +286,8 @@ public static class Initialization
                 Fragile: s_rnd.NextDouble() < 0.15,
                 Height: Math.Round(5 + s_rnd.NextDouble() * 50, 2),
                 Width: Math.Round(5 + s_rnd.NextDouble() * 50, 2),
-                OrderOpenTime: openTime
+                OrderOpenTime: openTime,
+                FullOrderAddress: addr.Label
             );
 
             orderDal.Create(order);

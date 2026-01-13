@@ -33,6 +33,9 @@ internal sealed class OrderImplementation : IOrder
 
 
     public void Delete(int orderId) => OrderManager.Delete(orderId);
+
+    /// <inheritdoc />
+    public void Cancel(int orderId) => OrderManager.Cancel(orderId);
     
     /// <inheritdoc />
     public BO.OrderTracking GetOrderTracking(int orderId) => OrderManager.GetOrderTracking(orderId);

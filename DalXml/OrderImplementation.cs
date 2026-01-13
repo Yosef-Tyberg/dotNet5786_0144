@@ -29,7 +29,8 @@ public class OrderImplementation : IOrder
             Fragile = (bool?)orderElem.Element("Fragile") ?? false,
             Height = orderElem.ToDoubleNullable("Height") ?? 0,
             Width = orderElem.ToDoubleNullable("Width") ?? 0,
-            OrderOpenTime = orderElem.ToDateTimeNullable("OrderOpenTime") ?? DateTime.Now
+            OrderOpenTime = orderElem.ToDateTimeNullable("OrderOpenTime") ?? DateTime.Now,
+            FullOrderAddress = (string?)orderElem.Element("FullOrderAddress") ?? ""
         };
     }
 
@@ -56,6 +57,8 @@ public class OrderImplementation : IOrder
         yield return new XElement("Height", item.Height);
         yield return new XElement("Width", item.Width);
         yield return new XElement("OrderOpenTime", item.OrderOpenTime);
+        if (!string.IsNullOrEmpty(item.FullOrderAddress))
+            yield return new XElement("FullOrderAddress", item.FullOrderAddress);
     }
 
     /// <summary>

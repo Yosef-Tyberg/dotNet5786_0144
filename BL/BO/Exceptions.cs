@@ -496,3 +496,15 @@ public class BlOrderCannotBeDeletedException : Exception
     public BlOrderCannotBeDeletedException(string? message, Exception? innerException) : base(message, innerException) { }
     protected BlOrderCannotBeDeletedException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 }
+
+/// <summary>
+/// Thrown when an admin tries to cancel an order that has already been delivered.
+/// </summary>
+[Serializable]
+public class BlOrderCannotBeCancelledException : Exception
+{
+    public BlOrderCannotBeCancelledException() : base("Cannot cancel an order that has been delivered.") { }
+    public BlOrderCannotBeCancelledException(string? message) : base(message) { }
+    public BlOrderCannotBeCancelledException(string? message, Exception? innerException) : base(message, innerException) { }
+    protected BlOrderCannotBeCancelledException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+}

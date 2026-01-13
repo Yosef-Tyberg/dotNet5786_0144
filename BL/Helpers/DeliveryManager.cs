@@ -425,6 +425,26 @@ internal static class DeliveryManager
     }
 
     /// <summary>
+    /// Creates a new dummy delivery for a cancelled order.
+    /// </summary>
+    /// <param name="orderId">The ID of the order.</param>
+    public static void CreateCancelledDelivery(int orderId)
+    {
+        var dummyDelivery = new DO.Delivery
+        (
+            Id: 0, // Set to 0 to indicate a new delivery
+            OrderId: orderId,
+            CourierId: 0, // Dummy courier
+            DeliveryType: DO.DeliveryTypes.OnFoot, // Or any default
+            DeliveryStartTime: AdminManager.Now,
+            DeliveryEndTime: AdminManager.Now,
+            DeliveryEndType: DO.DeliveryEndTypes.Cancelled,
+            ActualDistance: 0
+        );
+        s_dal.Delivery.Create(dummyDelivery);
+    }
+
+    /// <summary>
     /// a method for periodic updates of the delivery
     /// </summary>
     /// <param name="oldClock"></param>

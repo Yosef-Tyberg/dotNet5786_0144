@@ -51,6 +51,11 @@ public class OrderTracking
     public DateTime? MaxDeliveryTime { get; set; }
 
     /// <summary>
+    /// The full address of the order.
+    /// </summary>
+    public string? FullOrderAddress { get; set; }
+
+    /// <summary>
     /// Returns a string representation of the OrderTracking entity.
     /// </summary>
     public override string ToString() => Helpers.Tools.ToStringProperty(this);

@@ -89,6 +89,11 @@ public class Order
     public OrderStatus OrderStatus { get; set; }
 
     /// <summary>
+    /// The full address of the order.
+    /// </summary>
+    public string FullOrderAddress { get; set; }
+
+    /// <summary>
     /// Returns a string representation of the Order entity.
     /// </summary>
     public override string ToString() => Helpers.Tools.ToStringProperty(this);

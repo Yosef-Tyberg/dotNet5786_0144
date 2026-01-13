@@ -248,9 +248,9 @@ internal static class Tools
         }
         catch (Exception ex)
         {
-            throw new BlInvalidInputException("Error getting coordinates", ex);
+            throw new BlInvalidAddressException("Error getting coordinates", ex);
         }
-        throw new BlInvalidInputException("address not found");
+        throw new BlInvalidAddressException("address not found");
     }
 
     /// <summary>

@@ -29,9 +29,9 @@ public record Order
     bool Fragile,
     double Height,
     double Width,
-    DateTime OrderOpenTime
-
+    DateTime OrderOpenTime,
+    string FullOrderAddress
 )
 {
-    public Order() : this(0, OrderTypes.Pizza, "", 0, 0, "", "", 0, 0, false, 0, 0, DateTime.Now) { }
+    public Order() : this(0, OrderTypes.Pizza, "", 0, 0, "", "", 0, 0, false, 0, 0, DateTime.Now, "") { }
 }

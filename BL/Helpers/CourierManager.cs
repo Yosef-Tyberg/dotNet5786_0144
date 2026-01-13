@@ -336,12 +336,60 @@ internal static class CourierManager
     }
 
     /// <summary>
-    /// a method for periodic updates of the courier
+    /// a method for periodic updates of the courier.
+    /// An active courier is deactivated if they have been inactive for a period greater
+    /// than Config.InactivityRange. Inactivity is measured from the end of their last
+    /// delivery, or from their employment start time if they have no delivery history.
+    /// Couriers with a delivery in progress are always considered active.
     /// </summary>
-    /// <param name="oldClock"></param>
-    /// <param name="newClock"></param>
+    /// <param name="oldClock">The previous time the update was run.</param>
+    /// <param name="newClock">The current time the update is run.</param>
     public static void PeriodicCouriersUpdate(DateTime oldClock, DateTime newClock)
     {
-        //implementation will be added in the future
+        var inactivityRange = AdminManager.GetConfig().InactivityRange;
+        var activeCouriers = ReadAll(c => c.Active).ToList(); 
+        var allDeliveries = DeliveryManager.ReadAll().ToList();
+
+        var couriersToDeactivate = new List<BO.Courier>();
+
+        foreach (var courier in activeCouriers)
+        {
+            var courierDeliveries = allDeliveries.Where(d => d.CourierId == courier.Id).ToList();
+
+            // If the courier has a delivery in progress, they are considered active.
+            if (courierDeliveries.Any(d => !d.DeliveryEndTime.HasValue))
+            {
+                continue; // Skip to the next courier.
+            }
+
+            DateTime? lastInvolvementDate;
+
+            var completedDeliveries = courierDeliveries.Where(d => d.DeliveryEndTime.HasValue).ToList();
+
+            if (completedDeliveries.Any())
+            {
+                lastInvolvementDate = completedDeliveries.Max(d => d.DeliveryEndTime.Value);
+            }
+            else
+            {
+                // If no completed deliveries, their last "activity" is when they were hired.
+                lastInvolvementDate = courier.EmploymentStartTime;
+            }
+
+            // Now check if the inactivity period has been exceeded.
+            if (lastInvolvementDate.HasValue && (AdminManager.Now - lastInvolvementDate.Value > inactivityRange))
+            {
+                couriersToDeactivate.Add(courier);
+            }
+        }
+
+        if (couriersToDeactivate.Any())
+        {
+            foreach (var courier in couriersToDeactivate)
+            {
+                courier.Active = false;
+                UpdateCourier(courier);
+            }
+        }
     }
 }

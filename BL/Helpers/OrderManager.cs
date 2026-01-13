@@ -50,6 +50,11 @@ internal static class OrderManager
         if (boOrder.Width <= 0)
             throw new BO.BlInvalidInputException($"Width {boOrder.Width} must be positive.");
 
+        if (string.IsNullOrWhiteSpace(boOrder.FullOrderAddress))
+            throw new BO.BlInvalidAddressException("Order address cannot be empty.");
+
+        Tools.GetCoordinates(boOrder.FullOrderAddress);
+
         var config = AdminManager.GetConfig();
         var distance = Tools.GetAerialDistance((double)config.Latitude, (double)config.Longitude, boOrder.Latitude, boOrder.Longitude);
         if (distance > config.MaxGeneralDeliveryDistanceKm)
@@ -79,7 +84,8 @@ internal static class OrderManager
                 Fragile: boOrder.Fragile,
                 Height: boOrder.Height,
                 Width: boOrder.Width,
-                OrderOpenTime: boOrder.OrderOpenTime
+                OrderOpenTime: boOrder.OrderOpenTime,
+                FullOrderAddress: boOrder.FullOrderAddress
             );
         }
         catch (Exception ex)
@@ -113,6 +119,7 @@ internal static class OrderManager
                 Height = doOrder.Height,
                 Width = doOrder.Width,
                 OrderOpenTime = doOrder.OrderOpenTime,
+                FullOrderAddress = doOrder.FullOrderAddress,
                 TimeOpenedDuration = AdminManager.Now - doOrder.OrderOpenTime,
                 PackageDensity = doOrder.Volume > 0 ? doOrder.Weight / doOrder.Volume : 0
             };
@@ -350,7 +357,8 @@ internal static class OrderManager
             CustomerFullName = doOrder.CustomerFullName,
             OrderOpenTime = doOrder.OrderOpenTime,
             ExpectedDeliveryTime = expectedDeliveryTime,
-            MaxDeliveryTime = maxDeliveryTime
+            MaxDeliveryTime = maxDeliveryTime,
+            FullOrderAddress = doOrder.FullOrderAddress
         };
     }
 
@@ -411,5 +419,50 @@ internal static class OrderManager
     public static void PeriodicOrdersUpdate(DateTime oldClock, DateTime newClock)
     {
         //implementation will be added in the future
+    }
+
+    /// <summary>
+    /// Cancels an order.
+    /// </summary>
+    /// <param name="orderId">The ID of the order to cancel.</param>
+    public static void Cancel(int orderId)
+    {
+        try
+        {
+            BO.Order order = Read(orderId);
+
+            switch (order.OrderStatus)
+            {
+                case BO.OrderStatus.InProgress:
+                    // Find the active delivery
+                    var activeDelivery = s_dal.Delivery.Read(d => d.OrderId == orderId && d.DeliveryEndTime == null);
+                    if (activeDelivery != null)
+                    {
+                        // Cancel the delivery
+                        activeDelivery = activeDelivery with
+                        {
+                            DeliveryEndTime = AdminManager.Now,
+                            DeliveryEndType = DO.DeliveryEndTypes.Cancelled
+                        };
+                        s_dal.Delivery.Update(activeDelivery);
+                    }
+                    break;
+
+                case BO.OrderStatus.Open:
+                    // Create a dummy delivery
+                    DeliveryManager.CreateCancelledDelivery(orderId);
+                    break;
+
+                case BO.OrderStatus.Delivered:
+                case BO.OrderStatus.Cancelled:
+                case BO.OrderStatus.Refused:
+                    throw new BO.BlOrderCannotBeCancelledException(
+                        $"Order ID '{orderId}' cannot be cancelled as it is already in status {order.OrderStatus}.");
+            }
+        }
+        catch (Exception ex)
+        {
+            throw Tools.ConvertDalException(ex);
+        }
     }
 }
