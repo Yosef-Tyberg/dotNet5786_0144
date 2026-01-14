@@ -1,4 +1,4 @@
-﻿using Dal;
+﻿﻿using Dal;
 using DalApi;
 using DO;
 
@@ -388,11 +388,13 @@ internal static class Program
         var activeRaw = Console.ReadLine();
         var active = existing.Active;
         if (!string.IsNullOrWhiteSpace(activeRaw))
+        {
             //if value provided, parse and validate
             activeRaw = activeRaw.Trim().ToLowerInvariant();
             if (!(activeRaw == "y") && !(activeRaw == "n"))
                 throw new DalInvalidInputException("invalid active flag");
             active = activeRaw.Trim().ToLowerInvariant() == "y";
+        }
 
         Console.Write($"DeliveryType (Car/Motorcycle/Bicycle/OnFoot) (current: {existing.DeliveryType}): ");
         var dtypeRaw = Console.ReadLine();
@@ -416,14 +418,15 @@ internal static class Program
                 throw new DalInvalidInputException("invalid employment start time");
         }
 
-        Console.Write($"PersonalMaxDeliveryDistance (km) (current: {existing.PersonalMaxDeliveryDistance?.ToString() ?? "null"}) (leave empty to keep): ");
+        Console.Write($"PersonalMaxDeliveryDistance (km) (current: {existing.PersonalMaxDeliveryDistance?.ToString() ?? "null"}) (leave empty to keep, 'null' to clear): ");
         var pmaxRaw = Console.ReadLine();
         double? pmax = existing.PersonalMaxDeliveryDistance;
         if (!string.IsNullOrWhiteSpace(pmaxRaw))
         {
-            if (!double.TryParse(pmaxRaw, out double parsed))
+            if (pmaxRaw.Trim().ToLowerInvariant() == "null") pmax = null;
+            else if (!double.TryParse(pmaxRaw, out double parsed))
                 throw new DalInvalidInputException("invalid personal max delivery distance");
-            pmax = parsed;
+            else pmax = parsed;
         }
 
         // Create an updated copy using record 'with' expression and write it back to DAL.
@@ -531,9 +534,10 @@ internal static class Program
         if (string.IsNullOrWhiteSpace(verbal))
             throw new DalInvalidInputException("invalid verbal description");
 
-        Console.Write("FullOrderAccess (empty to auto-generate): ");
-        var access = Console.ReadLine();
-        if (string.IsNullOrWhiteSpace(access)) access = Guid.NewGuid().ToString("N");
+        Console.Write("FullOrderAddress: ");
+        var address = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(address))
+            throw new DalInvalidInputException("invalid full order address");
 
         Console.Write("Latitude (double): ");
         var latRaw = Console.ReadLine();
@@ -592,7 +596,7 @@ internal static class Program
         else if (!DateTime.TryParse(openRaw, out open))
             throw new DalInvalidInputException("invalid order open time");
 
-        var order = new Order(0, otype, verbal!, lat, lon, cust!, custPhone!, volume, weight, fragile, height, width, open);
+        var order = new Order(0, otype, verbal!, lat, lon, cust!, custPhone!, volume, weight, fragile, height, width, open, address);
         s_dal.Order!.Create(order);
         Console.WriteLine("Order created (Id assigned by DAL).");
     }
@@ -775,6 +779,10 @@ internal static class Program
                 throw new DalInvalidInputException("invalid width");
         }
 
+        Console.Write($"FullOrderAddress (current: {existing.FullOrderAddress}): ");
+        var addressRaw = Console.ReadLine();
+        var address = string.IsNullOrEmpty(addressRaw) ? existing.FullOrderAddress : addressRaw;
+
         Console.Write($"OrderOpenTime (yyyy-MM-dd HH:mm) (current: {existing.OrderOpenTime}): ");
         var openRaw = Console.ReadLine();
         var open = existing.OrderOpenTime;
@@ -797,6 +805,7 @@ internal static class Program
             Fragile = fragile,
             Height = height,
             Width = width,
+            FullOrderAddress = address,
             OrderOpenTime = open
         };
 
@@ -1066,35 +1075,38 @@ internal static class Program
             if (!DateTime.TryParse(stRaw2, out start)) throw new DalInvalidInputException("invalid delivery start time");
         }
 
-        Console.Write($"ActualDistance (current: {existing.ActualDistance?.ToString() ?? "null"}) leave empty to keep: ");
+        Console.Write($"ActualDistance (current: {existing.ActualDistance?.ToString() ?? "null"}) leave empty to keep, 'null' to clear: ");
         var aRaw = Console.ReadLine();
         double? actual = existing.ActualDistance;
         if (!string.IsNullOrWhiteSpace(aRaw))
         {
-            if (!double.TryParse(aRaw, out double parsedA)) throw new DalInvalidInputException("invalid actual distance");
-            actual = parsedA;
+            if (aRaw.Trim().ToLowerInvariant() == "null") actual = null;
+            else if (!double.TryParse(aRaw, out double parsedA)) throw new DalInvalidInputException("invalid actual distance");
+            else actual = parsedA;
         }
 
-        Console.Write($"DeliveryEndType (current: {existing.DeliveryEndType?.ToString() ?? "null"}) (empty to keep): ");
+        Console.Write($"DeliveryEndType (current: {existing.DeliveryEndType?.ToString() ?? "null"}) (empty to keep, 'null' to clear): ");
         var etRaw2 = Console.ReadLine();
         DeliveryEndTypes? endType = existing.DeliveryEndType;
         if (!string.IsNullOrWhiteSpace(etRaw2))
         {
-            if (!Enum.TryParse<DeliveryEndTypes>(etRaw2, true, out var parsedEt)
+            if (etRaw2.Trim().ToLowerInvariant() == "null") endType = null;
+            else if (!Enum.TryParse<DeliveryEndTypes>(etRaw2, true, out var parsedEt)
                 || !Enum.IsDefined(typeof(DeliveryEndTypes), parsedEt))
             {
                 throw new DalInvalidInputException("invalid delivery end type");
             }
-            endType = parsedEt;
+            else endType = parsedEt;
         }
 
-        Console.Write($"DeliveryEndTime (current: {existing.DeliveryEndTime?.ToString() ?? "null"}) (empty to keep): ");
+        Console.Write($"DeliveryEndTime (current: {existing.DeliveryEndTime?.ToString() ?? "null"}) (empty to keep, 'null' to clear): ");
         var eRaw2 = Console.ReadLine();
         DateTime? endTime = existing.DeliveryEndTime;
         if (!string.IsNullOrWhiteSpace(eRaw2))
         {
-            if (!DateTime.TryParse(eRaw2, out DateTime parsedE)) throw new DalInvalidInputException("invalid delivery end time");
-            endTime = parsedE;
+            if (eRaw2.Trim().ToLowerInvariant() == "null") endTime = null;
+            else if (!DateTime.TryParse(eRaw2, out DateTime parsedE)) throw new DalInvalidInputException("invalid delivery end time");
+            else endTime = parsedE;
         }
 
         var updated = existing with
