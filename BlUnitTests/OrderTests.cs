@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Helpers;
 using BlApi;
 using BO;
@@ -109,6 +109,29 @@ public class OrderTests
     }
 
     [TestMethod]
+    [ExpectedException(typeof(BlDoesNotExistException))]
+    public void Test_ReadOrder_NotFound_ThrowsException()
+    {
+        _bl.Order.Read(999999); // Non-existent ID
+    }
+
+    [TestMethod]
+    public void Test_ReadAllOrders_ReturnsData()
+    {
+        var orders = _bl.Order.ReadAll();
+        Assert.IsTrue(orders.Any(), "ReadAll should return a list of orders.");
+    }
+
+    [TestMethod]
+    public void Test_ReadAllOrders_WithFilter_ReturnsFilteredData()
+    {
+        var all = _bl.Order.ReadAll();
+        var filtered = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open);
+        Assert.IsTrue(filtered.All(o => o.OrderStatus == OrderStatus.Open));
+        // Note: We assume there are some open orders from initialization
+    }
+
+    [TestMethod]
     public void Test_UpdateOrder_Success()
     {
         // Arrange
@@ -137,6 +160,26 @@ public class OrderTests
         _bl.Order.Update(order);
     }
 
+    [TestMethod]
+    [ExpectedException(typeof(BlInvalidInputException))]
+    public void Test_UpdateOrder_InvalidData_ThrowsException()
+    {
+        // Arrange
+        var order = _bl.Order.Read(OrderManager.ReadAll().First().Id);
+        order.Weight = -10; // Invalid
+
+        // Act
+        _bl.Order.Update(order);
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(BlDoesNotExistException))]
+    public void Test_UpdateOrder_NotFound_ThrowsException()
+    {
+        var order = new Order { Id = 999999, CustomerFullName = "Ghost", FullOrderAddress = "Nowhere", CustomerMobile = "000", VerbalDescription = "None" };
+        _bl.Order.Update(order);
+    }
+
     #endregion
 
 
@@ -154,6 +197,13 @@ public class OrderTests
 
         // Assert
         Assert.ThrowsException<BlDoesNotExistException>(() => _bl.Order.Read(orderToDelete.Id));
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(BlDoesNotExistException))]
+    public void Test_DeleteOrder_NotFound_ThrowsException()
+    {
+        _bl.Order.Delete(999999);
     }
 
     [TestMethod]
@@ -184,6 +234,22 @@ public class OrderTests
     }
     
     [TestMethod]
+    public void Test_CancelOrder_InProgress_Success()
+    {
+        // Arrange: Pick up an order to make it InProgress
+        var courier = _bl.Courier.ReadAll(c => c.Active).First();
+        var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
+        _bl.Delivery.PickUp(courier.Id, order.Id);
+
+        // Act
+        _bl.Order.Cancel(order.Id);
+        var cancelledOrder = _bl.Order.Read(order.Id);
+
+        // Assert
+        Assert.AreEqual(OrderStatus.Cancelled, cancelledOrder.OrderStatus);
+    }
+
+    [TestMethod]
     [ExpectedException(typeof(BlOrderCannotBeCancelledException))]
     public void Test_CancelOrder_Delivered_ThrowsException()
     {
@@ -195,6 +261,13 @@ public class OrderTests
 
         // Act
         _bl.Order.Cancel(order.Id);
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(BlDoesNotExistException))]
+    public void Test_CancelOrder_NotFound_ThrowsException()
+    {
+        _bl.Order.Cancel(999999);
     }
 
     #endregion
@@ -242,6 +315,13 @@ public class OrderTests
         Assert.IsNotNull(trackingInfo.AssignedCourier);
         Assert.AreEqual(courier.Id, trackingInfo.AssignedCourier.Id);
         Assert.IsTrue(trackingInfo.DeliveryHistory.Any());
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(BlDoesNotExistException))]
+    public void Test_GetOrderTracking_NotFound_ThrowsException()
+    {
+        _bl.Order.GetOrderTracking(999999);
     }
 
     #endregion

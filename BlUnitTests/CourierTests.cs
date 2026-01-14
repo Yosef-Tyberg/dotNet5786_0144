@@ -91,6 +91,28 @@ public class CourierTests
         _bl.Courier.Create(invalidCourier);
     }
 
+    [TestMethod]
+    [ExpectedException(typeof(BlInvalidInputException))]
+    public void Test_CreateCourier_NegativeDistance_ThrowsException()
+    {
+        // Arrange
+        var invalidCourier = new Courier
+        {
+            Id = 123123123,
+            FullName = "Negative Distance",
+            MobilePhone = "050-000-0000",
+            Email = "neg@dist.com",
+            Password = "pass",
+            Active = true,
+            DeliveryType = DeliveryTypes.Car,
+            EmploymentStartTime = AdminManager.Now,
+            PersonalMaxDeliveryDistance = -5
+        };
+
+        // Act
+        _bl.Courier.Create(invalidCourier);
+    }
+
     #endregion
 
     #region Read Tests
@@ -125,6 +147,21 @@ public class CourierTests
 
         // Assert
         Assert.IsTrue(couriers.Any(), "ReadAll should return a list of couriers.");
+    }
+
+    [TestMethod]
+    public void Test_ReadAllCouriers_WithFilter_ReturnsFilteredData()
+    {
+        // Arrange
+        var allCouriers = _bl.Courier.ReadAll();
+        
+        // Act
+        var activeCouriers = _bl.Courier.ReadAll(c => c.Active);
+
+        // Assert
+        Assert.IsTrue(activeCouriers.All(c => c.Active));
+        if (allCouriers.Any(c => !c.Active))
+            Assert.IsTrue(activeCouriers.Count() < allCouriers.Count());
     }
 
     #endregion
@@ -163,6 +200,17 @@ public class CourierTests
         Assert.AreEqual("050-987-6543", updatedCourier.MobilePhone);
     }
 
+    [TestMethod]
+    [ExpectedException(typeof(BlInvalidInputException))]
+    public void Test_UpdateCourier_InvalidData_ThrowsException()
+    {
+        // Arrange
+        var courierToUpdate = _bl.Courier.Read(CourierManager.ReadAll().First().Id);
+        courierToUpdate.FullName = ""; // Invalid
+
+        // Act
+        _bl.Courier.Update(courierToUpdate);
+    }
 
     [TestMethod]
     [ExpectedException(typeof(BlDoesNotExistException))]
@@ -266,6 +314,27 @@ public class CourierTests
 
         // Assert
         Assert.IsFalse(openOrders.Any(), "Courier with no max distance should not see any open orders.");
+    }
+
+    [TestMethod]
+    public void Test_IsOrderInCourierRange_Logic()
+    {
+        // Arrange
+        var config = AdminManager.GetConfig();
+        double lat = (double)config.Latitude!;
+        double lon = (double)config.Longitude!;
+        
+        var courier = new Courier { PersonalMaxDeliveryDistance = 10 }; // 10 km
+        
+        // Create order ~0.5km away (0.005 deg lat is approx 0.55km)
+        var orderNear = new Order { Latitude = lat + 0.005, Longitude = lon }; 
+        
+        // Create order ~110km away (1.0 deg lat is approx 111km)
+        var orderFar = new Order { Latitude = lat + 1.0, Longitude = lon };
+
+        // Act & Assert
+        Assert.IsTrue(CourierManager.IsOrderInCourierRange(orderNear, courier, lat, lon), "Order within distance should be allowed.");
+        Assert.IsFalse(CourierManager.IsOrderInCourierRange(orderFar, courier, lat, lon), "Order beyond distance should be rejected.");
     }
 
     #endregion

@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Helpers;
 using BlApi;
 using System;
@@ -188,6 +188,30 @@ public class AdminTests
 
     [TestMethod]
     [ExpectedException(typeof(BO.BlInvalidInputException))]
+    public void Test_SetConfig_NegativeBicycleSpeed_ThrowsException()
+    {
+        // Arrange
+        var config = AdminManager.GetConfig();
+        config.AvgBicycleSpeedKmh = -5;
+
+        // Act
+        AdminManager.SetConfig(config);
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(BO.BlInvalidInputException))]
+    public void Test_SetConfig_NegativeWalkingSpeed_ThrowsException()
+    {
+        // Arrange
+        var config = AdminManager.GetConfig();
+        config.AvgWalkingSpeedKmh = -5;
+
+        // Act
+        AdminManager.SetConfig(config);
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(BO.BlInvalidInputException))]
     public void Test_SetConfig_NegativeMaxDeliveryDistance_ThrowsException()
     {
         // Arrange
@@ -243,6 +267,38 @@ public class AdminTests
         // Arrange
         var config = AdminManager.GetConfig();
         config.CompanyFullAddress = ""; // Invalid address
+
+        // Act
+        AdminManager.SetConfig(config);
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(BO.BlInvalidInputException))]
+    public void Test_SetConfig_NullConfigObject_ThrowsException()
+    {
+        // Act
+        AdminManager.SetConfig(null!);
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(BO.BlInvalidInputException))]
+    public void Test_SetConfig_NullAdminPassword_ThrowsException()
+    {
+        // Arrange
+        var config = AdminManager.GetConfig();
+        config.AdminPassword = null!;
+
+        // Act
+        AdminManager.SetConfig(config);
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(BO.BlInvalidAddressException))]
+    public void Test_SetConfig_NullCompanyAddress_ThrowsBlInvalidAddressException()
+    {
+        // Arrange
+        var config = AdminManager.GetConfig();
+        config.CompanyFullAddress = null;
 
         // Act
         AdminManager.SetConfig(config);
