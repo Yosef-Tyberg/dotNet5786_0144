@@ -471,7 +471,7 @@ public static class Initialization
         var prefixChoices = new[] { "050", "052", "054", "058" };
         var prefix = prefixChoices[s_rnd.Next(prefixChoices.Length)];
         var num = s_rnd.Next(1000000, 9999999);
-        return $"{prefix}-{num}";
+        return $"{prefix}{num}";
     }
 
     private static string SanitizeEmailLocalPart(string fullName)

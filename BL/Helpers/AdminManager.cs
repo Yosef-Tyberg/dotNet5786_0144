@@ -1,4 +1,4 @@
-﻿﻿//using BO;
+﻿//using BO;
 using System.Runtime.CompilerServices;
 
 namespace Helpers;
@@ -19,7 +19,7 @@ internal static class AdminManager //stage 4
     internal static event Action? ConfigUpdatedObservers; //stage 5 - for config update observers
     internal static event Action? ClockUpdatedObservers; //stage 5 - for clock update observers
 
-    private static Task? _periodicTask = null; //stage 7
+    //private static Task? _periodicTask = null; //stage 7
 
     /// <summary>
     /// Method to update application's clock from any BL class as may be required
@@ -204,11 +204,11 @@ internal static class AdminManager //stage 4
     /// The Interval for clock updating
     /// in minutes by second (default value is 1, will be set on Start())    
     /// </summary>
-    private static int s_interval = 1;
+    //private static int s_interval = 1;
     /// <summary>
     /// The flag that signs whether simulator is running
     /// 
-    private static volatile bool s_stop = false;
+    //private static volatile bool s_stop = false;
     /*
 
     [MethodImpl(MethodImplOptions.Synchronized)] //stage 7                                                 
@@ -236,14 +236,14 @@ internal static class AdminManager //stage 4
     {
         if (s_thread is not null)
         {
-            s_stop = true;
+            //s_stop = true;
             s_thread.Interrupt(); //awake a sleeping thread
             s_thread.Name = "ClockRunner stopped";
             s_thread = null;
         }
     }
 
-    private static Task? _simulateTask = null;
+    //private static Task? _simulateTask = null;
 
     /*private static void clockRunner()
     {

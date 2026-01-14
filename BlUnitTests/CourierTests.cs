@@ -35,7 +35,7 @@ public class CourierTests
             Password = "securepassword",
             Active = true,
             DeliveryType = DeliveryTypes.Car,
-            EmploymentStartTime = AdminManager.Now,
+            EmploymentStartTime = _bl.Admin.GetClock(),
             PersonalMaxDeliveryDistance = 50
         };
 
@@ -53,7 +53,7 @@ public class CourierTests
     public void Test_CreateCourier_AlreadyExists_ThrowsException()
     {
         // Arrange
-        var existingCourier = CourierManager.ReadAll().First();
+        var existingCourier = _bl.Courier.ReadAll().First();
         var newCourierWithSameId = new Courier
         {
             Id = existingCourier.Id,
@@ -63,7 +63,7 @@ public class CourierTests
             Password = "password",
             Active = true,
             DeliveryType = DeliveryTypes.OnFoot,
-            EmploymentStartTime = AdminManager.Now
+            EmploymentStartTime = _bl.Admin.GetClock()
         };
 
         // Act
@@ -84,7 +84,7 @@ public class CourierTests
             Password = "password",
             Active = true,
             DeliveryType = DeliveryTypes.Bicycle,
-            EmploymentStartTime = AdminManager.Now
+            EmploymentStartTime = _bl.Admin.GetClock()
         };
 
         // Act
@@ -105,7 +105,7 @@ public class CourierTests
             Password = "pass",
             Active = true,
             DeliveryType = DeliveryTypes.Car,
-            EmploymentStartTime = AdminManager.Now,
+            EmploymentStartTime = _bl.Admin.GetClock(),
             PersonalMaxDeliveryDistance = -5
         };
 
@@ -121,7 +121,7 @@ public class CourierTests
     public void Test_ReadCourier_Success()
     {
         // Arrange
-        var courierToRead = CourierManager.ReadAll().First();
+        var courierToRead = _bl.Courier.ReadAll().First();
 
         // Act
         var readCourier = _bl.Courier.Read(courierToRead.Id);
@@ -172,7 +172,7 @@ public class CourierTests
     public void Test_UpdateCourier_Success()
     {
         // Arrange
-        var courierToUpdate = _bl.Courier.Read(CourierManager.ReadAll().First().Id);
+        var courierToUpdate = _bl.Courier.Read(_bl.Courier.ReadAll().First().Id);
         courierToUpdate.FullName = "Updated Name";
         courierToUpdate.Email = "updated@email.com";
 
@@ -189,7 +189,7 @@ public class CourierTests
     public void Test_UpdateMyDetails_Success()
     {
         // Arrange
-        var courierToUpdate = _bl.Courier.Read(CourierManager.ReadAll().First().Id);
+        var courierToUpdate = _bl.Courier.Read(_bl.Courier.ReadAll().First().Id);
         
         // Act
         _bl.Courier.UpdateMyDetails(courierToUpdate.Id, fullName: "My New Name", phoneNum: "050-987-6543");
@@ -205,7 +205,7 @@ public class CourierTests
     public void Test_UpdateCourier_InvalidData_ThrowsException()
     {
         // Arrange
-        var courierToUpdate = _bl.Courier.Read(CourierManager.ReadAll().First().Id);
+        var courierToUpdate = _bl.Courier.Read(_bl.Courier.ReadAll().First().Id);
         courierToUpdate.FullName = ""; // Invalid
 
         // Act
@@ -231,7 +231,7 @@ public class CourierTests
     public void Test_DeleteCourier_Success()
     {
         // Arrange
-        var courierToDelete = CourierManager.ReadAll().First();
+        var courierToDelete = _bl.Courier.ReadAll().First();
         
         // Act
         _bl.Courier.Delete(courierToDelete.Id);
@@ -260,7 +260,7 @@ public class CourierTests
         // In this integration-style test, we rely on the DB being initialized.
         
         // Arrange: Find a courier and check they have history (the init DB should provide this)
-        var courier = CourierManager.ReadAll().First(c => _bl.Courier.GetCourierDeliveryHistory(c.Id).Any());
+        var courier = _bl.Courier.ReadAll().First(c => _bl.Courier.GetCourierDeliveryHistory(c.Id).Any());
         
         // Act
         var history = _bl.Courier.GetCourierDeliveryHistory(courier.Id);
@@ -274,7 +274,7 @@ public class CourierTests
     public void Test_GetCourierStatistics_CalculatesCorrectly()
     {
         // Arrange: Find a courier with history
-        var courier = CourierManager.ReadAll().First(c => _bl.Courier.GetCourierDeliveryHistory(c.Id).Any());
+        var courier = _bl.Courier.ReadAll().First(c => _bl.Courier.GetCourierDeliveryHistory(c.Id).Any());
 
         // Act
         var stats = _bl.Courier.GetCourierStatistics(courier.Id);
@@ -289,7 +289,7 @@ public class CourierTests
     public void Test_GetOpenOrders_ReturnsAvailableOrders()
     {
         // Arrange: Find a courier, ensure they have a max distance set.
-        var courier = _bl.Courier.Read(CourierManager.ReadAll().First().Id);
+        var courier = _bl.Courier.Read(_bl.Courier.ReadAll().First().Id);
         courier.PersonalMaxDeliveryDistance = 1000; // Set a large distance
         _bl.Courier.Update(courier);
 
@@ -305,7 +305,7 @@ public class CourierTests
     public void Test_GetOpenOrders_NoDistanceSet_ReturnsEmpty()
     {
         // Arrange: Find a courier and ensure they have no max distance.
-        var courier = _bl.Courier.Read(CourierManager.ReadAll().First().Id);
+        var courier = _bl.Courier.Read(_bl.Courier.ReadAll().First().Id);
         courier.PersonalMaxDeliveryDistance = null;
         _bl.Courier.Update(courier);
         
@@ -320,7 +320,7 @@ public class CourierTests
     public void Test_IsOrderInCourierRange_Logic()
     {
         // Arrange
-        var config = AdminManager.GetConfig();
+        var config = _bl.Admin.GetConfig();
         double lat = (double)config.Latitude!;
         double lon = (double)config.Longitude!;
         
@@ -335,6 +335,32 @@ public class CourierTests
         // Act & Assert
         Assert.IsTrue(CourierManager.IsOrderInCourierRange(orderNear, courier, lat, lon), "Order within distance should be allowed.");
         Assert.IsFalse(CourierManager.IsOrderInCourierRange(orderFar, courier, lat, lon), "Order beyond distance should be rejected.");
+    }
+
+    [TestMethod]
+    public void Test_CourierBecomesInactive_AfterInactivityRange()
+    {
+        // Arrange
+        var config = _bl.Admin.GetConfig();
+        var inactivityRange = config.InactivityRange;
+
+        // Find an active courier with at least one completed delivery from the initial data.
+        var courierToTest = _bl.Courier.ReadAll(c => c.Active)
+            .First(c => _bl.Courier.GetCourierDeliveryHistory(c.Id).Any());
+        
+        // Ensure the courier is indeed active initially.
+        var initialBoCourier = _bl.Courier.Read(courierToTest.Id);
+        Assert.IsTrue(initialBoCourier.Active, "Pre-condition failed: Courier should be active at the start of the test.");
+
+        // Act
+        // Forward the clock just past the inactivity threshold.
+        _bl.Admin.ForwardClock(inactivityRange.Add(TimeSpan.FromSeconds(1)));
+
+        // Re-read the courier. The logic to update the 'Active' status should be triggered during this call.
+        var updatedBoCourier = _bl.Courier.Read(courierToTest.Id);
+
+        // Assert
+        Assert.IsFalse(updatedBoCourier.Active, "Courier should become inactive after the inactivity period has passed.");
     }
 
     #endregion

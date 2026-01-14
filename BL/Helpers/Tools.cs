@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BO;
 using DO;
+using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -22,6 +23,8 @@ namespace Helpers;
 internal static class Tools
 {
     private static readonly HttpClient s_httpClient = new();
+    private static readonly ConcurrentDictionary<string, (double, double)> s_coordinateCache = new();
+    private static readonly ConcurrentDictionary<string, double> s_routeDistanceCache = new();
 
     #region Validation Methods
 
@@ -274,6 +277,16 @@ internal static class Tools
     /// <exception cref="BlInvalidInputException"></exception>
     public static (double, double) GetCoordinates(string address)
     {
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            throw new BlInvalidAddressException("address cannot be null or empty");
+        }
+            
+        if (s_coordinateCache.TryGetValue(address, out var coordinates))
+        {
+            return coordinates;
+        }
+
         try
         {
             // The Nominatim API endpoint for searching a structured query
@@ -290,7 +303,9 @@ internal static class Tools
             if (results?.Count > 0)
             {
                 var bestResult = results[0];
-                return (double.Parse(bestResult.Lat), double.Parse(bestResult.Lon));
+                var newCoordinates = (double.Parse(bestResult.Lat), double.Parse(bestResult.Lon));
+                s_coordinateCache.TryAdd(address, newCoordinates);
+                return newCoordinates;
             }
         }
         catch (Exception ex)
@@ -330,6 +345,12 @@ internal static class Tools
 
     private static double GetRouteDistance(double lat1, double lon1, double lat2, double lon2, string profile)
     {
+        string cacheKey = $"{lat1},{lon1};{lat2},{lon2};{profile}";
+        if (s_routeDistanceCache.TryGetValue(cacheKey, out double distance))
+        {
+            return distance;
+        }
+
         try
         {
             string url = $"http://router.project-osrm.org/route/v1/{profile}/{lon1},{lat1};{lon2},{lat2}?overview=false";
@@ -344,7 +365,9 @@ internal static class Tools
 
             if (result?.Routes?.Count > 0)
             {
-                return result.Routes[0].Distance / 1000; // Convert meters to kilometers
+                double newDistance = result.Routes[0].Distance / 1000; // Convert meters to kilometers
+                s_routeDistanceCache.TryAdd(cacheKey, newDistance);
+                return newDistance;
             }
         }
         catch (Exception ex)

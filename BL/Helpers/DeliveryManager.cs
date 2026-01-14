@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +18,7 @@ internal static class DeliveryManager
     {
         try
         {
-            return s_dal.Delivery.ReadAll(filter).Select(ConvertDoToBo);
+            return s_dal.Delivery.ReadAll(filter).Where(d => d != null).Select(d => ConvertDoToBo(d!));
         }
         catch (Exception ex)
         {
@@ -39,7 +39,7 @@ internal static class DeliveryManager
         }
     }
 
-    public static BO.Delivery GetMyCurrentDelivery(int courierId)
+    public static BO.Delivery? GetMyCurrentDelivery(int courierId)
     {
         // Find an active delivery for the courier (not yet delivered)
         var doDelivery = s_dal.Delivery.ReadAll()
@@ -116,8 +116,8 @@ internal static class DeliveryManager
         var config = AdminManager.GetConfig();
         return (BO.DeliveryTypes)delivery.DeliveryType switch
         {
-            BO.DeliveryTypes.Car or BO.DeliveryTypes.Motorcycle => Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude),
-            BO.DeliveryTypes.Bicycle or BO.DeliveryTypes.OnFoot => Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude),
+            BO.DeliveryTypes.Car or BO.DeliveryTypes.Motorcycle => Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude),
+            BO.DeliveryTypes.Bicycle or BO.DeliveryTypes.OnFoot => Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude),
             _ => throw new BO.BlMissingPropertyException($"Could not calculate properties for unrecognized delivery type: {(BO.DeliveryTypes)delivery.DeliveryType}"),
         };
     }
@@ -239,7 +239,7 @@ internal static class DeliveryManager
 
             case BO.DeliveryTypes.Car:
 
-                distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
+                distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
 
                 speed = config.AvgCarSpeedKmh;
 
@@ -247,7 +247,7 @@ internal static class DeliveryManager
 
             case BO.DeliveryTypes.Motorcycle:
 
-                distance = Tools.GetDrivingDistance((double)config.Latitude!, (double)config.Longitude!, order.Latitude, order.Longitude);
+                distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
 
                 speed = config.AvgMotorcycleSpeedKmh;
 
@@ -255,7 +255,7 @@ internal static class DeliveryManager
 
             case BO.DeliveryTypes.Bicycle:
 
-                distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
+                distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
 
                 speed = config.AvgBicycleSpeedKmh;
 
@@ -263,7 +263,7 @@ internal static class DeliveryManager
 
             case BO.DeliveryTypes.OnFoot:
 
-                distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, order.Latitude, order.Longitude);
+                distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
 
                 speed = config.AvgWalkingSpeedKmh;
 
@@ -407,7 +407,7 @@ internal static class DeliveryManager
         var order = OrderManager.Read(orderId);
         var config = AdminManager.GetConfig();
 
-        if (!CourierManager.IsOrderInCourierRange(order, courier, (double)config.Latitude, (double)config.Longitude))
+        if (!CourierManager.IsOrderInCourierRange(order, courier, (double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0)))
         {
             throw new BO.BlInvalidInputException($"Order location is too far for this courier. a maximum of {courier.PersonalMaxDeliveryDistance}km is allowed");
         }

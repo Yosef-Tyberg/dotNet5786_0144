@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -59,8 +59,8 @@ internal static class CourierManager
     {
         try
         {
-            DO.Courier doCourier = s_dal.Courier.Read(courierId);
-            return ConvertDoToBo(doCourier);
+            DO.Courier? doCourier = s_dal.Courier.Read(courierId);
+            return ConvertDoToBo(doCourier!);
         }
         catch (DO.DalDoesNotExistException ex)
         {
@@ -75,7 +75,7 @@ internal static class CourierManager
     /// <returns>An IEnumerable of BO.Courier.</returns>
     public static IEnumerable<BO.Courier> ReadAll(Func<BO.Courier, bool>? filter = null)
     {
-        var boCouriers = s_dal.Courier.ReadAll().Select(ConvertDoToBo);
+        var boCouriers = s_dal.Courier.ReadAll().Where(c => c != null).Select(c => ConvertDoToBo(c!));
         return filter == null ? boCouriers : boCouriers.Where(filter);
     }
 
@@ -316,8 +316,8 @@ internal static class CourierManager
         var openOrders = OrderManager.ReadAll().Where(o => o.OrderStatus == BO.OrderStatus.Open);
 
         var config = AdminManager.GetConfig();
-        var hqLatitude = (double)config.Latitude;
-        var hqLongitude = (double)config.Longitude;
+        var hqLatitude = (double)(config.Latitude ?? 0);
+        var hqLongitude = (double)(config.Longitude ?? 0);
 
         return openOrders
             .Where(order => IsOrderInCourierRange(order, courier, hqLatitude, hqLongitude))
@@ -367,7 +367,7 @@ internal static class CourierManager
         return new BO.CourierStatistics
         {
             TotalDeliveries = totalDeliveries,
-            TotalDistance = completedDeliveries.Sum(d => (double)d.ActualDistance),
+            TotalDistance = completedDeliveries.Sum(d => (double)(d.ActualDistance ?? 0)),
             AverageDeliveryTime = TimeSpan.FromMinutes(completedDeliveries.Average(d => ((TimeSpan)(d.DeliveryEndTime - d.DeliveryStartTime)).TotalMinutes)),
             OnTimeDeliveries = onTimeDeliveries,
             LateDeliveries = totalDeliveries - onTimeDeliveries,

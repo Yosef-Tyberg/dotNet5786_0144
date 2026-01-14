@@ -57,7 +57,7 @@ internal static class OrderManager
         Tools.GetCoordinates(boOrder.FullOrderAddress);
 
         var config = AdminManager.GetConfig();
-        var distance = Tools.GetAerialDistance((double)config.Latitude, (double)config.Longitude, lat, lon);
+        var distance = Tools.GetAerialDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), lat, lon);
         if (distance > config.MaxGeneralDeliveryDistanceKm)
             throw new BO.BlInvalidInputException($"Order location is too far from the company's location. a maximum of {config.MaxGeneralDeliveryDistanceKm}km is allowed");
     }
@@ -129,7 +129,7 @@ internal static class OrderManager
                 PackageDensity = doOrder.Volume > 0 ? doOrder.Weight / doOrder.Volume : 0
             };
 
-            var deliveries = DeliveryManager.ReadAll(d => d.OrderId == doOrder.Id);
+            var deliveries = s_dal.Delivery.ReadAll(d => d.OrderId == doOrder.Id);
             boOrder.OrderStatus = DetermineOrderStatus(deliveries);
             
             return boOrder;
@@ -138,6 +138,35 @@ internal static class OrderManager
         {
             throw Tools.ConvertDalException(ex);
         }
+    }
+
+    /// <summary>
+    /// Determines the status of an order based on its delivery history.
+    /// </summary>
+    /// <param name="deliveries">The list of deliveries associated with the order.</param>
+    /// <returns>The calculated order status.</returns>
+    private static BO.OrderStatus DetermineOrderStatus(IEnumerable<DO.Delivery> deliveries)
+    {
+        if (!deliveries.Any())
+        {
+            return BO.OrderStatus.Open;
+        }
+
+        if (deliveries.Any(d => d.DeliveryEndTime == null))
+        {
+            return BO.OrderStatus.InProgress;
+        }
+
+        var lastEnded = deliveries.OrderByDescending(d => d.DeliveryEndTime).First();
+        return lastEnded.DeliveryEndType switch
+        {
+            DO.DeliveryEndTypes.Delivered => BO.OrderStatus.Delivered,
+            DO.DeliveryEndTypes.CustomerRefused => BO.OrderStatus.Refused,
+            DO.DeliveryEndTypes.Cancelled => BO.OrderStatus.Cancelled,
+            DO.DeliveryEndTypes.RecipientNotFound => BO.OrderStatus.Open,
+            DO.DeliveryEndTypes.Failed => BO.OrderStatus.Open,
+            _ => BO.OrderStatus.Open
+        };
     }
 
     /// <summary>
@@ -205,7 +234,7 @@ internal static class OrderManager
     {
         try
         {
-            return s_dal.Order.ReadAll(filter).Select(ConvertDoToBo);
+            return s_dal.Order.ReadAll(filter).Where(o => o != null).Select(o => ConvertDoToBo(o!));
         }
         catch (Exception ex)
         {
@@ -222,7 +251,7 @@ internal static class OrderManager
     {
         try
         {
-            return ConvertDoToBo(s_dal.Order.Read(orderId));
+            return ConvertDoToBo(s_dal.Order.Read(orderId)!);
         }
         catch (Exception ex)
         {
@@ -331,7 +360,18 @@ internal static class OrderManager
             // The courier must exist to get available orders.
             BO.Courier boCourier = CourierManager.ReadCourier(courierId);
 
-            return ReadAll(order => !DeliveryManager.IsOrderTaken(order.Id));
+            var allUntakenOrders = ReadAll(order => !DeliveryManager.IsOrderTaken(order.Id));
+
+            if (boCourier.PersonalMaxDeliveryDistance == null)
+            {
+                return allUntakenOrders;
+            }
+
+            var config = AdminManager.GetConfig();
+            
+            return allUntakenOrders.Where(order =>
+                Tools.GetAerialDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude,
+                    order.Longitude) <= boCourier.PersonalMaxDeliveryDistance);
         }
         catch (Exception ex)
         {
@@ -359,7 +399,7 @@ internal static class OrderManager
 
         var deliveries = DeliveryManager.ReadAll(d => d.OrderId == orderId);
         BO.OrderStatus status = DetermineOrderStatus(deliveries);
-        BO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d.DeliveryEndTime == null);
+        BO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d?.DeliveryEndTime == null);
 
         // Get Assigned Courier (only if InProgress)
         BO.CourierInList? assignedCourier = null;
@@ -419,11 +459,11 @@ internal static class OrderManager
         {
             case BO.DeliveryTypes.Car:
             case BO.DeliveryTypes.Motorcycle:
-                distance = Tools.GetDrivingDistance((double)config.Latitude, (double)config.Longitude, doOrder.Latitude, doOrder.Longitude);
+                distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), doOrder.Latitude, doOrder.Longitude);
                 break;
             case BO.DeliveryTypes.Bicycle:
             case BO.DeliveryTypes.OnFoot:
-                distance = Tools.GetWalkingDistance((double)config.Latitude, (double)config.Longitude, doOrder.Latitude, doOrder.Longitude);
+                distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), doOrder.Latitude, doOrder.Longitude);
                 break;
             default:
                 throw new BO.BlMissingPropertyException($"Invalid or missing delivery type for courier {assignedCourier.Id}");
@@ -441,7 +481,7 @@ internal static class OrderManager
         if (speed > 0)
         {
             double travelHours = distance / speed;
-            return activeDelivery.DeliveryStartTime.AddHours(travelHours);
+            return activeDelivery.DeliveryStartTime!.AddHours(travelHours);
         }
 
         return null;

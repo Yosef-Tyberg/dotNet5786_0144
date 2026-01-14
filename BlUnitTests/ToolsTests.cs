@@ -43,21 +43,32 @@ public class ToolsTests
     [TestMethod]
     public void Test_GetDrivingDistance_ReturnsValidValue()
     {
-        // Driving distance should be at least the aerial distance
+        // Driving distance should be at least the aerial distance and within a reasonable range
         double aerial = Tools.GetAerialDistance(Lat1, Lon1, Lat2, Lon2);
         double driving = Tools.GetDrivingDistance(Lat1, Lon1, Lat2, Lon2);
         
         Assert.IsTrue(driving >= aerial, "Driving distance should be >= aerial distance.");
+        Assert.IsTrue(driving < aerial * 5, "Driving distance should be within a reasonable range of aerial distance.");
     }
 
     [TestMethod]
     public void Test_GetWalkingDistance_ReturnsValidValue()
     {
-        // Walking distance should be at least the aerial distance
+        // Walking distance should be at least the aerial distance and within a reasonable range
         double aerial = Tools.GetAerialDistance(Lat1, Lon1, Lat2, Lon2);
         double walking = Tools.GetWalkingDistance(Lat1, Lon1, Lat2, Lon2);
         
         Assert.IsTrue(walking >= aerial, "Walking distance should be >= aerial distance.");
+        Assert.IsTrue(walking < aerial * 7, "Walking distance should be within a reasonable range of aerial distance.");
+    }
+
+    [TestMethod]
+    public void Test_GetAerialDistance_KnownDistance_ReturnsCorrectValue()
+    {
+        // Distance calculated using online tool for the given coordinates
+        const double expectedDistance = 2.6; // km
+        double actualDistance = Tools.GetAerialDistance(Lat1, Lon1, 31.8000, 35.2300);
+        Assert.AreEqual(expectedDistance, actualDistance, 0.1, "Distance should be close to the known value.");
     }
 
     #endregion
@@ -96,6 +107,13 @@ public class ToolsTests
     public void Test_GetCoordinates_WhitespaceAddress_ThrowsException()
     {
         Tools.GetCoordinates("   ");
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(BlInvalidAddressException))]
+    public void Test_GetCoordinates_InvalidAddress_ThrowsException()
+    {
+        Tools.GetCoordinates("asdfasdfasdf");
     }
 
     #endregion
