@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -96,12 +96,24 @@ internal static class DeliveryManager
 
     public static void Deliver(int courierId, BO.DeliveryEndTypes endType)
     {
+        // Validate courier exists
+        CourierManager.ReadCourier(courierId);
+        
         var delivery = s_dal.Delivery.ReadAll().FirstOrDefault(d => d.CourierId == courierId && d.DeliveryStartTime <= AdminManager.Now && d.DeliveryEndTime == null);
         if(delivery == null)
             throw new BO.BlCourierHasNoActiveDeliveryException("Courier has no picked-up delivery to deliver.");
 
         delivery = delivery with { DeliveryEndTime = AdminManager.Now, DeliveryEndType = (DO.DeliveryEndTypes)endType };
         
+         BO.Order order;
+
+         try
+         {
+             order = OrderManager.Read(delivery.OrderId);
+         } catch (Exception ex) { 
+            
+            throw new BO.BlDoesNotExistException($"order with {delivery.OrderId} was not found", ex);
+         }
         s_dal.Delivery.Update(delivery);
     }
 

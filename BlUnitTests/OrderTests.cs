@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Helpers;
 using BlApi;
 using BO;
@@ -28,7 +28,7 @@ public class OrderTests
         {
             Id = 0,
             CustomerFullName = "Test Customer",
-            CustomerMobile = "050-111-2222",
+            CustomerMobile = "0501112222",
             FullOrderAddress = "Jaffa Road 2, Jerusalem", // Valid, known address
             OrderType = OrderTypes.Pizza,
             VerbalDescription = "A valid test order",
@@ -57,7 +57,7 @@ public class OrderTests
         var invalidOrder = new Order
         {
             CustomerFullName = " ", // Invalid
-            CustomerMobile = "050-111-2222",
+            CustomerMobile = "0501112222",
             FullOrderAddress = "Jaffa Road 2, Jerusalem",
             OrderType = OrderTypes.Pizza,
             VerbalDescription = "Invalid",
@@ -76,7 +76,7 @@ public class OrderTests
         var invalidOrder = new Order
         {
             CustomerFullName = "Test Customer",
-            CustomerMobile = "050-111-2222",
+            CustomerMobile = "0501112222",
             FullOrderAddress = "123 Fake Street, Nowhere", // Invalid address
             OrderType = OrderTypes.Pizza,
             VerbalDescription = "A valid test order",
@@ -104,9 +104,9 @@ public class OrderTests
         var farOrder = new Order
         {
             CustomerFullName = "Far Away Customer",
-            CustomerMobile = "050-999-8888",
+            CustomerMobile = "0509998888",
             FullOrderAddress = "HaNessi Boulevard 1, Haifa", // ~150km from Jerusalem
-            OrderType = OrderTypes.Falafel, Weight = 1, Height = 1, Width = 1, Volume = 1
+            OrderType = OrderTypes.Falafel, Weight = 1, Height = 1, Width = 1, Volume = 1, VerbalDescription = "Far order"
         };
 
         // Act
@@ -190,7 +190,7 @@ public class OrderTests
     public void Test_UpdateOrder_WhileInProgress_ThrowsException()
     {
         // Arrange: Pick up an order
-        var courier = _bl.Courier.ReadAll(c => c.Active).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         var orderInList = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         var order = _bl.Order.Read(orderInList.Id);
         _bl.Delivery.PickUp(courier.Id, order.Id);
@@ -225,7 +225,7 @@ public class OrderTests
     public void Test_UpdateOrder_AlreadyDelivered_ThrowsException()
     {
         // Arrange: Deliver an order
-        var courier = _bl.Courier.ReadAll(c => c.Active).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         var orderInList = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         var order = _bl.Order.Read(orderInList.Id);
         _bl.Delivery.PickUp(courier.Id, order.Id);
@@ -287,7 +287,7 @@ public class OrderTests
     public void Test_DeleteOrder_AlreadyAssigned_ThrowsException()
     {
         // Arrange: Pick up an order
-        var courier = _bl.Courier.ReadAll(c => c.Active).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
 
@@ -313,7 +313,7 @@ public class OrderTests
     public void Test_CancelOrder_InProgress_Success()
     {
         // Arrange: Pick up an order to make it InProgress
-        var courier = _bl.Courier.ReadAll(c => c.Active).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
 
@@ -330,7 +330,7 @@ public class OrderTests
     public void Test_CancelOrder_Delivered_ThrowsException()
     {
         // Arrange: Deliver an order
-        var courier = _bl.Courier.ReadAll(c => c.Active).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
         _bl.Delivery.Deliver(courier.Id, DeliveryEndTypes.Delivered);
@@ -359,7 +359,7 @@ public class OrderTests
         Assert.AreEqual(OrderStatus.Open, order.OrderStatus, "Order should start as Open.");
         
         // Act 1: Pick up
-        var courier = _bl.Courier.ReadAll(c => c.Active).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
         var inProgressOrder = _bl.Order.Read(order.Id);
         
@@ -378,7 +378,7 @@ public class OrderTests
     public void Test_GetOrderTracking_InProgressOrder_ReturnsCorrectData()
     {
         // Arrange: Pick up an order
-        var courier = _bl.Courier.ReadAll(c => c.Active).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
 
@@ -480,7 +480,7 @@ public class OrderTests
         // Arrange
         var config = _bl.Admin.GetConfig();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
-        var courier = _bl.Courier.ReadAll(c => c.Active).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
 
         // Act 1: Pick up the order and check initial state
         _bl.Delivery.PickUp(courier.Id, order.Id);
@@ -563,7 +563,7 @@ public class OrderTests
     private (int orderId, int courierId) SetupInProgressOrder()
     {
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
-        var courier = _bl.Courier.ReadAll(c => c.Active).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
         return (order.Id, courier.Id);
     }
@@ -586,9 +586,9 @@ public class OrderTests
         var nearOrder = new Order
         {
             CustomerFullName = "Near Customer",
-            CustomerMobile = "050-123-4567",
+            CustomerMobile = "0501234567",
             FullOrderAddress = "King George Street 1, Jerusalem", // ~2.5km from Jaffa 24
-            OrderType = OrderTypes.Pizza, Weight = 1, Height = 1, Width = 1, Volume = 1
+            OrderType = OrderTypes.Pizza, Weight = 1, Height = 1, Width = 1, Volume = 1, VerbalDescription = "Near order"
         };
         _bl.Order.Create(nearOrder);
         var createdNearOrder = _bl.Order.ReadAll(o => o.CustomerFullName == "Near Customer").First();
@@ -599,9 +599,9 @@ public class OrderTests
         var farOrder = new Order
         {
             CustomerFullName = "Far Customer",
-            CustomerMobile = "050-765-4321",
+            CustomerMobile = "0507654321",
             FullOrderAddress = "Rothschild Boulevard 16, Tel Aviv-Yafo", // ~50km from Jerusalem
-            OrderType = OrderTypes.Pizza, Weight = 1, Height = 1, Width = 1, Volume = 1
+            OrderType = OrderTypes.Pizza, Weight = 1, Height = 1, Width = 1, Volume = 1, VerbalDescription = "Far order"
         };
         _bl.Order.Create(farOrder);
         var createdFarOrder = _bl.Order.ReadAll(o => o.CustomerFullName == "Far Customer").First();

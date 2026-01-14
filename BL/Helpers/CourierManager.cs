@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -60,6 +60,8 @@ internal static class CourierManager
         try
         {
             DO.Courier? doCourier = s_dal.Courier.Read(courierId);
+            if (doCourier == null)
+                throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
             return ConvertDoToBo(doCourier!);
         }
         catch (DO.DalDoesNotExistException ex)
@@ -336,7 +338,7 @@ internal static class CourierManager
     {
         if (!courier.PersonalMaxDeliveryDistance.HasValue)
         {
-            return false;
+            return true;
         }
         var distance = Tools.GetAerialDistance(hqLatitude, hqLongitude, order.Latitude, order.Longitude);
         return distance <= courier.PersonalMaxDeliveryDistance.Value;
@@ -396,15 +398,14 @@ internal static class CourierManager
         {
             var courierDeliveries = allDeliveries.Where(d => d.CourierId == courier.Id).ToList();
 
-            // If the courier has a delivery in progress, they are considered active.
             if (courierDeliveries.Any(d => !d.DeliveryEndTime.HasValue))
             {
-                continue; // Skip to the next courier.
+                continue; 
             }
 
             DateTime? lastInvolvementDate;
 
-            var completedDeliveries = courierDeliveries.Where(d => d.DeliveryEndTime.HasValue).ToList();
+            var completedDeliveries = courierDeliveries.Where(d => d.DeliveryEndTime.HasValue).OrderByDescending(d => d.DeliveryEndTime).ToList();
 
             if (completedDeliveries.Any())
             {
@@ -412,11 +413,9 @@ internal static class CourierManager
             }
             else
             {
-                // If no completed deliveries, their last "activity" is when they were hired.
                 lastInvolvementDate = courier.EmploymentStartTime;
             }
 
-            // Now check if the inactivity period has been exceeded.
             if (lastInvolvementDate.HasValue && (AdminManager.Now - lastInvolvementDate.Value > inactivityRange))
             {
                 couriersToDeactivate.Add(courier);

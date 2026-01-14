@@ -1,4 +1,4 @@
-﻿//using BO;
+﻿﻿//using BO;
 using System.Runtime.CompilerServices;
 
 namespace Helpers;
@@ -79,6 +79,8 @@ internal static class AdminManager //stage 4
     [MethodImpl(MethodImplOptions.Synchronized)] //stage 7
     internal static void SetConfig(BO.Config configuration) //stage 4
     {
+        if (configuration is null) throw new BO.BlInvalidInputException("configuration can't be null");
+
         if (configuration.AdminId <= 0)
             throw new BO.BlInvalidInputException("Admin ID must be positive.");
         if (string.IsNullOrWhiteSpace(configuration.AdminPassword))

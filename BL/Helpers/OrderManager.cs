@@ -249,9 +249,14 @@ internal static class OrderManager
     /// <returns>A BO.Order object.</returns>
     public static BO.Order Read(int orderId)
     {
+        DO.Order? doOrder = s_dal.Order.Read(orderId);
+        if (doOrder == null)
+        {
+            throw new BO.BlDoesNotExistException($"Order with ID {orderId} not found.");
+        }
         try
         {
-            return ConvertDoToBo(s_dal.Order.Read(orderId)!);
+            return ConvertDoToBo(doOrder);
         }
         catch (Exception ex)
         {
@@ -320,6 +325,9 @@ internal static class OrderManager
                 FullOrderAddress: updatedOrder.FullOrderAddress
             );
 
+
+
+
             s_dal.Order.Update(doOrderToUpdate);
         }
         catch (Exception ex)
@@ -360,8 +368,8 @@ internal static class OrderManager
             // The courier must exist to get available orders.
             BO.Courier boCourier = CourierManager.ReadCourier(courierId);
 
-            var allUntakenOrders = ReadAll(order => !DeliveryManager.IsOrderTaken(order.Id));
-
+            var allUntakenOrders = ReadAll(order => !DeliveryManager.IsOrderTaken(order.Id))
+                    .Where(o => o.OrderStatus == BO.OrderStatus.Open);
             if (boCourier.PersonalMaxDeliveryDistance == null)
             {
                 return allUntakenOrders;

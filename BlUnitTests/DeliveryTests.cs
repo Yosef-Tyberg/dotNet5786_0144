@@ -85,12 +85,12 @@ public class DeliveryTests
     public void Test_PickUp_OrderAlreadyInProgress_ThrowsException()
     {
         // Arrange: Pick up an order
-        var courier1 = _bl.Courier.ReadAll(c => c.Active && c.Id != 0).First();
+        var courier1 = _bl.Courier.ReadAll(c => c.Active && c.Id != 0 && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         _bl.Delivery.PickUp(courier1.Id, order.Id);
 
         // Arrange: Find another courier to try and pick it up again
-        var courier2 = _bl.Courier.ReadAll(c => c.Active && c.Id != courier1.Id).First();
+        var courier2 = _bl.Courier.ReadAll(c => c.Active && c.Id != courier1.Id && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
 
         // Act
         _bl.Delivery.PickUp(courier2.Id, order.Id);
@@ -101,13 +101,13 @@ public class DeliveryTests
     public void Test_PickUp_OrderAlreadyClosed_ThrowsException()
     {
         // Arrange: Deliver an order to close it
-        var courier1 = _bl.Courier.ReadAll(c => c.Active && c.Id != 0).First();
+        var courier1 = _bl.Courier.ReadAll(c => c.Active && c.Id != 0 && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         _bl.Delivery.PickUp(courier1.Id, order.Id);
         _bl.Delivery.Deliver(courier1.Id, DeliveryEndTypes.Delivered);
 
         // Arrange: Find another courier to try and pick it up
-        var courier2 = _bl.Courier.ReadAll(c => c.Active && c.Id != courier1.Id).First();
+        var courier2 = _bl.Courier.ReadAll(c => c.Active && c.Id != courier1.Id && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         
         // Act
         _bl.Delivery.PickUp(courier2.Id, order.Id);
@@ -118,7 +118,7 @@ public class DeliveryTests
     public void Test_PickUp_CourierAlreadyHasDelivery_ThrowsException()
     {
         // Arrange: A courier picks up one order
-        var courier = _bl.Courier.ReadAll(c => c.Active && c.Id != 0).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && c.Id != 0 && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         var order1 = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
          _bl.Delivery.PickUp(courier.Id, order1.Id);
         
@@ -134,7 +134,7 @@ public class DeliveryTests
     public void Test_PickUp_OrderOutOfRange_ThrowsException()
     {
         // Arrange: Find a courier and set their range to be very small
-        var courier = _bl.Courier.Read(_bl.Courier.ReadAll(c => c.Active).First().Id);
+        var courier = _bl.Courier.Read(_bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First().Id);
         courier.PersonalMaxDeliveryDistance = 0.1; // 100 meters
         _bl.Courier.Update(courier);
         
@@ -173,7 +173,7 @@ public class DeliveryTests
     [ExpectedException(typeof(BlDoesNotExistException))]
     public void Test_PickUp_OrderNotFound_ThrowsException()
     {
-        var courier = _bl.Courier.ReadAll(c => c.Active).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
         _bl.Delivery.PickUp(courier.Id, 999999);
     }
 
