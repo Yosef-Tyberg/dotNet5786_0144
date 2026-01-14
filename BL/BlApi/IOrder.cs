@@ -59,7 +59,7 @@ public interface IOrder
     /// <returns>An IEnumerable of BO.OrderInList that the courier can deliver.</returns>
     IEnumerable<BO.OrderInList> GetAvailableOrders(int courierId);
 
-
+    #endregion
     
     #region General Methods
     

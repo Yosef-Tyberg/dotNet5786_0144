@@ -308,8 +308,8 @@ internal static class Program
             Height = height,
             Width = width,
         };
-        int newId = s_bl.Order.Create(newOrder);
-        Console.WriteLine($"Order added successfully. New ID: {newId}");
+        s_bl.Order.Create(newOrder);
+        Console.WriteLine($"Order added successfully");
     }
 
     private static void UpdateOrder()
