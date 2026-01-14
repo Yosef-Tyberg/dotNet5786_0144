@@ -5,7 +5,7 @@ namespace BlApi;
 /// <summary>
 /// Factory class to create an instance of the business logic layer.
 /// </summary>
-public static class BlFactory
+public static class Factory
 {
     /// <summary>
     /// Gets an instance of the business logic layer.
