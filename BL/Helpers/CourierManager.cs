@@ -32,14 +32,21 @@ internal static class CourierManager
         if ((boCourier.Id < 100000000 || boCourier.Id > 999999999) && boCourier.Id != 0)
             throw new BO.BlInvalidIdException($"Courier ID '{boCourier.Id}' is not valid. It must be a 9-digit number.");
 
-        if (string.IsNullOrWhiteSpace(boCourier.FullName))
-            throw new BO.BlInvalidInputException("Courier full name cannot be empty.");
+        Tools.ValidateFullName(boCourier.FullName, "Courier full name");
+        Tools.ValidatePhoneNumber(boCourier.MobilePhone, "Courier mobile phone");
+        Tools.ValidateEmail(boCourier.Email, "Courier email");
 
         if (string.IsNullOrWhiteSpace(boCourier.Password))
             throw new BO.BlInvalidInputException("Courier password cannot be empty.");
 
-        if (!string.IsNullOrWhiteSpace(boCourier.Email) && !Regex.IsMatch(boCourier.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-            throw new BO.BlInvalidEmailException($"Courier email '{boCourier.Email}' is not a valid format.");
+        if (boCourier.Password.Length > 100)
+            throw new BO.BlInvalidInputException("Courier password is too long.");
+
+        if (boCourier.PersonalMaxDeliveryDistance.HasValue && boCourier.PersonalMaxDeliveryDistance <= 0)
+            throw new BO.BlInvalidInputException("Personal max delivery distance must be positive.");
+
+        if (!Enum.IsDefined(typeof(BO.DeliveryTypes), boCourier.DeliveryType))
+            throw new BO.BlInvalidInputException("Invalid delivery type.");
     }
 
     /// <summary>

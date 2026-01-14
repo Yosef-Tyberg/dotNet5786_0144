@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Helpers;
@@ -28,11 +29,14 @@ internal static class OrderManager
         if (boOrder.Id < 0)
             throw new BO.BlInvalidIdException($"Order ID '{boOrder.Id}' cannot be negative.");
 
-        if (string.IsNullOrWhiteSpace(boOrder.CustomerFullName))
-            throw new BO.BlInvalidInputException("Order customer full name cannot be empty.");
+        if (!Enum.IsDefined(typeof(BO.OrderTypes), boOrder.OrderType))
+            throw new BO.BlInvalidInputException("Invalid order type.");
 
-        if (string.IsNullOrWhiteSpace(boOrder.CustomerMobile))
-            throw new BO.BlInvalidInputException("Order customer mobile cannot be empty.");
+        if (string.IsNullOrWhiteSpace(boOrder.VerbalDescription))
+            throw new BO.BlInvalidInputException("Order verbal description cannot be empty.");
+
+        Tools.ValidateFullName(boOrder.CustomerFullName, "Customer full name");
+        Tools.ValidatePhoneNumber(boOrder.CustomerMobile, "Customer mobile");
 
         if (boOrder.Volume <= 0)
             throw new BO.BlInvalidInputException($"Volume {boOrder.Volume} must be positive.");
@@ -48,6 +52,9 @@ internal static class OrderManager
 
         if (string.IsNullOrWhiteSpace(boOrder.FullOrderAddress))
             throw new BO.BlInvalidAddressException("Order address cannot be empty.");
+
+        // Validate address validity
+        Tools.GetCoordinates(boOrder.FullOrderAddress);
 
         var config = AdminManager.GetConfig();
         var distance = Tools.GetAerialDistance((double)config.Latitude, (double)config.Longitude, lat, lon);
@@ -247,6 +254,12 @@ internal static class OrderManager
             if (DeliveryManager.IsOrderTaken(updatedOrder.Id))
                 throw new BO.BlDeliveryInProgressException(
                     $"Order ID '{updatedOrder.Id}' cannot be updated as it is currently being delivered.");
+
+            // Verify that the order is not finalized (Delivered or Cancelled)
+            var deliveries = DeliveryManager.ReadAll(d => d.OrderId == updatedOrder.Id);
+            var status = DetermineOrderStatus(deliveries);
+            if (status == BO.OrderStatus.Delivered || status == BO.OrderStatus.Cancelled || status == BO.OrderStatus.Refused)
+                throw new BO.BlDeliveryAlreadyClosedException($"Order {updatedOrder.Id} cannot be updated because it is {status}.");
             
             // Read the original order from DAL to preserve immutable properties
             DO.Order originalOrder = s_dal.Order.Read(updatedOrder.Id);

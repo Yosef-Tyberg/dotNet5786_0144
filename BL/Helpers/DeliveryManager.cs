@@ -59,12 +59,23 @@ internal static class DeliveryManager
         try
         {
             // Verify that the order exists
-            OrderManager.Read(orderId);
+            var order = OrderManager.Read(orderId);
 
-            // Verify the order is not already taken
-            if (IsOrderTaken(orderId))
-                throw new BO.BlOrderAlreadyAssignedException(
-                    $"Order ID '{orderId}' is already assigned and cannot be taken again.");
+            // Verify order is available for pickup
+            if (order.OrderStatus == BO.OrderStatus.InProgress)
+            {
+                throw new BO.BlOrderAlreadyAssignedException($"Order {orderId} cannot be picked up because it is in status {order.OrderStatus}.");
+            }
+
+            if (order.OrderStatus != BO.OrderStatus.Open)
+            {
+                throw new BO.BlDeliveryAlreadyClosedException($"Order {orderId} cannot be picked up because it is {order.OrderStatus}.");
+            }
+
+            // Verify courier exists and is active
+            var courier = CourierManager.ReadCourier(courierId);
+            if (!courier.Active)
+                throw new BO.BlInvalidInputException($"Courier {courierId} is not active.");
             
             // Verify courier doesn't have an active delivery
             if (s_dal.Delivery.ReadAll().Any(d => d.CourierId == courierId && d.DeliveryEndTime == null))
@@ -76,16 +87,16 @@ internal static class DeliveryManager
         }
         catch (Exception ex)
         {
-            if (ex is BO.BlOrderAlreadyAssignedException || ex is BO.BlCourierAlreadyHasDeliveryException or BO.BlDoesNotExistException)
-                throw;
+            if (ex.GetType().Namespace == "DO")
+                throw Tools.ConvertDalException(ex);
             
-            throw Tools.ConvertDalException(ex);
+            throw;
         }
     }
 
     public static void Deliver(int courierId, BO.DeliveryEndTypes endType)
     {
-        var delivery = s_dal.Delivery.ReadAll().FirstOrDefault(d => d.CourierId == courierId && d.DeliveryStartTime < AdminManager.Now && d.DeliveryEndTime == null);
+        var delivery = s_dal.Delivery.ReadAll().FirstOrDefault(d => d.CourierId == courierId && d.DeliveryStartTime <= AdminManager.Now && d.DeliveryEndTime == null);
         if(delivery == null)
             throw new BO.BlCourierHasNoActiveDeliveryException("Courier has no picked-up delivery to deliver.");
 
@@ -452,4 +463,3 @@ internal static class DeliveryManager
         //implementation will be added in the future
     }
 }
-

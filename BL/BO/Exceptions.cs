@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -239,6 +239,18 @@ public class BlDeliveryInProgressException : Exception
     /// </summary>
     protected BlDeliveryInProgressException(SerializationInfo info, StreamingContext context)
         : base(info, context) { }
+}
+
+/// <summary>
+/// Thrown when attempting to modify a delivery or order that is already closed/finalized.
+/// </summary>
+[Serializable]
+public class BlDeliveryAlreadyClosedException : Exception
+{
+    public BlDeliveryAlreadyClosedException() : base("Delivery is already closed.") { }
+    public BlDeliveryAlreadyClosedException(string? message) : base(message) { }
+    public BlDeliveryAlreadyClosedException(string? message, Exception? innerException) : base(message, innerException) { }
+    protected BlDeliveryAlreadyClosedException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 }
 
 /// <summary>

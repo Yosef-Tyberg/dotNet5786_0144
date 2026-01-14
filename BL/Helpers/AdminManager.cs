@@ -1,4 +1,4 @@
-﻿//using BO;
+﻿﻿//using BO;
 using System.Runtime.CompilerServices;
 
 namespace Helpers;
@@ -79,6 +79,30 @@ internal static class AdminManager //stage 4
     [MethodImpl(MethodImplOptions.Synchronized)] //stage 7
     internal static void SetConfig(BO.Config configuration) //stage 4
     {
+        if (configuration.AdminId <= 0)
+            throw new BO.BlInvalidInputException("Admin ID must be positive.");
+        if (string.IsNullOrWhiteSpace(configuration.AdminPassword))
+            throw new BO.BlInvalidInputException("Admin password cannot be empty.");
+        if (configuration.AvgCarSpeedKmh <= 0 || configuration.AvgMotorcycleSpeedKmh <= 0 || 
+            configuration.AvgBicycleSpeedKmh <= 0 || configuration.AvgWalkingSpeedKmh <= 0)
+            throw new BO.BlInvalidInputException("Average speeds must be positive.");
+        if (configuration.MaxGeneralDeliveryDistanceKm.HasValue && configuration.MaxGeneralDeliveryDistanceKm <= 0)
+            throw new BO.BlInvalidInputException("Max general delivery distance must be positive.");
+        if (configuration.MaxDeliveryTimeSpan <= TimeSpan.Zero)
+            throw new BO.BlInvalidInputException("Max delivery time span must be positive.");
+        if (configuration.RiskRange <= TimeSpan.Zero)
+            throw new BO.BlInvalidInputException("Risk range must be positive.");
+        if (configuration.InactivityRange <= TimeSpan.Zero)
+            throw new BO.BlInvalidInputException("Inactivity range must be positive.");
+
+        double? newLat = null, newLon = null;
+        if (s_dal.Config.CompanyFullAddress != configuration.CompanyFullAddress)
+        {
+             if (string.IsNullOrWhiteSpace(configuration.CompanyFullAddress))
+                 throw new BO.BlInvalidAddressException("Company address cannot be empty.");
+             (newLat, newLon) = Tools.GetCoordinates(configuration.CompanyFullAddress);
+        }
+
         bool configChanged = false; // stage 5
 
         if (s_dal.Config.AdminId != configuration.AdminId)
@@ -134,7 +158,8 @@ internal static class AdminManager //stage 4
         if (s_dal.Config.CompanyFullAddress != configuration.CompanyFullAddress)
         {
             s_dal.Config.CompanyFullAddress = configuration.CompanyFullAddress;
-            (s_dal.Config.Latitude, s_dal.Config.Longitude) = Tools.GetCoordinates(configuration.CompanyFullAddress!);
+            s_dal.Config.Latitude = newLat;
+            s_dal.Config.Longitude = newLon;
             configChanged = true;
         }
 

@@ -24,7 +24,7 @@
 Every class in the `BO` folder must follow these constraints:
 - **Namespace:** Must be `BO`.
 - **Class Type:** `public class`, matching the filename.
-- **PODS Principle:** Business Objects should be Plain Old Data Structures (PODS). They must not contain any calculation logic, constructors, or destructors. The only allowed method is `ToString()` overloading.
+- **PODS Principle:** Business Objects should be Plain Old Data Structures (PODS). They must not contain any calculation logic, constructors, or destructors. The only allowed method is an override of `ToString()` that provides a comprehensive description of the entity's properties.
 - **Properties Only:**
     - All properties must be `public`.
     - **No automatic properties:** Do not initialize during declaration.
@@ -88,8 +88,8 @@ The `DeliveryEndTypes` enum defines how a delivery concludes. This affects the f
 - **Delivery Ending Time**: When the delivery is finished, triggering order closure or reopening.
 
 ### 4.2. Business Layer Timestamp Properties
-- **Expected Delivery Time**: An estimated delivery date and time, based on delivery type (means of transportation), distance from the company address, and average speed (from config).
-- **Maximum Delivery Time**: Latest allowable delivery date and time, calculated as `OrderOpeningTime + MaxDeliveryTimeSpan`.
+- **Expected Delivery Time**: An estimated delivery date and time, based on delivery type (means of transportation), distance from the company address, and average speed (from config). This is calculated dynamically in the Business Layer and is not stored in the Data Layer.
+- **Maximum Delivery Time**: Latest allowable delivery date and time, calculated as `OrderOpeningTime + MaxDeliveryTimeSpan`. This is also calculated in the Business Layer and is not stored directly in the Data Layer.
 - **Schedule Status**: Calculated in the BL (`BO.Delivery`) based on `Config` settings. Relevant for active or completed deliveries:
   - **OnTime**: The delivery is active with sufficient time, or completed before the deadline.
   - **AtRisk**: The delivery is active, and the remaining time is less than `Config.RiskRange`.
@@ -102,6 +102,9 @@ The `DeliveryEndTypes` enum defines how a delivery concludes. This affects the f
 
 ### 5.1. Aerial Distance
 - **Method:** `Tools.GetAerialDistance`
+- **Configuration:**
+    - `MaxGeneralDeliveryDistanceKm`: A configuration setting that limits the distance for all orders.
+    - `PersonalMaxDeliveryDistance`: A courier-specific setting that limits which orders a courier can accept. This must be less than or equal to `MaxGeneralDeliveryDistanceKm`.
 - **Usage:**
     - **Order Validation:** When creating or updating an order, the aerial distance from the company headquarters to the order's destination is calculated. This distance must not exceed `MaxGeneralDeliveryDistanceKm` defined in the configuration.
     - **Delivery Validation:** When a courier accepts an order, the aerial distance from the company headquarters to the order's destination is calculated. This distance must not exceed the courier's `PersonalMaxDeliveryDistance`.
