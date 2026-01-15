@@ -435,10 +435,9 @@ internal static class Tools
         return (distance, speed);
     }
 
-    internal static BO.ScheduleStatus DetermineScheduleStatus(int orderId, BO.Delivery? activeDelivery = null)
+    internal static BO.ScheduleStatus DetermineScheduleStatus(BO.Order order, BO.Delivery? activeDelivery = null)
     {
         var config = AdminManager.GetConfig();
-        var order = OrderManager.Read(orderId);
         
         var deliveryType = GetFastestType(config);
         

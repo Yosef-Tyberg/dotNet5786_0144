@@ -164,7 +164,7 @@ public class ToolsTests
     {
         var order = new BO.Order { Id = 0, CustomerFullName = "Test111", CustomerMobile = "0500000000", FullOrderAddress = "Addr", VerbalDescription = "Desc", Volume = 1, Weight = 1, Height = 1, Width = 1, OrderOpenTime = AdminManager.Now };
         bl.Order.Create(order);
-        var id = OrderManager.ReadAll(o => o.CustomerFullName == "Test111").First().Id; 
+        var id = OrderManager.ReadAll(o => o.CustomerFullName == "Test111").First(); 
         var status = Tools.DetermineScheduleStatus(id);
         Assert.AreEqual(ScheduleStatus.OnTime, status);
     }
@@ -175,11 +175,11 @@ public class ToolsTests
         
         // Arrange: Setup - Pick up an order
         var courier = bl.Courier.ReadAll(c => c.Active && c.Id != 0 && bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-        var order = bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
+        var order = OrderManager.ReadAll().Where(o => o.OrderStatus == OrderStatus.Open).First();
         bl.Delivery.PickUp(courier.Id, order.Id);
         
         // Assert 1: Initially OnTime
-        Assert.AreEqual(ScheduleStatus.OnTime, Tools.DetermineScheduleStatus(order.Id));
+        Assert.AreEqual(ScheduleStatus.OnTime, Tools.DetermineScheduleStatus(order));
         
         // Act 2: Forward clock
         var config = AdminManager.GetConfig();
@@ -192,13 +192,13 @@ public class ToolsTests
         bl.Admin.ForwardClock(timeToForward);
         
         // Assert 2: AtRisk
-        Assert.AreEqual(ScheduleStatus.AtRisk, Tools.DetermineScheduleStatus(order.Id));
+        Assert.AreEqual(ScheduleStatus.AtRisk, Tools.DetermineScheduleStatus(order));
         
         // Act 3: Forward past max
         bl.Admin.ForwardClock(config.RiskRange);
         
         // Assert 3: Late
-        Assert.AreEqual(ScheduleStatus.Late, Tools.DetermineScheduleStatus(order.Id));
+        Assert.AreEqual(ScheduleStatus.Late, Tools.DetermineScheduleStatus(order));
     }
 
     #endregion
