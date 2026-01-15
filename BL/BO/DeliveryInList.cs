@@ -29,7 +29,7 @@ public class DeliveryInList
     /// <summary>
     /// The schedule status of the delivery.
     /// </summary>
-    public ScheduleStatus ScheduleStatus { get; set; }
+    public ScheduleStatus? ScheduleStatus { get; set; }
 
     /// <summary>
     /// Result/status of the delivery.

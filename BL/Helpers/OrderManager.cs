@@ -129,7 +129,7 @@ internal static class OrderManager
                 PackageDensity = doOrder.Volume > 0 ? doOrder.Weight / doOrder.Volume : 0
             };
 
-            var deliveries = s_dal.Delivery.ReadAll(d => d.OrderId == doOrder.Id);
+            var deliveries = DeliveryManager.ReadAll(d => d.OrderId == doOrder.Id);
             boOrder.OrderStatus = DetermineOrderStatus(deliveries);
             
             return boOrder;
@@ -140,34 +140,7 @@ internal static class OrderManager
         }
     }
 
-    /// <summary>
-    /// Determines the status of an order based on its delivery history.
-    /// </summary>
-    /// <param name="deliveries">The list of deliveries associated with the order.</param>
-    /// <returns>The calculated order status.</returns>
-    private static BO.OrderStatus DetermineOrderStatus(IEnumerable<DO.Delivery> deliveries)
-    {
-        if (!deliveries.Any())
-        {
-            return BO.OrderStatus.Open;
-        }
 
-        if (deliveries.Any(d => d.DeliveryEndTime == null))
-        {
-            return BO.OrderStatus.InProgress;
-        }
-
-        var lastEnded = deliveries.OrderByDescending(d => d.DeliveryEndTime).First();
-        return lastEnded.DeliveryEndType switch
-        {
-            DO.DeliveryEndTypes.Delivered => BO.OrderStatus.Delivered,
-            DO.DeliveryEndTypes.CustomerRefused => BO.OrderStatus.Refused,
-            DO.DeliveryEndTypes.Cancelled => BO.OrderStatus.Cancelled,
-            DO.DeliveryEndTypes.RecipientNotFound => BO.OrderStatus.Open,
-            DO.DeliveryEndTypes.Failed => BO.OrderStatus.Open,
-            _ => BO.OrderStatus.Open
-        };
-    }
 
     /// <summary>
     /// Determines the status of an order based on its delivery history.
@@ -395,19 +368,11 @@ internal static class OrderManager
     /// <returns>the tracking information for the order</returns>
     public static BO.OrderTracking GetOrderTracking(int orderId)
     {
-        DO.Order doOrder;
-        try
-        {
-            doOrder = s_dal.Order.Read(orderId);
-        }
-        catch (DO.DalDoesNotExistException ex)
-        {
-            throw new BO.BlDoesNotExistException($"Order with ID {orderId} not found.", ex);
-        }
+        BO.Order boOrder = Read(orderId);
 
         var deliveries = DeliveryManager.ReadAll(d => d.OrderId == orderId);
         BO.OrderStatus status = DetermineOrderStatus(deliveries);
-        BO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d?.DeliveryEndTime == null);
+        BO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d != null && d?.DeliveryEndTime == null);
 
         // Get Assigned Courier (only if InProgress)
         BO.CourierInList? assignedCourier = null;
@@ -428,72 +393,28 @@ internal static class OrderManager
 
         // Calculate Timing Properties
         var config = AdminManager.GetConfig();
-        DateTime? maxDeliveryTime = doOrder.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
-        DateTime? expectedDeliveryTime = CalculateExpectedDeliveryTime(status, activeDelivery, assignedCourier, doOrder, config);
+        DateTime? maxDeliveryTime = boOrder.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
+        DateTime? expectedDeliveryTime = null;
+        if (activeDelivery != null)
+        {
+            expectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(activeDelivery.DeliveryType, boOrder, activeDelivery);
+        }
 
         return new BO.OrderTracking
         {
-            Id = doOrder.Id,
+            Id = boOrder.Id,
             Status = status,
             AssignedCourier = assignedCourier,
             DeliveryHistory = history,
-            VerbalDescription = doOrder.VerbalDescription,
-            CustomerFullName = doOrder.CustomerFullName,
-            OrderOpenTime = doOrder.OrderOpenTime,
+            VerbalDescription = boOrder.VerbalDescription,
+            CustomerFullName = boOrder.CustomerFullName,
+            OrderOpenTime = boOrder.OrderOpenTime,
             ExpectedDeliveryTime = expectedDeliveryTime,
             MaxDeliveryTime = maxDeliveryTime,
-            FullOrderAddress = doOrder.FullOrderAddress
+            FullOrderAddress = boOrder.FullOrderAddress
         };
     }
 
-    /// <summary>
-    /// Calculates the expected delivery time for an order that is in progress.
-    /// </summary>
-    /// <param name="status">The current status of the order.</param>
-    /// <param name="activeDelivery">The active delivery for the order.</param>
-    /// <param name="assignedCourier">The courier assigned to the delivery.</param>
-    /// <param name="doOrder">The data layer order object.</param>
-    /// <param name="config">The application configuration.</param>
-    /// <returns>The calculated expected delivery time, or null if not applicable.</returns>
-    private static DateTime? CalculateExpectedDeliveryTime(BO.OrderStatus status, BO.Delivery? activeDelivery, BO.CourierInList? assignedCourier, DO.Order doOrder, BO.Config config)
-    {
-        if (status != BO.OrderStatus.InProgress || activeDelivery == null || assignedCourier == null)
-        {
-            return null;
-        }
-
-        double distance;
-        switch (assignedCourier.DeliveryType)
-        {
-            case BO.DeliveryTypes.Car:
-            case BO.DeliveryTypes.Motorcycle:
-                distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), doOrder.Latitude, doOrder.Longitude);
-                break;
-            case BO.DeliveryTypes.Bicycle:
-            case BO.DeliveryTypes.OnFoot:
-                distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), doOrder.Latitude, doOrder.Longitude);
-                break;
-            default:
-                throw new BO.BlMissingPropertyException($"Invalid or missing delivery type for courier {assignedCourier.Id}");
-        }
-
-        double speed = assignedCourier.DeliveryType switch
-        {
-            BO.DeliveryTypes.Car => config.AvgCarSpeedKmh,
-            BO.DeliveryTypes.Motorcycle => config.AvgMotorcycleSpeedKmh,
-            BO.DeliveryTypes.Bicycle => config.AvgBicycleSpeedKmh,
-            BO.DeliveryTypes.OnFoot => config.AvgWalkingSpeedKmh,
-            _ => config.AvgCarSpeedKmh
-        };
-
-        if (speed > 0)
-        {
-            double travelHours = distance / speed;
-            return activeDelivery.DeliveryStartTime!.AddHours(travelHours);
-        }
-
-        return null;
-    }
 
     /// <summary>
     /// a method for periodic updates of the order

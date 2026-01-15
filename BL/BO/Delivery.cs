@@ -62,18 +62,18 @@ public class Delivery
     /// <summary>
     /// The schedule status of the delivery.
     /// </summary>
-    public ScheduleStatus ScheduleStatus { get; set; }
+    public ScheduleStatus? ScheduleStatus { get; set; }
 
     
     /// <summary>
     /// An estimated delivery date and time.
     /// </summary>
-    public DateTime ExpectedDeliveryTime { get; set; }
+    public DateTime? ExpectedDeliveryTime { get; set; }
 
     /// <summary>
     /// The latest allowable delivery date and time.
     /// </summary>
-    public DateTime MaximumDeliveryTime { get; set; }    
+    public DateTime? MaximumDeliveryTime { get; set; }    
 
     /// <summary>   
     /// Returns a string representation of the Delivery entity.  

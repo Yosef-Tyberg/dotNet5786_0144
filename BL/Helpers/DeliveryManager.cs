@@ -200,11 +200,11 @@ internal static class DeliveryManager
 
 
 
-            boDelivery.ExpectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(boDelivery.DeliveryType, order);
+            boDelivery.ExpectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(boDelivery.DeliveryType, order, boDelivery);
 
 
 
-            boDelivery.ScheduleStatus = Tools.DetermineScheduleStatus(boDelivery.OrderId);
+            boDelivery.ScheduleStatus = Tools.DetermineScheduleStatus(boDelivery.OrderId, boDelivery);
 
 
 

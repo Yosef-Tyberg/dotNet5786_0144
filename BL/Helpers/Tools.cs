@@ -389,12 +389,11 @@ internal static class Tools
     /// <param name="order">The associated order.</param>
     /// <returns>The calculated expected delivery time.</returns>
     /// <exception cref="BO.BlMissingPropertyException">Thrown when calculation fails.</exception>
-    internal static DateTime CalculateExpectedDeliveryTime(BO.DeliveryTypes deliveryType, BO.Order order)
+    internal static DateTime CalculateExpectedDeliveryTime(BO.DeliveryTypes deliveryType, BO.Order order, BO.Delivery? activeDelivery = null)
     {
         var config = AdminManager.GetConfig();
 
-        // Determine the start time: if an active delivery exists for the order, use its DeliveryStartTime; otherwise, use AdminManager.Now
-        DO.Delivery? activeDelivery = s_dal.Delivery.ReadAll(d => d.OrderId == order.Id && d.DeliveryEndTime == null).FirstOrDefault();
+        // Determine the start time: if an active delivery exists for the order, use its DeliveryStartTime; otherwise, use AdminManager.Now 
         DateTime startTime = activeDelivery?.DeliveryStartTime ?? AdminManager.Now;
 
         var (distance, speed) = GetDistanceAndSpeed(deliveryType, order, config);
@@ -436,20 +435,19 @@ internal static class Tools
         return (distance, speed);
     }
 
-    internal static BO.ScheduleStatus DetermineScheduleStatus(int orderId)
+    internal static BO.ScheduleStatus DetermineScheduleStatus(int orderId, BO.Delivery? activeDelivery = null)
     {
         var config = AdminManager.GetConfig();
         var order = OrderManager.Read(orderId);
         
         var deliveryType = GetFastestType(config);
         
-        var activeDelivery = DeliveryManager.ReadAll(d => d.OrderId == orderId && d.DeliveryEndTime == null).FirstOrDefault();
         if (activeDelivery != null)
         {
-            deliveryType = (BO.DeliveryTypes)activeDelivery.DeliveryType;
+            deliveryType = activeDelivery.DeliveryType;
         }
         
-        var arrival = CalculateExpectedDeliveryTime(deliveryType, order);  
+        var arrival = CalculateExpectedDeliveryTime(deliveryType, order, activeDelivery);  
         var deadline = order.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
 
         if (AdminManager.Now > deadline || arrival > deadline)
