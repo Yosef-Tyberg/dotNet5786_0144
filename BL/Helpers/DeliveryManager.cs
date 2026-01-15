@@ -204,7 +204,7 @@ internal static class DeliveryManager
 
 
 
-            boDelivery.ScheduleStatus = DetermineScheduleStatus(boDelivery, config.RiskRange);
+            boDelivery.ScheduleStatus = Tools.DetermineScheduleStatus(boDelivery.OrderId);
 
 
 
