@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BO;
 
 namespace Helpers;
 
@@ -199,7 +200,7 @@ internal static class DeliveryManager
 
 
 
-            boDelivery.ExpectedDeliveryTime = CalculateExpectedDeliveryTime(boDelivery, order, config);
+            boDelivery.ExpectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(boDelivery.DeliveryType, order);
 
 
 
@@ -223,84 +224,6 @@ internal static class DeliveryManager
 
 
 
-    /// <summary>
-
-    /// Calculates the expected delivery time for a given delivery.
-
-    /// </summary>
-
-    /// <param name="delivery">The delivery.</param>
-
-    /// <param name="order">The associated order.</param>
-
-    /// <param name="config">The application configuration.</param>
-
-    /// <returns>The calculated expected delivery time.</returns>
-
-    private static DateTime CalculateExpectedDeliveryTime(BO.Delivery delivery, BO.Order order, BO.Config config)
-
-    {
-
-        double distance;
-
-        double speed;
-
-        switch (delivery.DeliveryType)
-
-        {
-
-            case BO.DeliveryTypes.Car:
-
-                distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
-
-                speed = config.AvgCarSpeedKmh;
-
-                break;
-
-            case BO.DeliveryTypes.Motorcycle:
-
-                distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
-
-                speed = config.AvgMotorcycleSpeedKmh;
-
-                break;
-
-            case BO.DeliveryTypes.Bicycle:
-
-                distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
-
-                speed = config.AvgBicycleSpeedKmh;
-
-                break;
-
-            case BO.DeliveryTypes.OnFoot:
-
-                distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
-
-                speed = config.AvgWalkingSpeedKmh;
-
-                break;
-
-            default:
-
-                throw new BO.BlMissingPropertyException($"Could not calculate properties for unrecognized delivery type: {delivery.DeliveryType}");
-
-        }
-
-        if (speed >= 1)
-
-        {
-
-            var estimatedHours = distance / speed;
-
-            return delivery.DeliveryStartTime.AddHours(estimatedHours);
-
-        }
-
-        throw new BO.BlMissingPropertyException($"speed must be >= 1");
-    }
-
-
 
     /// <summary>
 
@@ -314,33 +237,7 @@ internal static class DeliveryManager
 
     /// <returns>The calculated schedule status.</returns>
 
-    private static BO.ScheduleStatus DetermineScheduleStatus(BO.Delivery delivery, TimeSpan riskRange)
-
-    {
-
-        if ((delivery.DeliveryEndTime == null && AdminManager.Now > delivery.MaximumDeliveryTime) || (delivery.DeliveryEndTime != null && delivery.DeliveryEndTime > delivery.MaximumDeliveryTime))
-
-        {
-
-            return BO.ScheduleStatus.Late;
-
-        }
-
-
-
-        if (delivery.DeliveryEndTime == null && (delivery.MaximumDeliveryTime - AdminManager.Now) < riskRange)
-
-        {
-
-            return BO.ScheduleStatus.AtRisk;
-
-        }
-
-
-
-        return BO.ScheduleStatus.OnTime;
-
-    }
+    
 
 
 

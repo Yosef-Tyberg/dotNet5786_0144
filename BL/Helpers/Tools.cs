@@ -26,6 +26,8 @@ internal static class Tools
     private static readonly ConcurrentDictionary<string, (double, double)> s_coordinateCache = new();
     private static readonly ConcurrentDictionary<string, double> s_routeDistanceCache = new();
 
+    private static DalApi.IDal s_dal = DalApi.Factory.Get;
+
     #region Validation Methods
 
     public static void ValidateFullName(string name, string label)
@@ -376,6 +378,103 @@ internal static class Tools
         }
         throw new BlInvalidInputException("could not find a route");
     }
+    #endregion
+
+    #region Schedule Methods
+
+    /// <summary>
+    /// Calculates the expected delivery time for a delivery.
+    /// </summary>
+    /// <param name="deliveryType">The delivery type.</param>
+    /// <param name="order">The associated order.</param>
+    /// <returns>The calculated expected delivery time.</returns>
+    /// <exception cref="BO.BlMissingPropertyException">Thrown when calculation fails.</exception>
+    internal static DateTime CalculateExpectedDeliveryTime(BO.DeliveryTypes deliveryType, BO.Order order)
+    {
+        var config = AdminManager.GetConfig();
+
+        // Determine the start time: if an active delivery exists for the order, use its DeliveryStartTime; otherwise, use AdminManager.Now
+        DO.Delivery? activeDelivery = s_dal.Delivery.ReadAll(d => d.OrderId == order.Id && d.DeliveryEndTime == null).FirstOrDefault();
+        DateTime startTime = activeDelivery?.DeliveryStartTime ?? AdminManager.Now;
+
+        var (distance, speed) = GetDistanceAndSpeed(deliveryType, order, config);
+
+        if (speed >= 1)
+        {
+            var estimatedHours = distance / speed;
+            return startTime.AddHours(estimatedHours);
+        }
+
+        throw new BO.BlMissingPropertyException("Average speed must be >= 1 km/h");
+    }
+
+    private static (double distance, double speed) GetDistanceAndSpeed(BO.DeliveryTypes deliveryType, BO.Order order, BO.Config config)
+    {
+        double distance;
+        double speed;
+        switch (deliveryType)
+        {
+            case BO.DeliveryTypes.Car:
+                distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
+                speed = config.AvgCarSpeedKmh;
+                break;
+            case BO.DeliveryTypes.Motorcycle:
+                distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
+                speed = config.AvgMotorcycleSpeedKmh;
+                break;
+            case BO.DeliveryTypes.Bicycle:
+                distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
+                speed = config.AvgBicycleSpeedKmh;
+                break;
+            case BO.DeliveryTypes.OnFoot:
+                distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
+                speed = config.AvgWalkingSpeedKmh;
+                break;
+            default:
+                throw new BO.BlMissingPropertyException($"Could not calculate properties for unrecognized delivery type: {deliveryType}");
+        }
+        return (distance, speed);
+    }
+
+    internal static BO.ScheduleStatus DetermineScheduleStatus(int orderId)
+    {
+        var config = AdminManager.GetConfig();
+        var order = OrderManager.Read(orderId);
+        
+        var deliveryType = GetFastestType(config);
+        
+        var activeDelivery = DeliveryManager.ReadAll(d => d.OrderId == orderId && d.DeliveryEndTime == null).FirstOrDefault();
+        if (activeDelivery != null)
+        {
+            deliveryType = (BO.DeliveryTypes)activeDelivery.DeliveryType;
+        }
+        
+        var arrival = CalculateExpectedDeliveryTime(deliveryType, order);  
+        var deadline = order.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
+
+        if (AdminManager.Now > deadline || arrival > deadline)
+            return BO.ScheduleStatus.Late;
+
+        if ((deadline - arrival) < config.RiskRange)
+            return BO.ScheduleStatus.AtRisk;
+
+        return BO.ScheduleStatus.OnTime;
+    }
+
+    internal static BO.DeliveryTypes GetFastestType(BO.Config config)
+    {
+        var speeds = new Dictionary<BO.DeliveryTypes, double>
+        {
+            { BO.DeliveryTypes.Car, config.AvgCarSpeedKmh },
+            { BO.DeliveryTypes.Motorcycle, config.AvgMotorcycleSpeedKmh },
+            { BO.DeliveryTypes.Bicycle, config.AvgBicycleSpeedKmh },
+            { BO.DeliveryTypes.OnFoot, config.AvgWalkingSpeedKmh }
+        };
+
+        return speeds.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
+    }
+
+
     #endregion
 
     #region Helper Classes for JSON Deserialization

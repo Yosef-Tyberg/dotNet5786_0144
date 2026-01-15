@@ -89,6 +89,11 @@ public class Order
     public OrderStatus OrderStatus { get; set; }
 
     /// <summary>
+    /// The schedule status of the order.
+    /// </summary>
+    public ScheduleStatus ScheduleStatus { get; set; }
+
+    /// <summary>
     /// The full address of the order.
     /// </summary>
     public string FullOrderAddress { get; set; }

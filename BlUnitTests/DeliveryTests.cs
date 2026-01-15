@@ -311,39 +311,6 @@ public class DeliveryTests
 
     #endregion
 
-    #region Schedule Status Tests
-
-    [TestMethod]
-    public void Test_ScheduleStatus_ChangesOverTime()
-    {
-        // Arrange: A courier picks up an order
-        var (orderId, _) = SetupInProgressOrder();
-        var delivery = _bl.Delivery.Read(orderId);
-        
-        // Assert 1: Initially OnTime
-        Assert.AreEqual(ScheduleStatus.OnTime, delivery.ScheduleStatus, "Delivery should start as OnTime.");
-        
-        // Act 2: Forward clock to be within the 'at risk' range
-        var config = _bl.Admin.GetConfig();
-        var timeToMaximum = delivery.MaximumDeliveryTime - _bl.Admin.GetClock();
-        var timeToForward = timeToMaximum - (config.RiskRange / 2); // Go to middle of risk range
-        
-        _bl.Admin.ForwardClock(timeToForward);
-        
-        // Assert 2: Now AtRisk
-        delivery = _bl.Delivery.Read(orderId);
-        Assert.AreEqual(ScheduleStatus.AtRisk, delivery.ScheduleStatus, "Delivery should become AtRisk.");
-        
-        // Act 3: Forward clock past the maximum delivery time
-        _bl.Admin.ForwardClock(config.RiskRange); // Go past the max time
-        
-        // Assert 3: Now Late
-        delivery = _bl.Delivery.Read(orderId);
-        Assert.AreEqual(ScheduleStatus.Late, delivery.ScheduleStatus, "Delivery should become Late.");
-    }
-
-    #endregion
-
     #region Helper Methods
 
     private (int orderId, int courierId) SetupInProgressOrder()
@@ -352,6 +319,23 @@ public class DeliveryTests
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
         return (order.Id, courier.Id);
+    }
+
+    #endregion
+
+    #region Helper Methods Tests
+
+    [TestMethod]
+    public void Test_IsOrderTaken_ReturnsTrueForActiveDelivery()
+    {
+        // Arrange
+        var (orderId, courierId) = SetupInProgressOrder();
+
+        // Act
+        bool taken = DeliveryManager.IsOrderTaken(orderId);
+
+        // Assert
+        Assert.IsTrue(taken, "Order should be taken after delivery creation");
     }
 
     #endregion

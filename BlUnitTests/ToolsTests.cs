@@ -16,6 +16,14 @@ public class ToolsTests
     private const double Lat2 = 31.7800;
     private const double Lon2 = 35.2300;
 
+    private readonly IBl bl = Factory.Get();
+
+    [TestInitialize]
+    public void Init()
+    {
+        AdminManager.InitializeDB();
+    }
+
     #region Distance Tests
 
     [TestMethod]
@@ -114,6 +122,83 @@ public class ToolsTests
     public void Test_GetCoordinates_InvalidAddress_ThrowsException()
     {
         Tools.GetCoordinates("asdfasdfasdf");
+    }
+
+    #endregion
+
+    #region Schedule & Calculation Tests
+
+    [TestMethod]
+    public void Test_GetFastestType_ReturnsCorrectType()
+    {
+        var config = new BO.Config
+        {
+            AvgCarSpeedKmh = 50,
+            AvgMotorcycleSpeedKmh = 100, // Fastest
+            AvgBicycleSpeedKmh = 20,
+            AvgWalkingSpeedKmh = 5
+        };
+
+        var result = Tools.GetFastestType(config);
+        Assert.AreEqual(DeliveryTypes.Motorcycle, result);
+    }
+
+    [TestMethod]
+    public void Test_CalculateExpectedDeliveryTime_ReturnsValidTime()
+    {
+        var config = AdminManager.GetConfig();
+        var order = new BO.Order
+        {
+            Id = 1,
+            Latitude = (config.Latitude ?? 31.7) + 0.01,
+            Longitude = (config.Longitude ?? 35.2) + 0.01,
+            OrderOpenTime = AdminManager.Now
+        };
+
+        var result = Tools.CalculateExpectedDeliveryTime(DeliveryTypes.Car, order);
+        Assert.IsTrue(result >= AdminManager.Now);
+    }
+
+    [TestMethod]
+    public void Test_DetermineScheduleStatus_ReturnsOnTime_ForNewOrder()
+    {
+        var order = new BO.Order { Id = 0, CustomerFullName = "Test111", CustomerMobile = "0500000000", FullOrderAddress = "Addr", VerbalDescription = "Desc", Volume = 1, Weight = 1, Height = 1, Width = 1, OrderOpenTime = AdminManager.Now };
+        bl.Order.Create(order);
+        var id = OrderManager.ReadAll(o => o.CustomerFullName == "Test111").First().Id; 
+        var status = Tools.DetermineScheduleStatus(id);
+        Assert.AreEqual(ScheduleStatus.OnTime, status);
+    }
+
+    [TestMethod]
+    public void Test_ScheduleStatus_ChangesOverTime()
+    {
+        
+        // Arrange: Setup - Pick up an order
+        var courier = bl.Courier.ReadAll(c => c.Active && c.Id != 0 && bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
+        var order = bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
+        bl.Delivery.PickUp(courier.Id, order.Id);
+        
+        // Assert 1: Initially OnTime
+        Assert.AreEqual(ScheduleStatus.OnTime, Tools.DetermineScheduleStatus(order.Id));
+        
+        // Act 2: Forward clock
+        var config = AdminManager.GetConfig();
+        var orderObj = bl.Order.Read(order.Id);
+        var maxTime = orderObj.OrderOpenTime + config.MaxDeliveryTimeSpan;
+        
+        var timeToMaximum = maxTime - AdminManager.Now;
+        var timeToForward = timeToMaximum - (config.RiskRange / 2); 
+        
+        bl.Admin.ForwardClock(timeToForward);
+        
+        // Assert 2: AtRisk
+        Assert.AreEqual(ScheduleStatus.AtRisk, Tools.DetermineScheduleStatus(order.Id));
+        
+        // Act 3: Forward past max
+        bl.Admin.ForwardClock(config.RiskRange);
+        
+        // Assert 3: Late
+        Assert.AreEqual(ScheduleStatus.Late, Tools.DetermineScheduleStatus(order.Id));
     }
 
     #endregion
