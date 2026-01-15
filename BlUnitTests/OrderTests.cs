@@ -190,7 +190,7 @@ public class OrderTests
     public void Test_UpdateOrder_WhileInProgress_ThrowsException()
     {
         // Arrange: Pick up an order
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
         var orderInList = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         var order = _bl.Order.Read(orderInList.Id);
         _bl.Delivery.PickUp(courier.Id, order.Id);
@@ -225,7 +225,7 @@ public class OrderTests
     public void Test_UpdateOrder_AlreadyDelivered_ThrowsException()
     {
         // Arrange: Deliver an order
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
         var orderInList = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         var order = _bl.Order.Read(orderInList.Id);
         _bl.Delivery.PickUp(courier.Id, order.Id);
@@ -287,7 +287,7 @@ public class OrderTests
     public void Test_DeleteOrder_AlreadyAssigned_ThrowsException()
     {
         // Arrange: Pick up an order
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
 
@@ -313,7 +313,7 @@ public class OrderTests
     public void Test_CancelOrder_InProgress_Success()
     {
         // Arrange: Pick up an order to make it InProgress
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
 
@@ -330,7 +330,7 @@ public class OrderTests
     public void Test_CancelOrder_Delivered_ThrowsException()
     {
         // Arrange: Deliver an order
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
         _bl.Delivery.Deliver(courier.Id, DeliveryEndTypes.Delivered);
@@ -359,7 +359,7 @@ public class OrderTests
         Assert.AreEqual(OrderStatus.Open, order.OrderStatus, "Order should start as Open.");
         
         // Act 1: Pick up
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
         var inProgressOrder = _bl.Order.Read(order.Id);
         
@@ -378,7 +378,7 @@ public class OrderTests
     public void Test_GetOrderTracking_InProgressOrder_ReturnsCorrectData()
     {
         // Arrange: Pick up an order
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
 
@@ -480,7 +480,7 @@ public class OrderTests
         // Arrange
         var config = _bl.Admin.GetConfig();
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
 
         // Act 1: Pick up the order and check initial state
         _bl.Delivery.PickUp(courier.Id, order.Id);
@@ -563,7 +563,7 @@ public class OrderTests
     private (int orderId, int courierId) SetupInProgressOrder()
     {
         var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetMyCurrentDelivery(c.Id) == null).First();
+        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
         _bl.Delivery.PickUp(courier.Id, order.Id);
         return (order.Id, courier.Id);
     }

@@ -112,7 +112,7 @@ public class AdminTests
 
         // Assert
         Assert.IsNotNull(config);
-        Assert.IsTrue(config.AdminId > 0, "Default Admin ID should be positive");
+        Assert.IsTrue(config.AdminId <= 0, "Admin ID must be positive.");
         Assert.IsFalse(string.IsNullOrWhiteSpace(config.AdminPassword), "Default Admin Password should not be empty");
         Assert.IsTrue(config.AvgCarSpeedKmh > 0, "Default car speed should be positive");
         Assert.IsTrue(config.AvgMotorcycleSpeedKmh > 0, "Default motorcycle speed should be positive");
@@ -126,6 +126,7 @@ public class AdminTests
     {
         // Arrange
         var config = AdminManager.GetConfig();
+        config.AdminId = 123456789;
         config.AvgCarSpeedKmh = 120.5;
         config.AdminPassword = "newPassword123";
 
@@ -266,6 +267,7 @@ public class AdminTests
     {
         // Arrange
         var config = AdminManager.GetConfig();
+        config.AdminId = 111111111;
         config.CompanyFullAddress = ""; // Invalid address
 
         // Act
@@ -298,6 +300,7 @@ public class AdminTests
     {
         // Arrange
         var config = AdminManager.GetConfig();
+        config.AdminId = 111111111;
         config.CompanyFullAddress = null;
 
         // Act

@@ -5,6 +5,7 @@ using BO;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace BlUnitTests;
 
@@ -18,6 +19,33 @@ public class CourierTests
     {
         // Reset and initialize DB before every test to ensure isolation
         AdminManager.InitializeDB();
+        var newCourier = new Courier
+        {
+            Id = 123454321,
+            FullName = "New Courier",
+            MobilePhone = "0551111111",
+            Email = "new@courier.com",
+            Password = "securepassword",
+            Active = true,
+            DeliveryType = DeliveryTypes.Car,
+            EmploymentStartTime = _bl.Admin.GetClock(),
+            PersonalMaxDeliveryDistance = null
+        };
+        _bl.Courier.Create(newCourier);
+
+        newCourier = new Courier
+        {
+            Id = 987654567,
+            FullName = "New Courier",
+            MobilePhone = "0551111111",
+            Email = "new@courier.com",
+            Password = "securepassword",
+            Active = true,
+            DeliveryType = DeliveryTypes.Car,
+            EmploymentStartTime = _bl.Admin.GetClock(),
+            PersonalMaxDeliveryDistance = null
+        };
+        _bl.Courier.Create(newCourier);
     }
 
     #region Create Tests
@@ -30,7 +58,7 @@ public class CourierTests
         {
             Id = 111222333,
             FullName = "New Courier",
-            MobilePhone = "055-111-1111",
+            MobilePhone = "0551111111",
             Email = "new@courier.com",
             Password = "securepassword",
             Active = true,
@@ -58,7 +86,7 @@ public class CourierTests
         {
             Id = existingCourier.Id,
             FullName = "Duplicate Courier",
-            MobilePhone = "055-222-2222",
+            MobilePhone = "0552222222",
             Email = "duplicate@courier.com",
             Password = "password",
             Active = true,
@@ -79,7 +107,7 @@ public class CourierTests
         {
             Id = 999888777,
             FullName = "", // Invalid
-            MobilePhone = "055-333-3333",
+            MobilePhone = "0553333333",
             Email = "invalid@courier.com",
             Password = "password",
             Active = true,
@@ -100,7 +128,7 @@ public class CourierTests
         {
             Id = 123123123,
             FullName = "Negative Distance",
-            MobilePhone = "050-000-0000",
+            MobilePhone = "0500000000",
             Email = "neg@dist.com",
             Password = "pass",
             Active = true,
@@ -192,12 +220,12 @@ public class CourierTests
         var courierToUpdate = _bl.Courier.Read(_bl.Courier.ReadAll().First().Id);
         
         // Act
-        _bl.Courier.UpdateMyDetails(courierToUpdate.Id, fullName: "My New Name", phoneNum: "050-987-6543");
+        _bl.Courier.UpdateMyDetails(courierToUpdate.Id, fullName: "My New Name", phoneNum: "0509876543");
         var updatedCourier = _bl.Courier.Read(courierToUpdate.Id);
 
         // Assert
         Assert.AreEqual("My New Name", updatedCourier.FullName);
-        Assert.AreEqual("050-987-6543", updatedCourier.MobilePhone);
+        Assert.AreEqual("0509876543", updatedCourier.MobilePhone);
     }
 
     [TestMethod]
@@ -302,7 +330,7 @@ public class CourierTests
     }
 
     [TestMethod]
-    public void Test_GetOpenOrders_NoDistanceSet_ReturnsEmpty()
+    public void Test_GetOpenOrders_NoDistanceSet_ReturnsAll()
     {
         // Arrange: Find a courier and ensure they have no max distance.
         var courier = _bl.Courier.Read(_bl.Courier.ReadAll().First().Id);
@@ -311,9 +339,18 @@ public class CourierTests
         
         // Act
         var openOrders = _bl.Courier.GetOpenOrders(courier.Id);
+        var allOrders = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open);
+        bool same =
+        _bl.Courier.GetOpenOrders(courier.Id)
+        .Select(c => c.Id)
+        .ToHashSet()
+        .SetEquals(
+            allOrders
+                .Select(c => c.Id)
+        );
 
         // Assert
-        Assert.IsFalse(openOrders.Any(), "Courier with no max distance should not see any open orders.");
+        Assert.IsTrue(same, "Courier with no max distance should see all open orders.");
     }
 
     [TestMethod]
@@ -346,18 +383,23 @@ public class CourierTests
 
         // Find an active courier with at least one completed delivery from the initial data.
         var courierToTest = _bl.Courier.ReadAll(c => c.Active)
-            .First(c => _bl.Courier.GetCourierDeliveryHistory(c.Id).Any());
+            .FirstOrDefault(c => DeliveryManager.GetDeliveryByCourier(c.Id) == null);
         
         // Ensure the courier is indeed active initially.
         var initialBoCourier = _bl.Courier.Read(courierToTest.Id);
+        Debug.WriteLine($"Testing with Courier ID: {initialBoCourier.Id}");
+        Debug.WriteLine($"Clock: {_bl.Admin.GetClock():yyyy-MM-dd HH:mm:ss.fff}, Initial Courier Active Status: {initialBoCourier.Id} , {initialBoCourier.Active}");
         Assert.IsTrue(initialBoCourier.Active, "Pre-condition failed: Courier should be active at the start of the test.");
 
         // Act
         // Forward the clock just past the inactivity threshold.
-        _bl.Admin.ForwardClock(inactivityRange.Add(TimeSpan.FromSeconds(1)));
-
+        _bl.Admin.ForwardClock(inactivityRange.Add(TimeSpan.FromMinutes(1)));
+        Debug.WriteLine($"inactivity range: {config.InactivityRange}");
+        Debug.WriteLine($"Clock: {_bl.Admin.GetClock():yyyy-MM-dd HH:mm:ss.fff}, after ForwardClock");
+        
         // Re-read the courier. The logic to update the 'Active' status should be triggered during this call.
         var updatedBoCourier = _bl.Courier.Read(courierToTest.Id);
+        Debug.WriteLine($"After Read - Courier {updatedBoCourier.Id} Active Status: {updatedBoCourier.Active}");
 
         // Assert
         Assert.IsFalse(updatedBoCourier.Active, "Courier should become inactive after the inactivity period has passed.");

@@ -36,8 +36,8 @@ internal sealed class DeliveryImplementation : IDelivery
     }
 
     /// <inheritdoc />
-    public BO.Delivery GetMyCurrentDelivery(int courierId)
+    public BO.Delivery? GetDeliveryByCourier(int courierId)
     {
-        return DeliveryManager.GetMyCurrentDelivery(courierId);
+        return DeliveryManager.GetDeliveryByCourier(courierId);
     }
 }

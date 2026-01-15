@@ -39,7 +39,7 @@ internal static class DeliveryManager
         }
     }
 
-    public static BO.Delivery? GetMyCurrentDelivery(int courierId)
+    public static BO.Delivery? GetDeliveryByCourier(int courierId)
     {
         // Find an active delivery for the courier (not yet delivered)
         var doDelivery = s_dal.Delivery.ReadAll()
@@ -78,7 +78,7 @@ internal static class DeliveryManager
                 throw new BO.BlInvalidInputException($"Courier {courierId} is not active.");
             
             // Verify courier doesn't have an active delivery
-            if (s_dal.Delivery.ReadAll().Any(d => d.CourierId == courierId && d.DeliveryEndTime == null))
+            if (GetDeliveryByCourier(courierId) != null)
                 throw new BO.BlCourierAlreadyHasDeliveryException(
                     $"Courier ID '{courierId}' already has an active delivery.");
 
@@ -382,7 +382,9 @@ internal static class DeliveryManager
 
                 ScheduleStatus = boDelivery.ScheduleStatus,
 
-                DeliveryEndType = boDelivery.DeliveryEndType
+                DeliveryEndType = boDelivery.DeliveryEndType,
+
+                DeliveryEndTime = boDelivery.DeliveryEndTime
 
             };
 

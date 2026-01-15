@@ -47,7 +47,7 @@ public interface IDelivery
     /// </summary>
     /// <param name="courierId">The ID of the courier.</param>
     /// <returns>A BO.Delivery object for the active delivery, or null if none exists.</returns>
-    BO.Delivery GetMyCurrentDelivery(int courierId);
+    BO.Delivery? GetDeliveryByCourier(int courierId);
 
     #endregion
 }

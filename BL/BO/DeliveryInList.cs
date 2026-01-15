@@ -38,6 +38,11 @@ public class DeliveryInList
     public DeliveryEndTypes? DeliveryEndType { get; set; }
 
     /// <summary>
+    /// Timestamp indicating when the delivery ended.
+    /// </summary>
+    public DateTime? DeliveryEndTime { get; set; }
+
+    /// <summary>
     /// Returns a string representation of the DeliveryInList entity.
     /// </summary>
     public override string ToString() => Helpers.Tools.ToStringProperty(this);

@@ -1,9 +1,10 @@
-﻿﻿﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 
 namespace Helpers;
@@ -129,7 +130,7 @@ internal static class CourierManager
             var existingCourier = ReadCourier(courier.Id);
 
             // Check if courier has an active delivery
-            if (DeliveryManager.GetMyCurrentDelivery(courier.Id) != null)
+            if (DeliveryManager.GetDeliveryByCourier(courier.Id) != null)
             {
                 // If any property besides the allowed ones is changed, throw exception
                 if (existingCourier.Active != courier.Active ||
@@ -174,7 +175,7 @@ internal static class CourierManager
             var courier = ReadCourier(courierId); // Read once at the beginning
 
             // Check if courier has an active delivery
-            if (DeliveryManager.GetMyCurrentDelivery(courierId) != null)
+            if (DeliveryManager.GetDeliveryByCourier(courierId) != null)
             {
                 // If in delivery, only allow certain fields to be updated.
                 // DeliveryType is not one of them.
@@ -358,7 +359,7 @@ internal static class CourierManager
         }
 
         var completedDeliveries = deliveries
-            .Where(d => d.ScheduleStatus is BO.ScheduleStatus.OnTime or BO.ScheduleStatus.Late)
+            .Where(d => d.DeliveryEndTime != null)
             .Select(d => DeliveryManager.ReadDelivery(d.Id)) // Read full delivery for details
             .ToList();
 
@@ -377,6 +378,7 @@ internal static class CourierManager
         };
     }
 
+
     /// <summary>
     /// a method for periodic updates of the courier.
     /// An active courier is deactivated if they have been inactive for a period greater
@@ -389,46 +391,70 @@ internal static class CourierManager
     public static void PeriodicCouriersUpdate(DateTime oldClock, DateTime newClock)
     {
         var inactivityRange = AdminManager.GetConfig().InactivityRange;
-        var activeCouriers = ReadAll(c => c.Active).ToList(); 
-        var allDeliveries = DeliveryManager.ReadAll().ToList();
+        var activeCouriers = ReadAll(c => c.Active);
+        var allDeliveries = DeliveryManager.ReadAll();
 
-        var couriersToDeactivate = new List<BO.Courier>();
-
-        foreach (var courier in activeCouriers)
-        {
-            var courierDeliveries = allDeliveries.Where(d => d.CourierId == courier.Id).ToList();
-
-            if (courierDeliveries.Any(d => !d.DeliveryEndTime.HasValue))
+        // Materialize filtered couriers BEFORE side effects
+        var couriersToDeactivate = activeCouriers
+            .Where(courier =>
             {
-                continue; 
-            }
+                var courierDeliveries = allDeliveries.Where(d => d.CourierId == courier.Id).ToArray();
 
-            DateTime? lastInvolvementDate;
+                // Debug: Check why courier is being skipped
+                if (courier.Id == 219282986) // Replace with your test courier ID
+                {
+                    Console.WriteLine($"[DEBUG] Checking courier {courier.Id}:");
+                    Console.WriteLine($"  Total deliveries: {courierDeliveries.Length}");
+                    Console.WriteLine($"  Active deliveries (EndTime == null): {courierDeliveries.Count(d => d.DeliveryEndTime == null)}");
+                    Console.WriteLine($"  Completed deliveries: {courierDeliveries.Count(d => d.DeliveryEndTime.HasValue)}");
+                }
 
-            var completedDeliveries = courierDeliveries.Where(d => d.DeliveryEndTime.HasValue).OrderByDescending(d => d.DeliveryEndTime).ToList();
+                // Skip if courier has an active delivery (DeliveryEndTime == null)
+                if (courierDeliveries.Any(d => d.DeliveryEndTime == null))
+                {
+                    if (courier.Id == 219282986)
+                        Console.WriteLine($"  [SKIP] Has active delivery");
+                    return false;
+                }
 
-            if (completedDeliveries.Any())
-            {
-                lastInvolvementDate = completedDeliveries.Max(d => d.DeliveryEndTime.Value);
-            }
-            else
-            {
-                lastInvolvementDate = courier.EmploymentStartTime;
-            }
+                // Determine last involvement date
+                DateTime lastInvolvementDate;
+                var completedDeliveries = courierDeliveries.Where(d => d.DeliveryEndTime.HasValue).ToArray();
+                
+                if (completedDeliveries.Any())
+                {
+                    lastInvolvementDate = completedDeliveries.Max(d => d.DeliveryEndTime!.Value);
+                }
+                else
+                {
+                    lastInvolvementDate = courier.EmploymentStartTime;
+                    if (courier.Id == 219282986)
+                        Console.WriteLine($"  No deliveries - using EmploymentStartTime: {lastInvolvementDate}");
+                }
 
-            if (lastInvolvementDate.HasValue && (AdminManager.Now - lastInvolvementDate.Value > inactivityRange))
-            {
-                couriersToDeactivate.Add(courier);
-            }
-        }
+                if (courier.Id == 219282986)
+                {
+                    Debug.WriteLine($"  Last involvement: {lastInvolvementDate}");
+                    Debug.WriteLine($"  Current time: {AdminManager.Now}");
+                    Debug.WriteLine($"  Time since last activity: {AdminManager.Now - lastInvolvementDate}");
+                    Debug.WriteLine($"  Inactivity range: {inactivityRange}");
+                    Debug.WriteLine($"  Should deactivate: {(AdminManager.Now - lastInvolvementDate) > inactivityRange}");
+                }
 
-        if (couriersToDeactivate.Any())
-        {
-            foreach (var courier in couriersToDeactivate)
+                // Check if inactive beyond the threshold
+                return (AdminManager.Now - lastInvolvementDate) > inactivityRange;
+            })
+            .ToArray();
+
+        // Apply side effects without active enumeration
+        couriersToDeactivate
+            .Select(courier =>
             {
                 courier.Active = false;
+                Debug.WriteLine($"Deactivating courier ID {courier.Id} due to inactivity.");
                 UpdateCourier(courier);
-            }
-        }
+                return true;
+            })
+            .Count();
     }
 }

@@ -657,7 +657,7 @@ internal static class Program
     {
         Console.Write("Enter your Courier ID: ");
         if (!int.TryParse(Console.ReadLine(), out int id)) throw new BlInvalidInputException("Invalid Courier ID.");
-        var delivery = s_bl.Delivery.GetMyCurrentDelivery(id);
+        var delivery = s_bl.Delivery.GetDeliveryByCourier(id);
         if (delivery == null) { Console.WriteLine("You do not have an active delivery."); } 
         else { Console.WriteLine(delivery); }
     }
