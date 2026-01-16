@@ -28,6 +28,27 @@ internal static class Tools
 
     private static DalApi.IDal s_dal = DalApi.Factory.Get;
 
+    //to be called in reset to clear the static caches
+    public static void ClearCaches()
+    {
+        s_coordinateCache.Clear();
+        s_routeDistanceCache.Clear();
+    }
+    //populate cache for testing purposes
+    public static void SeedCoordinateCache()
+    {
+        // These matches the strings used in Initialization.cs and your Unit Tests
+        s_coordinateCache.TryAdd("Ben Yehuda Street, Jerusalem", (31.781500, 35.217600));
+        s_coordinateCache.TryAdd("Jaffa Road, Jerusalem", (31.784637, 35.215046));
+        s_coordinateCache.TryAdd("Mahane Yehuda, Jerusalem", (31.784700, 35.207300));
+        s_coordinateCache.TryAdd("Emek Refaim - German Colony, Jerusalem", (31.757919, 35.218139));
+        s_coordinateCache.TryAdd("Givat Shaul, Jerusalem", (31.787128, 35.190108));
+        s_coordinateCache.TryAdd("Hebron Road (central), Jerusalem", (31.766509, 35.225938));
+        s_coordinateCache.TryAdd("Ein Kerem (outer), Jerusalem", (31.759164, 35.143000));
+        s_coordinateCache.TryAdd("Knesset area, Jerusalem", (31.776670, 35.205280));
+        s_coordinateCache.TryAdd("Jaffa Road 2, Jerusalem", (31.784637, 35.215046));
+        s_coordinateCache.TryAdd("King George Street 1, Jerusalem", (31.782000, 35.218200));
+    }
     #region Validation Methods
 
     public static void ValidateFullName(string name, string label)
@@ -383,13 +404,13 @@ internal static class Tools
     #region Schedule Methods
 
     /// <summary>
-    /// Calculates the expected delivery time for a delivery.
+    /// Calculates the expected delivery time for an order/delivery. if now>estimate returns now. 
     /// </summary>
     /// <param name="deliveryType">The delivery type.</param>
     /// <param name="order">The associated order.</param>
     /// <returns>The calculated expected delivery time.</returns>
     /// <exception cref="BO.BlMissingPropertyException">Thrown when calculation fails.</exception>
-    internal static DateTime CalculateExpectedDeliveryTime(BO.DeliveryTypes deliveryType, BO.Order order, BO.Delivery? activeDelivery = null)
+    internal static DateTime CalculateExpectedDeliveryTime(DO.DeliveryTypes deliveryType, DO.Order order, DO.Delivery? activeDelivery = null)
     {
         var config = AdminManager.GetConfig();
 
@@ -401,31 +422,35 @@ internal static class Tools
         if (speed >= 1)
         {
             var estimatedHours = distance / speed;
-            return startTime.AddHours(estimatedHours);
+            var estimate = startTime.AddHours(estimatedHours);
+            //if its already later than expected time (affects open deliveries)
+            if (estimate < AdminManager.Now) 
+                return AdminManager.Now;
+            return estimate;
         }
 
         throw new BO.BlMissingPropertyException("Average speed must be >= 1 km/h");
     }
 
-    private static (double distance, double speed) GetDistanceAndSpeed(BO.DeliveryTypes deliveryType, BO.Order order, BO.Config config)
+    private static (double distance, double speed) GetDistanceAndSpeed(DO.DeliveryTypes deliveryType, DO.Order order, BO.Config config)
     {
         double distance;
         double speed;
         switch (deliveryType)
         {
-            case BO.DeliveryTypes.Car:
+            case DO.DeliveryTypes.Car:
                 distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
                 speed = config.AvgCarSpeedKmh;
                 break;
-            case BO.DeliveryTypes.Motorcycle:
+            case DO.DeliveryTypes.Motorcycle:
                 distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
                 speed = config.AvgMotorcycleSpeedKmh;
                 break;
-            case BO.DeliveryTypes.Bicycle:
+            case DO.DeliveryTypes.Bicycle:
                 distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
                 speed = config.AvgBicycleSpeedKmh;
                 break;
-            case BO.DeliveryTypes.OnFoot:
+            case DO.DeliveryTypes.OnFoot:
                 distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
                 speed = config.AvgWalkingSpeedKmh;
                 break;
@@ -435,7 +460,7 @@ internal static class Tools
         return (distance, speed);
     }
 
-    internal static BO.ScheduleStatus DetermineScheduleStatus(BO.Order order, BO.Delivery? activeDelivery = null)
+    internal static BO.ScheduleStatus DetermineScheduleStatus(DO.Order order, DO.Delivery? activeDelivery = null)
     {
         var config = AdminManager.GetConfig();
         
@@ -448,29 +473,34 @@ internal static class Tools
         
         var arrival = CalculateExpectedDeliveryTime(deliveryType, order, activeDelivery);  
         var deadline = order.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
-
-        if (AdminManager.Now > deadline || arrival > deadline)
+        //late only if current time is after deadline
+        if (AdminManager.Now > deadline)
             return BO.ScheduleStatus.Late;
-
+        //at risk if the time left until deadline is less than risk range (including negative - expected arrival is late)
         if ((deadline - arrival) < config.RiskRange)
             return BO.ScheduleStatus.AtRisk;
 
         return BO.ScheduleStatus.OnTime;
     }
 
-    internal static BO.DeliveryTypes GetFastestType(BO.Config config)
+    internal static DO.DeliveryTypes GetFastestType(BO.Config config)
     {
-        var speeds = new Dictionary<BO.DeliveryTypes, double>
-        {
-            { BO.DeliveryTypes.Car, config.AvgCarSpeedKmh },
-            { BO.DeliveryTypes.Motorcycle, config.AvgMotorcycleSpeedKmh },
-            { BO.DeliveryTypes.Bicycle, config.AvgBicycleSpeedKmh },
-            { BO.DeliveryTypes.OnFoot, config.AvgWalkingSpeedKmh }
-        };
+        // Explicitly mapping DO types to speeds from the BO config
+        var speeds = new Dictionary<DO.DeliveryTypes, double>
+    {
+        { DO.DeliveryTypes.Car, config.AvgCarSpeedKmh },
+        { DO.DeliveryTypes.Motorcycle, config.AvgMotorcycleSpeedKmh },
+        { DO.DeliveryTypes.Bicycle, config.AvgBicycleSpeedKmh },
+        { DO.DeliveryTypes.OnFoot, config.AvgWalkingSpeedKmh }
+    };
 
-        return speeds.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
+        // Ordering by speed ensures we don't crash if a key is missing 
+        // or if the dictionary is somehow empty.
+        var fastest = speeds.OrderByDescending(x => x.Value).FirstOrDefault();
+
+        // Fallback to Motorcycle if something goes wrong to prevent crash
+        return fastest.Key != default ? fastest.Key : DO.DeliveryTypes.Motorcycle;
     }
-
 
     #endregion
 

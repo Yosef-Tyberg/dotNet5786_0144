@@ -4,6 +4,7 @@ using BlApi;
 using BO;
 using System;
 using System.Linq;
+using DalApi;
 
 namespace BlUnitTests;
 
@@ -16,12 +17,15 @@ public class ToolsTests
     private const double Lat2 = 31.7800;
     private const double Lon2 = 35.2300;
 
-    private readonly IBl bl = Factory.Get();
+    private readonly IBl bl = BlApi.Factory.Get();
+    private readonly IDal dl = DalApi.Factory.Get;
 
     [TestInitialize]
     public void Init()
     {
         AdminManager.InitializeDB();
+        Tools.ClearCaches();
+        Tools.SeedCoordinateCache();
     }
 
     #region Distance Tests
@@ -140,14 +144,14 @@ public class ToolsTests
         };
 
         var result = Tools.GetFastestType(config);
-        Assert.AreEqual(DeliveryTypes.Motorcycle, result);
+        Assert.AreEqual(DO.DeliveryTypes.Motorcycle, result);
     }
 
     [TestMethod]
     public void Test_CalculateExpectedDeliveryTime_ReturnsValidTime()
     {
         var config = AdminManager.GetConfig();
-        var order = new BO.Order
+        var order = new DO.Order
         {
             Id = 1,
             Latitude = (config.Latitude ?? 31.7) + 0.01,
@@ -155,16 +159,16 @@ public class ToolsTests
             OrderOpenTime = AdminManager.Now
         };
 
-        var result = Tools.CalculateExpectedDeliveryTime(DeliveryTypes.Car, order);
+        var result = Tools.CalculateExpectedDeliveryTime(DO.DeliveryTypes.Car, order);
         Assert.IsTrue(result >= AdminManager.Now);
     }
 
     [TestMethod]
     public void Test_DetermineScheduleStatus_ReturnsOnTime_ForNewOrder()
     {
-        var order = new BO.Order { Id = 0, CustomerFullName = "Test111", CustomerMobile = "0500000000", FullOrderAddress = "Addr", VerbalDescription = "Desc", Volume = 1, Weight = 1, Height = 1, Width = 1, OrderOpenTime = AdminManager.Now };
+        var order = new BO.Order { Id = 0, CustomerFullName = "TestIII I", CustomerMobile = "0500000000", FullOrderAddress = "Ben Yehuda Street, Jerusalem", VerbalDescription = "Desc", Volume = 1, Weight = 1, Height = 1, Width = 1, OrderOpenTime = AdminManager.Now };
         bl.Order.Create(order);
-        var id = OrderManager.ReadAll(o => o.CustomerFullName == "Test111").First(); 
+        var id =dl.Order.ReadAll(o => o.CustomerFullName == "TestIII I").First(); 
         var status = Tools.DetermineScheduleStatus(id);
         Assert.AreEqual(ScheduleStatus.OnTime, status);
     }
@@ -172,34 +176,66 @@ public class ToolsTests
     [TestMethod]
     public void Test_ScheduleStatus_ChangesOverTime()
     {
-        
-        // Arrange: Setup - Pick up an order
-        var courier = bl.Courier.ReadAll(c => c.Active && c.Id != 0 && bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-        var order = OrderManager.ReadAll().Where(o => o.OrderStatus == OrderStatus.Open).First();
-        bl.Delivery.PickUp(courier.Id, order.Id);
-        
-        // Assert 1: Initially OnTime
-        Assert.AreEqual(ScheduleStatus.OnTime, Tools.DetermineScheduleStatus(order));
-        
-        // Act 2: Forward clock
-        var config = AdminManager.GetConfig();
-        var orderObj = bl.Order.Read(order.Id);
-        var maxTime = orderObj.OrderOpenTime + config.MaxDeliveryTimeSpan;
-        
-        var timeToMaximum = maxTime - AdminManager.Now;
-        var timeToForward = timeToMaximum - (config.RiskRange / 2); 
-        
-        bl.Admin.ForwardClock(timeToForward);
-        
-        // Assert 2: AtRisk
-        Assert.AreEqual(ScheduleStatus.AtRisk, Tools.DetermineScheduleStatus(order));
-        
-        // Act 3: Forward past max
-        bl.Admin.ForwardClock(config.RiskRange);
-        
-        // Assert 3: Late
-        Assert.AreEqual(ScheduleStatus.Late, Tools.DetermineScheduleStatus(order));
-    }
+        // 1. Arrange: Setup dedicated data to avoid seed collisions
+        var config = bl.Admin.GetConfig();
+        int testCourierId = 777777777;
 
+        // Create a guaranteed active courier who won't be deactivated
+        dl.Courier.Create(new DO.Courier(
+            Id: testCourierId,
+            FullName: "Timing Tester",
+            MobilePhone: "0551112222",
+            Email: "timing@test.com",
+            Password: "password",
+            Active: true,
+            DeliveryType: DO.DeliveryTypes.Car,
+            EmploymentStartTime: bl.Admin.GetClock(),
+            PersonalMaxDeliveryDistance: 5000.0
+        ));
+
+        // Create a fresh order
+        var newOrder = new BO.Order
+        {
+            CustomerFullName = "Timing Customer",
+            CustomerMobile = "0501112222",
+            VerbalDescription = "Timing Test Order",
+            FullOrderAddress = "Ben Yehuda Street, Jerusalem", // Uses Seeded Cache
+            OrderType = OrderTypes.Pizza,
+            Weight = 5,
+            Volume = 2,
+            Height = 10,
+            Width = 10,
+            OrderOpenTime = bl.Admin.GetClock()
+        };
+        bl.Order.Create(newOrder);
+        var order = bl.Order.ReadAll().First(o => o.CustomerFullName == "Timing Customer");
+
+        // Act 1: Pick up to start the delivery lifecycle
+        bl.Delivery.PickUp(testCourierId, order.Id);
+
+        // Fetch DO record for Tools.DetermineScheduleStatus check
+        var doOrder = dl.Order.Read(order.Id);
+
+        // Assert 1: Initially OnTime
+        Assert.AreEqual(ScheduleStatus.OnTime, Tools.DetermineScheduleStatus(doOrder));
+
+        // 2. Act 2: Forward clock to the "AtRisk" window
+        // MaxTime is the hard deadline. AtRisk starts (RiskRange) before MaxTime.
+        var maxTime = order.OrderOpenTime + config.MaxDeliveryTimeSpan;
+
+        // Target the middle of the Risk window with a 30s buffer for safety
+        var timeToRiskMidpoint = (maxTime - bl.Admin.GetClock()) - (config.RiskRange / 2);
+        bl.Admin.ForwardClock(timeToRiskMidpoint);
+
+        // Assert 2: AtRisk
+        Assert.AreEqual(ScheduleStatus.AtRisk, Tools.DetermineScheduleStatus(dl.Order.Read(order.Id)));
+
+        // 3. Act 3: Forward past the maximum deadline
+        // Moving forward by the full RiskRange + 5 minutes ensures we are well past Late
+        bl.Admin.ForwardClock(config.RiskRange.Add(TimeSpan.FromMinutes(5)));
+
+        // Assert 3: Late
+        Assert.AreEqual(ScheduleStatus.Late, Tools.DetermineScheduleStatus(dl.Order.Read(order.Id)));
+    }
     #endregion
 }

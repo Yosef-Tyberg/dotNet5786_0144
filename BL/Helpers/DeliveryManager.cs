@@ -31,7 +31,7 @@ internal static class DeliveryManager
     {
         try
         {
-            var doDelivery = s_dal.Delivery.Read(deliveryId);
+            var doDelivery = s_dal.Delivery.Read(deliveryId) ?? throw new BO.BlDoesNotExistException($"Delivery with ID {deliveryId} not found.");
             return ConvertDoToBo(doDelivery);
         }
         catch (DO.DalDoesNotExistException ex)
@@ -170,6 +170,11 @@ internal static class DeliveryManager
     /// <exception cref="BO.BlInvalidInputException">Thrown when conversion fails.</exception>
     public static BO.Delivery ConvertDoToBo(DO.Delivery doDelivery)
     {
+        if (s_dal.Delivery.Read(doDelivery.Id) is null) 
+        {
+            throw new BO.BlDoesNotExistException($"Delivery with ID {doDelivery.Id} not found for conversion");
+        }
+
         try
         {
             var boDelivery = new BO.Delivery
@@ -193,19 +198,15 @@ internal static class DeliveryManager
                     : 0;
             }
             
-            var order = OrderManager.Read(boDelivery.OrderId);
+            var order = s_dal.Order.Read(doDelivery.OrderId) ?? 
+                throw new BO.BlDoesNotExistException("Associated Order does not exist )for conversion logic)");
             var config = AdminManager.GetConfig();
             
             boDelivery.MaximumDeliveryTime = order.OrderOpenTime + config.MaxDeliveryTimeSpan;
 
+            boDelivery.ExpectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(doDelivery.DeliveryType, order, doDelivery);
 
-
-            boDelivery.ExpectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(boDelivery.DeliveryType, order, boDelivery);
-
-
-
-            boDelivery.ScheduleStatus = Tools.DetermineScheduleStatus(order, boDelivery);
-
+            boDelivery.ScheduleStatus = Tools.DetermineScheduleStatus(order, doDelivery);
 
 
             return boDelivery;

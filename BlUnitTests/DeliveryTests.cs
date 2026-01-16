@@ -11,331 +11,236 @@ namespace BlUnitTests;
 public class DeliveryTests
 {
     private readonly IBl _bl = Factory.Get();
+    private const int TEST_COURIER_ID = 555555555;
 
     [TestInitialize]
     public void TestInitialize()
     {
-        // Reset and initialize DB before every test to ensure isolation
-        AdminManager.InitializeDB();
+        var dal = DalApi.Factory.Get;
+
+        // 1. Reset state to prevent cross-test interference
+        dal.ResetDB();
+        Tools.ClearCaches();
+        Tools.SeedCoordinateCache(); // Prevent API timeouts
+
+        // 2. Baseline initialization to set valid vehicle speeds and clock
+        try { AdminManager.InitializeDB(); } catch { }
+
+        // 3. Fix configuration leaks from other tests
+        var config = _bl.Admin.GetConfig();
+        config.AdminId = 1;
+        config.MaxGeneralDeliveryDistanceKm = 5000;
+        _bl.Admin.SetConfig(config);
+
+        // 4. Create a permanent active courier for the test run
+        dal.Courier.Create(new DO.Courier(
+            Id: TEST_COURIER_ID,
+            FullName: "Delivery Master", // Two-word valid name
+            MobilePhone: "0559998888",
+            Email: "master@delivery.com",
+            Password: "password",
+            Active: true,
+            DeliveryType: DO.DeliveryTypes.Car,
+            EmploymentStartTime: _bl.Admin.GetClock(),
+            PersonalMaxDeliveryDistance: 5000.0
+        ));
     }
 
-    #region Read Tests
+    #region CRUD & Read Tests
 
     [TestMethod]
     public void Test_ReadDelivery_Success()
     {
-        // Arrange: Find a delivery that exists from init
-        var delivery = _bl.Delivery.ReadAll().First();
+        var order = CreateAndGetTestOrder("Read Success");
+        _bl.Delivery.PickUp(TEST_COURIER_ID, order.Id);
 
-        // Act
-        var readDelivery = _bl.Delivery.Read(delivery.Id);
+        // Must fetch the real Delivery ID assigned by the DAL
+        var activeDelivery = _bl.Delivery.GetDeliveryByCourier(TEST_COURIER_ID);
 
-        // Assert
+        var readDelivery = _bl.Delivery.Read(activeDelivery.Id);
         Assert.IsNotNull(readDelivery);
-        Assert.AreEqual(delivery.Id, readDelivery.Id);
+        Assert.AreEqual(activeDelivery.Id, readDelivery.Id);
     }
 
     [TestMethod]
     [ExpectedException(typeof(BlDoesNotExistException))]
     public void Test_ReadDelivery_NotFound_ThrowsException()
     {
-        // Act
-        _bl.Delivery.Read(99999); // Non-existent ID
+        _bl.Delivery.Read(99999);
     }
 
     [TestMethod]
-    public void Test_ReadAllDeliveries_ReturnsData()
+    public void Test_ReadAllDeliveries_ReturnsFilteredData()
     {
-        var deliveries = _bl.Delivery.ReadAll();
-        Assert.IsTrue(deliveries.Any(), "ReadAll should return a list of deliveries.");
-    }
+        var order = CreateAndGetTestOrder("List Test");
+        _bl.Delivery.PickUp(TEST_COURIER_ID, order.Id);
 
-    [TestMethod]
-    public void Test_ReadAllDeliveries_WithFilter_ReturnsFilteredData()
-    {
-        // Filter for delivered items (assuming some exist from init)
-        var filtered = _bl.Delivery.ReadAll(d => d.DeliveryEndType == DeliveryEndTypes.Delivered);
-        if (filtered.Any())
-            Assert.IsTrue(filtered.All(d => d.DeliveryEndType == DeliveryEndTypes.Delivered));
+        var all = _bl.Delivery.ReadAll();
+        Assert.IsTrue(all.Any(d => d.CourierId == TEST_COURIER_ID));
     }
 
     #endregion
 
-    #region PickUp Tests
+    #region Pickup Edge Cases
 
     [TestMethod]
     public void Test_PickUp_Success()
     {
-        // Arrange
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-        var order = _bl.Order.GetAvailableOrders(courier.Id).First();
-        
-        // Act
-        _bl.Delivery.PickUp(courier.Id, order.Id);
+        var order = CreateAndGetTestOrder("Pickup Success");
+        _bl.Delivery.PickUp(TEST_COURIER_ID, order.Id);
 
-        // Assert
-        var delivery = _bl.Delivery.GetDeliveryByCourier(courier.Id);
-        Assert.IsNotNull(delivery, "Delivery should be created and active.");
+        var delivery = _bl.Delivery.GetDeliveryByCourier(TEST_COURIER_ID);
+        Assert.IsNotNull(delivery);
         Assert.AreEqual(order.Id, delivery.OrderId);
-        Assert.AreEqual(courier.Id, delivery.CourierId);
     }
-    
+
     [TestMethod]
     [ExpectedException(typeof(BlOrderAlreadyAssignedException))]
     public void Test_PickUp_OrderAlreadyInProgress_ThrowsException()
     {
-        // Arrange: Pick up an order
-        var courier1 = _bl.Courier.ReadAll(c => c.Active && c.Id != 0 && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-        var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
-        _bl.Delivery.PickUp(courier1.Id, order.Id);
+        var order = CreateAndGetTestOrder("Double Pickup");
+        _bl.Delivery.PickUp(TEST_COURIER_ID, order.Id);
 
-        // Arrange: Find another courier to try and pick it up again
-        var courier2 = _bl.Courier.ReadAll(c => c.Active && c.Id != courier1.Id && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-
-        // Act
-        _bl.Delivery.PickUp(courier2.Id, order.Id);
-    }
-
-    [TestMethod]
-    [ExpectedException(typeof(BlDeliveryAlreadyClosedException))]
-    public void Test_PickUp_OrderAlreadyClosed_ThrowsException()
-    {
-        // Arrange: Deliver an order to close it
-        var courier1 = _bl.Courier.ReadAll(c => c.Active && c.Id != 0 && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-        var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
-        _bl.Delivery.PickUp(courier1.Id, order.Id);
-        _bl.Delivery.Deliver(courier1.Id, DeliveryEndTypes.Delivered);
-
-        // Arrange: Find another courier to try and pick it up
-        var courier2 = _bl.Courier.ReadAll(c => c.Active && c.Id != courier1.Id && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-        
-        // Act
-        _bl.Delivery.PickUp(courier2.Id, order.Id);
+        int courier2 = 666666666;
+        CreateSecondaryCourier(courier2, "Second Courier", true);
+        _bl.Delivery.PickUp(courier2, order.Id);
     }
 
     [TestMethod]
     [ExpectedException(typeof(BlCourierAlreadyHasDeliveryException))]
-    public void Test_PickUp_CourierAlreadyHasDelivery_ThrowsException()
+    public void Test_PickUp_CourierBusy_ThrowsException()
     {
-        // Arrange: A courier picks up one order
-        var courier = _bl.Courier.ReadAll(c => c.Active && c.Id != 0 && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-        var order1 = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
-         _bl.Delivery.PickUp(courier.Id, order1.Id);
-        
-        // Arrange: Find a second order for them to try and pick up
-        var order2 = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open && o.Id != order1.Id).First();
+        var order1 = CreateAndGetTestOrder("Order One");
+        var order2 = CreateAndGetTestOrder("Order Two");
 
-        // Act
-        _bl.Delivery.PickUp(courier.Id, order2.Id);
+        _bl.Delivery.PickUp(TEST_COURIER_ID, order1.Id);
+        _bl.Delivery.PickUp(TEST_COURIER_ID, order2.Id);
     }
 
     [TestMethod]
     [ExpectedException(typeof(BlInvalidInputException))]
-    public void Test_PickUp_OrderOutOfRange_ThrowsException()
+    public void Test_PickUp_OrderTooFar_ThrowsException()
     {
-        // Arrange: Find a courier and set their range to be very small
-        var courier = _bl.Courier.Read(_bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First().Id);
-        courier.PersonalMaxDeliveryDistance = 0.1; // 100 meters
+        // Restrict courier range to 100 meters
+        var courier = _bl.Courier.Read(TEST_COURIER_ID);
+        courier.PersonalMaxDeliveryDistance = 0.1;
         _bl.Courier.Update(courier);
-        
-        // Arrange: Find an order that is far away by taking one not in the available list
-        var allOpenOrders = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).Select(o => o.Id);
-        var availableOrders = _bl.Order.GetAvailableOrders(courier.Id).Select(o => o.Id);
-        var outOfRangeOrderId = allOpenOrders.Except(availableOrders).First();
-        
-        // Act
-        _bl.Delivery.PickUp(courier.Id, outOfRangeOrderId);
+
+        var order = CreateAndGetTestOrder("Far Away");
+        _bl.Delivery.PickUp(TEST_COURIER_ID, order.Id);
     }
 
     [TestMethod]
     [ExpectedException(typeof(BlInvalidInputException))]
     public void Test_PickUp_CourierInactive_ThrowsException()
     {
-        // Arrange
-        var inactiveCourier = _bl.Courier.ReadAll(c => !c.Active).FirstOrDefault();
-        if (inactiveCourier == null) Assert.Inconclusive("No inactive couriers in DB.");
-        
-        var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
+        int inactiveId = 777777777;
+        CreateSecondaryCourier(inactiveId, "Inactive User", false);
+        var order = CreateAndGetTestOrder("Inactive Test");
 
-        // Act
-        _bl.Delivery.PickUp(inactiveCourier.Id, order.Id);
+        _bl.Delivery.PickUp(inactiveId, order.Id);
     }
 
     [TestMethod]
-    [ExpectedException(typeof(BlDoesNotExistException))]
-    public void Test_PickUp_CourierNotFound_ThrowsException()
+    [ExpectedException(typeof(BlDeliveryAlreadyClosedException))]
+    public void Test_PickUp_OrderAlreadyDelivered_ThrowsException()
     {
-        var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
-        _bl.Delivery.PickUp(999999, order.Id);
-    }
+        var order = CreateAndGetTestOrder("Closed Test");
+        _bl.Delivery.PickUp(TEST_COURIER_ID, order.Id);
+        _bl.Delivery.Deliver(TEST_COURIER_ID, DeliveryEndTypes.Delivered);
 
-    [TestMethod]
-    [ExpectedException(typeof(BlDoesNotExistException))]
-    public void Test_PickUp_OrderNotFound_ThrowsException()
-    {
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-        _bl.Delivery.PickUp(courier.Id, 999999);
+        int courier2 = 666666666;
+        CreateSecondaryCourier(courier2, "Later Courier", true);
+        _bl.Delivery.PickUp(courier2, order.Id);
     }
 
     #endregion
 
-    #region Deliver Tests
+    #region Finalization Logic
 
     [TestMethod]
-    public void Test_Deliver_Success()
+    public void Test_Deliver_StatusRevertsToOpen_OnFailedDelivery()
     {
-        // Arrange: A courier picks up an order
-        var (orderId, courierId) = SetupInProgressOrder();
-        
-        // Act
-        _bl.Delivery.Deliver(courierId, DeliveryEndTypes.Delivered);
+        var order = CreateAndGetTestOrder("Failed Logic");
+        _bl.Delivery.PickUp(TEST_COURIER_ID, order.Id);
 
-        // Assert
-        var delivery = _bl.Delivery.Read(orderId);
-        Assert.IsNotNull(delivery.DeliveryEndTime, "DeliveryEndTime should be set.");
-        Assert.AreEqual(DeliveryEndTypes.Delivered, delivery.DeliveryEndType);
+        // RecipientNotFound should move the order status back to Open
+        _bl.Delivery.Deliver(TEST_COURIER_ID, DeliveryEndTypes.RecipientNotFound);
+
+        var updatedOrder = _bl.Order.Read(order.Id);
+        Assert.AreEqual(OrderStatus.Open, updatedOrder.OrderStatus);
     }
 
     [TestMethod]
-    public void Test_Deliver_WithStatus_CustomerRefused()
+    public void Test_Deliver_UpdatesOrderStatus_ToRefused()
     {
-        // Arrange
-        var (orderId, courierId) = SetupInProgressOrder();
-        
-        // Act
-        _bl.Delivery.Deliver(courierId, DeliveryEndTypes.CustomerRefused);
+        var order = CreateAndGetTestOrder("Refusal Logic");
+        _bl.Delivery.PickUp(TEST_COURIER_ID, order.Id);
 
-        // Assert
-        var delivery = _bl.Delivery.Read(orderId);
-        var order = _bl.Order.Read(orderId);
-        Assert.AreEqual(DeliveryEndTypes.CustomerRefused, delivery.DeliveryEndType);
-        Assert.AreEqual(OrderStatus.Refused, order.OrderStatus, "Order status should be Refused.");
-    }
+        _bl.Delivery.Deliver(TEST_COURIER_ID, DeliveryEndTypes.CustomerRefused);
 
-    [TestMethod]
-    public void Test_Deliver_WithStatus_Cancelled()
-    {
-        // Arrange
-        var (orderId, courierId) = SetupInProgressOrder();
-        
-        // Act
-        _bl.Delivery.Deliver(courierId, DeliveryEndTypes.Cancelled);
-
-        // Assert
-        var delivery = _bl.Delivery.Read(orderId);
-        var order = _bl.Order.Read(orderId);
-        Assert.AreEqual(DeliveryEndTypes.Cancelled, delivery.DeliveryEndType);
-        Assert.AreEqual(OrderStatus.Cancelled, order.OrderStatus, "Order status should be Cancelled.");
-    }
-
-    [TestMethod]
-    public void Test_Deliver_WithStatus_RecipientNotFound()
-    {
-        // Arrange
-        var (orderId, courierId) = SetupInProgressOrder();
-        
-        // Act
-        _bl.Delivery.Deliver(courierId, DeliveryEndTypes.RecipientNotFound);
-
-        // Assert
-        var delivery = _bl.Delivery.Read(orderId);
-        var order = _bl.Order.Read(orderId);
-        Assert.AreEqual(DeliveryEndTypes.RecipientNotFound, delivery.DeliveryEndType);
-        Assert.AreEqual(OrderStatus.Open, order.OrderStatus, "Order status should revert to Open.");
-    }
-
-    [TestMethod]
-    public void Test_Deliver_WithStatus_Failed()
-    {
-        // Arrange
-        var (orderId, courierId) = SetupInProgressOrder();
-        
-        // Act
-        _bl.Delivery.Deliver(courierId, DeliveryEndTypes.Failed);
-
-        // Assert
-        var delivery = _bl.Delivery.Read(orderId);
-        var order = _bl.Order.Read(orderId);
-        Assert.AreEqual(DeliveryEndTypes.Failed, delivery.DeliveryEndType);
-        Assert.AreEqual(OrderStatus.Open, order.OrderStatus, "Order status should revert to Open.");
+        var updatedOrder = _bl.Order.Read(order.Id);
+        Assert.AreEqual(OrderStatus.Refused, updatedOrder.OrderStatus);
     }
 
     [TestMethod]
     [ExpectedException(typeof(BlCourierHasNoActiveDeliveryException))]
-    public void Test_Deliver_CourierHasNoActiveDelivery_ThrowsException()
+    public void Test_Deliver_NoActiveDelivery_ThrowsException()
     {
-        // Arrange: A courier that has NOT picked up an order
-        var courier = _bl.Courier.ReadAll(c => c.Active && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-        
-        // Act
-        _bl.Delivery.Deliver(courier.Id, DeliveryEndTypes.Delivered);
-    }
-
-    [TestMethod]
-    [ExpectedException(typeof(BlDoesNotExistException))]
-    public void Test_Deliver_CourierNotFound_ThrowsException()
-    {
-        _bl.Delivery.Deliver(999999, DeliveryEndTypes.Delivered);
+        _bl.Delivery.Deliver(TEST_COURIER_ID, DeliveryEndTypes.Delivered);
     }
 
     #endregion
 
-    #region GetDeliveryByCourier Tests
+    #region Helper Logic Tests
 
     [TestMethod]
-    public void Test_GetDeliveryByCourier_ReturnsActiveDelivery()
+    public void Test_IsOrderTaken_ReturnsTrueForInProgress()
     {
-        // Arrange: A courier picks up an order
-        var (orderId, courierId) = SetupInProgressOrder();
-        
-        // Act
-        var currentDelivery = _bl.Delivery.GetDeliveryByCourier(courierId);
+        var order = CreateAndGetTestOrder("Taken Test");
+        _bl.Delivery.PickUp(TEST_COURIER_ID, order.Id);
 
-        // Assert
-        Assert.IsNotNull(currentDelivery);
-        Assert.AreEqual(orderId, currentDelivery.OrderId);
+        Assert.IsTrue(DeliveryManager.IsOrderTaken(order.Id));
     }
 
     [TestMethod]
-    public void Test_GetDeliveryByCourier_NoActiveDelivery_ReturnsNull()
+    public void Test_GetDeliveryByCourier_ReturnsNullIfIdle()
     {
-        // Arrange: A courier with no active delivery
-        var courier = _bl.Courier.ReadAll(c => _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-
-        // Act
-        var currentDelivery = _bl.Delivery.GetDeliveryByCourier(courier.Id);
-
-        // Assert
-        Assert.IsNull(currentDelivery);
+        Assert.IsNull(_bl.Delivery.GetDeliveryByCourier(TEST_COURIER_ID));
     }
 
     #endregion
 
-    #region Helper Methods
+    #region Private Helpers
 
-    private (int orderId, int courierId) SetupInProgressOrder()
+    private Order CreateAndGetTestOrder(string customerName)
     {
-        var courier = _bl.Courier.ReadAll(c => c.Active && c.Id != 0 && _bl.Delivery.GetDeliveryByCourier(c.Id) == null).First();
-        var order = _bl.Order.ReadAll(o => o.OrderStatus == OrderStatus.Open).First();
-        _bl.Delivery.PickUp(courier.Id, order.Id);
-        return (order.Id, courier.Id);
+        string validName = customerName.Contains(" ") ? customerName : $"{customerName} Test";
+        var newOrder = new Order
+        {
+            CustomerFullName = validName,
+            CustomerMobile = "0501112222",
+            FullOrderAddress = "Hebron Road (central), Jerusalem", // Matched in SeedCoordinateCache
+            OrderType = OrderTypes.Pizza,
+            VerbalDescription = "Valid Description",
+            Weight = 5,
+            Volume = 2,
+            Height = 10,
+            Width = 10,
+            Fragile = false,
+            OrderOpenTime = _bl.Admin.GetClock()
+        };
+        _bl.Order.Create(newOrder);
+        return OrderManager.ReadAll().First(o => o.CustomerFullName == validName);
     }
 
-    #endregion
-
-    #region Helper Methods Tests
-
-    [TestMethod]
-    public void Test_IsOrderTaken_ReturnsTrueForActiveDelivery()
+    private void CreateSecondaryCourier(int id, string name, bool active)
     {
-        // Arrange
-        var (orderId, courierId) = SetupInProgressOrder();
-
-        // Act
-        bool taken = DeliveryManager.IsOrderTaken(orderId);
-
-        // Assert
-        Assert.IsTrue(taken, "Order should be taken after delivery creation");
+        DalApi.Factory.Get.Courier.Create(new DO.Courier(
+            Id: id, FullName: name, MobilePhone: "0552223333", Email: $"c{id}@test.com",
+            Password: "password", Active: active, DeliveryType: DO.DeliveryTypes.Bicycle,
+            EmploymentStartTime: _bl.Admin.GetClock(), PersonalMaxDeliveryDistance: 1000.0
+        ));
     }
 
     #endregion

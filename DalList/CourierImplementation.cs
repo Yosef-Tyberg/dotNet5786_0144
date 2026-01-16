@@ -28,15 +28,8 @@ internal class CourierImplementation : ICourier
     /// <exception cref="Exception">Thrown when the courier doesn't exist.</exception>
     public void Delete(int id)
     {
-        Courier? temp = Read(id);
-        if (temp != null)
-        {
-            DataSource.Couriers.Remove(temp);
-        }
-        else
-        {
-            throw new DalDoesNotExistException($"Courier with Id=" + id + " doesn't exist");
-        }
+        if (DataSource.Couriers.RemoveAll(c => c.Id == id) == 0)
+            throw new DalDoesNotExistException($"Courier with Id={id} doesn't exist");
     }
 
     /// <summary>
@@ -83,7 +76,11 @@ internal class CourierImplementation : ICourier
     /// <param name="item">Courier with updated data. Must have an existing Id.</param>
     public void Update(Courier item)
     {
-        Delete(item.Id);
-        Create(item);
+        int index = DataSource.Couriers.FindIndex(c => c.Id == item.Id);
+        if (index == -1)
+            throw new DalDoesNotExistException($"Courier with Id={item.Id} doesn't exist");
+
+        DataSource.Couriers[index] = item;
     }
 }
+

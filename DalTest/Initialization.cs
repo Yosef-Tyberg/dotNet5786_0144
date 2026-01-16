@@ -108,9 +108,9 @@ public static class Initialization
     private static void InitializeConfig()
     {
         // Example company coordinates - change as appropriate for your tests
-        s_dal.Config.CompanyFullAddress = "Downtown (test) - company HQ";
-        s_dal.Config.Latitude = 31.771959;
-        s_dal.Config.Longitude = 35.217018;
+        s_dal.Config.CompanyFullAddress = "Hebron Road (central)";
+        s_dal.Config.Latitude = 31.766509;
+        s_dal.Config.Longitude = 35.225938;
 
         // reasonable urban speed assumptions
         s_dal.Config.AvgCarSpeedKmh = 40.0;
@@ -140,7 +140,6 @@ public static class Initialization
                 new TestAddress("Mahane Yehuda", 31.784700, 35.207300),
                 new TestAddress("Emek Refaim - German Colony", 31.757919, 35.218139),
                 new TestAddress("Givat Shaul", 31.787128, 35.190108),
-                new TestAddress("Hebron Road (central)", 31.766509, 35.225938),
                 new TestAddress("Ein Kerem (outer)", 31.759164, 35.143000),
                 new TestAddress("Knesset area", 31.776670, 35.205280)
             };

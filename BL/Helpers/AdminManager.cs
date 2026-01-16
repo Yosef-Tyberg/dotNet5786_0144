@@ -175,6 +175,7 @@ internal static class AdminManager //stage 4
         lock (BlMutex) //stage 7
         {
             s_dal.ResetDB(); //stage 4
+            Tools.ClearCaches();
             AdminManager.UpdateClock(AdminManager.Now); //stage 5 - needed since we want the label on Pl to be updated
             ConfigUpdatedObservers?.Invoke(); //stage 5 - needed for update the PL 
         }

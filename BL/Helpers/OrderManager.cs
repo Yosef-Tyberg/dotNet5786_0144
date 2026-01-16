@@ -129,7 +129,7 @@ internal static class OrderManager
                 PackageDensity = doOrder.Volume > 0 ? doOrder.Weight / doOrder.Volume : 0
             };
 
-            var deliveries = DeliveryManager.ReadAll(d => d.OrderId == doOrder.Id);
+            var deliveries = s_dal.Delivery.ReadAll(d => d.OrderId == doOrder.Id);
             boOrder.OrderStatus = DetermineOrderStatus(deliveries);
             
             return boOrder;
@@ -147,7 +147,7 @@ internal static class OrderManager
     /// </summary>
     /// <param name="deliveries">The list of deliveries associated with the order.</param>
     /// <returns>The calculated order status.</returns>
-    private static BO.OrderStatus DetermineOrderStatus(IEnumerable<BO.Delivery> deliveries)
+    private static BO.OrderStatus DetermineOrderStatus(IEnumerable<DO.Delivery> deliveries)
     {
         if (!deliveries.Any())
         {
@@ -162,12 +162,12 @@ internal static class OrderManager
         var lastEnded = deliveries.OrderByDescending(d => d.DeliveryEndTime).First();
         return lastEnded.DeliveryEndType switch
         {
-            BO.DeliveryEndTypes.Delivered => BO.OrderStatus.Delivered,
-            BO.DeliveryEndTypes.CustomerRefused => BO.OrderStatus.Refused,
-            BO.DeliveryEndTypes.Cancelled => BO.OrderStatus.Cancelled,
-            BO.DeliveryEndTypes.RecipientNotFound => BO.OrderStatus.Open,
-            BO.DeliveryEndTypes.Failed => BO.OrderStatus.Open,
-            _ => BO.OrderStatus.Open
+            DO.DeliveryEndTypes.Delivered => BO.OrderStatus.Delivered,
+            DO.DeliveryEndTypes.CustomerRefused => BO.OrderStatus.Refused,
+            DO.DeliveryEndTypes.Cancelled => BO.OrderStatus.Cancelled,
+            DO.DeliveryEndTypes.RecipientNotFound => BO.OrderStatus.Open,
+            DO.DeliveryEndTypes.Failed => BO.OrderStatus.Open,
+            _ => throw new BO.BlMissingPropertyException("Unrecognized delivery end type. Can't determine order status"),
         };
     }
 
@@ -263,7 +263,7 @@ internal static class OrderManager
                     $"Order ID '{updatedOrder.Id}' cannot be updated as it is currently being delivered.");
 
             // Verify that the order is not finalized (Delivered or Cancelled)
-            var deliveries = DeliveryManager.ReadAll(d => d.OrderId == updatedOrder.Id);
+            var deliveries = s_dal.Delivery.ReadAll(d => d.OrderId == updatedOrder.Id);
             var status = DetermineOrderStatus(deliveries);
             if (status == BO.OrderStatus.Delivered || status == BO.OrderStatus.Cancelled || status == BO.OrderStatus.Refused)
                 throw new BO.BlDeliveryAlreadyClosedException($"Order {updatedOrder.Id} cannot be updated because it is {status}.");
@@ -305,7 +305,9 @@ internal static class OrderManager
         }
         catch (Exception ex)
         {
-            throw Tools.ConvertDalException(ex);
+            if (ex.GetType().Namespace == "DO")
+                throw Tools.ConvertDalException(ex);
+            throw;
         }
     }
     
@@ -325,7 +327,9 @@ internal static class OrderManager
         }
         catch (Exception ex)
         {
-            throw Tools.ConvertDalException(ex);
+            if (ex.GetType().Namespace == "DO")
+                throw Tools.ConvertDalException(ex);
+            throw;
         }
     }
     
@@ -368,11 +372,12 @@ internal static class OrderManager
     /// <returns>the tracking information for the order</returns>
     public static BO.OrderTracking GetOrderTracking(int orderId)
     {
-        BO.Order boOrder = Read(orderId);
+        DO.Order doOrder = s_dal.Order.Read(orderId) ?? 
+            throw new BO.BlDoesNotExistException($"Order with ID {orderId} does not exist");
 
-        var deliveries = DeliveryManager.ReadAll(d => d.OrderId == orderId);
+        var deliveries = s_dal.Delivery.ReadAll(d => d.OrderId == orderId);
         BO.OrderStatus status = DetermineOrderStatus(deliveries);
-        BO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d != null && d?.DeliveryEndTime == null);
+        DO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d != null && d?.DeliveryEndTime == null);
 
         // Get Assigned Courier (only if InProgress)
         BO.CourierInList? assignedCourier = null;
@@ -389,29 +394,29 @@ internal static class OrderManager
         // Map Delivery History
         IEnumerable<BO.DeliveryInList> history = deliveries
             .OrderBy(d => d.DeliveryStartTime)
-            .Select(DeliveryManager.ConvertBoToDeliveryInList);
+            .Select(d => DeliveryManager.ConvertBoToDeliveryInList(DeliveryManager.ConvertDoToBo(d!)));
 
         // Calculate Timing Properties
         var config = AdminManager.GetConfig();
-        DateTime? maxDeliveryTime = boOrder.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
+        DateTime? maxDeliveryTime = doOrder.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
         DateTime? expectedDeliveryTime = null;
         if (activeDelivery != null)
         {
-            expectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(activeDelivery.DeliveryType, boOrder, activeDelivery);
+            expectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(activeDelivery.DeliveryType, doOrder, activeDelivery);
         }
 
         return new BO.OrderTracking
         {
-            Id = boOrder.Id,
+            Id = doOrder.Id,
             Status = status,
             AssignedCourier = assignedCourier,
             DeliveryHistory = history,
-            VerbalDescription = boOrder.VerbalDescription,
-            CustomerFullName = boOrder.CustomerFullName,
-            OrderOpenTime = boOrder.OrderOpenTime,
+            VerbalDescription = doOrder.VerbalDescription,
+            CustomerFullName = doOrder.CustomerFullName,
+            OrderOpenTime = doOrder.OrderOpenTime,
             ExpectedDeliveryTime = expectedDeliveryTime,
             MaxDeliveryTime = maxDeliveryTime,
-            FullOrderAddress = boOrder.FullOrderAddress
+            FullOrderAddress = doOrder.FullOrderAddress
         };
     }
 

@@ -305,7 +305,7 @@ internal static class CourierManager
     {
         ReadCourier(courierId); // Validate courier exists
         var boDeliveries = DeliveryManager.ReadAll(d => d.CourierId == courierId);
-        return boDeliveries.Select(DeliveryManager.ConvertBoToDeliveryInList);
+        return boDeliveries.Select(DeliveryManager.ConvertBoToDeliveryInList).OrderBy(d => d.DeliveryStartTime);
     }
     
     /// <summary>
@@ -353,16 +353,16 @@ internal static class CourierManager
     public static BO.CourierStatistics GetCourierStatistics(int courierId)
     {
         var deliveries = GetCourierDeliveryHistory(courierId);
-        if (!deliveries.Any())
-        {
-            return new BO.CourierStatistics(); // Return empty stats if no deliveries
-        }
 
         var completedDeliveries = deliveries
             .Where(d => d.DeliveryEndTime != null)
             .Select(d => DeliveryManager.ReadDelivery(d.Id)) // Read full delivery for details
             .ToList();
-
+        //if no deliveries completed, return empty stats with TotalDeliveries being 1 if there's a delivery in progress
+        if (!completedDeliveries.Any())
+        {
+            return new BO.CourierStatistics { TotalDeliveries = deliveries.Count() };
+        }
         var totalDeliveries = completedDeliveries.Count;
         var onTimeDeliveries = completedDeliveries.Count(d => d.ScheduleStatus == BO.ScheduleStatus.OnTime);
         var successfulDeliveries = completedDeliveries.Count(d => d.DeliveryEndType == BO.DeliveryEndTypes.Delivered);
@@ -380,81 +380,47 @@ internal static class CourierManager
 
 
     /// <summary>
-    /// a method for periodic updates of the courier.
-    /// An active courier is deactivated if they have been inactive for a period greater
-    /// than Config.InactivityRange. Inactivity is measured from the end of their last
-    /// delivery, or from their employment start time if they have no delivery history.
-    /// Couriers with a delivery in progress are always considered active.
+    /// Periodically checks all active couriers and deactivates those who have been 
+    /// inactive longer than the allowed InactivityRange.
     /// </summary>
-    /// <param name="oldClock">The previous time the update was run.</param>
-    /// <param name="newClock">The current time the update is run.</param>
     public static void PeriodicCouriersUpdate(DateTime oldClock, DateTime newClock)
     {
-        var inactivityRange = AdminManager.GetConfig().InactivityRange;
-        var activeCouriers = ReadAll(c => c.Active);
-        var allDeliveries = DeliveryManager.ReadAll();
+        var config = AdminManager.GetConfig();
+        var inactivityRange = config.InactivityRange; //
+        // 1. Materialize active couriers as RAW Data Objects (DO)
+        // This stops the "Stack Overflow" by avoiding ConvertDoToBo
+        // And stops "Collection was modified" by creating a snapshot
+        var activeDoCouriers = s_dal.Courier.ReadAll(c => c.Active).ToList();
 
-        // Materialize filtered couriers BEFORE side effects
-        var couriersToDeactivate = activeCouriers
-            .Where(courier =>
+        // 2. Materialize all deliveries once to avoid repeated DAL hits
+        var allDoDeliveries = s_dal.Delivery.ReadAll().ToList();
+
+        foreach (var doCourier in activeDoCouriers)
+        {
+            // Filter deliveries for this specific courier from our local snapshot
+            var courierDeliveries = allDoDeliveries.Where(d => d.CourierId == doCourier.Id).ToList();
+
+            // 3. Skip if the courier is currently busy (has an active delivery)
+            if (courierDeliveries.Any(d => d.DeliveryEndTime == null)) //
+                continue;
+
+            // 4. Determine the date of their last activity
+            // Either the end of their last delivery or their employment start date
+            DateTime lastActivity = courierDeliveries.Any()
+                ? courierDeliveries.Max(d => d.DeliveryEndTime!.Value) //
+                : doCourier.EmploymentStartTime; //
+
+            // 5. If the inactivity threshold is crossed, deactivate them
+            if ((newClock - lastActivity) > inactivityRange)
             {
-                var courierDeliveries = allDeliveries.Where(d => d.CourierId == courier.Id).ToArray();
+                Debug.WriteLine($"Deactivating courier ID {doCourier.Id} due to inactivity.");
 
-                // Debug: Check why courier is being skipped
-                if (courier.Id == 219282986) // Replace with your test courier ID
-                {
-                    Console.WriteLine($"[DEBUG] Checking courier {courier.Id}:");
-                    Console.WriteLine($"  Total deliveries: {courierDeliveries.Length}");
-                    Console.WriteLine($"  Active deliveries (EndTime == null): {courierDeliveries.Count(d => d.DeliveryEndTime == null)}");
-                    Console.WriteLine($"  Completed deliveries: {courierDeliveries.Count(d => d.DeliveryEndTime.HasValue)}");
-                }
-
-                // Skip if courier has an active delivery (DeliveryEndTime == null)
-                if (courierDeliveries.Any(d => d.DeliveryEndTime == null))
-                {
-                    if (courier.Id == 219282986)
-                        Console.WriteLine($"  [SKIP] Has active delivery");
-                    return false;
-                }
-
-                // Determine last involvement date
-                DateTime lastInvolvementDate;
-                var completedDeliveries = courierDeliveries.Where(d => d.DeliveryEndTime.HasValue).ToArray();
-                
-                if (completedDeliveries.Any())
-                {
-                    lastInvolvementDate = completedDeliveries.Max(d => d.DeliveryEndTime!.Value);
-                }
-                else
-                {
-                    lastInvolvementDate = courier.EmploymentStartTime;
-                    if (courier.Id == 219282986)
-                        Console.WriteLine($"  No deliveries - using EmploymentStartTime: {lastInvolvementDate}");
-                }
-
-                if (courier.Id == 219282986)
-                {
-                    Debug.WriteLine($"  Last involvement: {lastInvolvementDate}");
-                    Debug.WriteLine($"  Current time: {AdminManager.Now}");
-                    Debug.WriteLine($"  Time since last activity: {AdminManager.Now - lastInvolvementDate}");
-                    Debug.WriteLine($"  Inactivity range: {inactivityRange}");
-                    Debug.WriteLine($"  Should deactivate: {(AdminManager.Now - lastInvolvementDate) > inactivityRange}");
-                }
-
-                // Check if inactive beyond the threshold
-                return (AdminManager.Now - lastInvolvementDate) > inactivityRange;
-            })
-            .ToArray();
-
-        // Apply side effects without active enumeration
-        couriersToDeactivate
-            .Select(courier =>
-            {
-                courier.Active = false;
-                Debug.WriteLine($"Deactivating courier ID {courier.Id} due to inactivity.");
-                UpdateCourier(courier);
-                return true;
-            })
-            .Count();
+                // USE THE DAL DIRECTLY for the deactivation flip.
+                // Why? Calling UpdateCourier(BO) triggers full validation. 
+                // If your seed data has an invalid field (like name or distance), 
+                // the background thread will crash with an unhandled exception.
+                s_dal.Courier.Update(doCourier with { Active = false });
+            }
+        }
     }
 }

@@ -446,6 +446,9 @@ internal static class Program
 
     private static void AddNewCourier()
     {
+        if (!int.TryParse(Console.ReadLine(), out int ID)) throw new BlInvalidInputException("Invalid Courier ID.");
+        int id = ID;
+
         Console.Write("Enter Courier Full Name: ");
         string? fullName = Console.ReadLine();
         
@@ -462,11 +465,12 @@ internal static class Program
         string? maxDistStr = Console.ReadLine();
         if (!double.TryParse(maxDistStr, out double maxDistance)) throw new BlInvalidInputException("Invalid distance.");
         
-        Console.Write("Enter Delivery Type (Standard, Fast, Blitz): ");
+        Console.Write("Enter Delivery Type (Car, Motrcycle, Bicycle, OnFoot): ");
         if (!Enum.TryParse<DeliveryTypes>(Console.ReadLine(), true, out var deliveryType) || !Enum.IsDefined(deliveryType)) throw new BlInvalidInputException("Invalid Delivery Type.");
 
         var newCourier = new Courier
         {
+            Id = id,
             FullName = fullName,
             Email = email,
             MobilePhone = mobilePhone,
