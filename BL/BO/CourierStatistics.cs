@@ -34,4 +34,6 @@ public class CourierStatistics
     /// The success rate of the courier's deliveries.
     /// </summary>
     public double SuccessRate { get; set; }
+
+    public override string ToString() => Helpers.Tools.ToStringProperty(this);
 }

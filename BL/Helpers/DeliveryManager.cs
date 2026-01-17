@@ -19,7 +19,28 @@ internal static class DeliveryManager
     {
         try
         {
-            return s_dal.Delivery.ReadAll(filter).Where(d => d != null).Select(d => ConvertDoToBo(d!));
+            // 1. Fetch initial deliveries and materialize to avoid multiple enumerations
+            var doDeliveries = s_dal.Delivery.ReadAll(filter).Where(d => d != null).ToList();
+            if (!doDeliveries.Any())
+                return Enumerable.Empty<BO.Delivery>();
+
+            // 2. Get unique order IDs from the delivery list
+            var orderIds = doDeliveries.Select(d => d!.OrderId).Distinct();
+
+            // 3. Fetch all required orders in a single batch
+            var doOrders = s_dal.Order.ReadAll(o => orderIds.Contains(o.Id))
+                                      .ToDictionary(o => o.Id);
+
+            // 4. Project to BO using the efficient private overload
+            return doDeliveries.Select(d => 
+            {
+                if (doOrders.TryGetValue(d!.OrderId, out var order))
+                {
+                    return ConvertDoToBo(d, order);
+                }
+                // This case should not happen in a consistent database, but throw a clear exception if it does.
+                throw new BO.BlDoesNotExistException($"Associated Order with ID {d.OrderId} not found for Delivery {d.Id}");
+            });
         }
         catch (Exception ex)
         {
@@ -43,8 +64,8 @@ internal static class DeliveryManager
     public static BO.Delivery? GetDeliveryByCourier(int courierId)
     {
         // Find an active delivery for the courier (not yet delivered)
-        var doDelivery = s_dal.Delivery.ReadAll()
-            .FirstOrDefault(d => d.CourierId == courierId && d.DeliveryEndTime == null);
+        var doDelivery = s_dal.Delivery.ReadAll(d => d.CourierId == courierId && d.DeliveryEndTime == null)
+            .FirstOrDefault();
 
         if (doDelivery == null)
         {
@@ -59,29 +80,33 @@ internal static class DeliveryManager
     {
         try
         {
-            // Verify that the order exists
-            var order = OrderManager.Read(orderId);
+            // --- OPTIMIZED CHECKS ---
 
-            // Verify order is available for pickup
-            if (order.OrderStatus == BO.OrderStatus.InProgress)
-            {
-                throw new BO.BlOrderAlreadyAssignedException($"Order {orderId} cannot be picked up because it is in status {order.OrderStatus}.");
-            }
-
-            if (order.OrderStatus != BO.OrderStatus.Open)
-            {
-                throw new BO.BlDeliveryAlreadyClosedException($"Order {orderId} cannot be picked up because it is {order.OrderStatus}.");
-            }
-
-            // Verify courier exists and is active
-            var courier = CourierManager.ReadCourier(courierId);
-            if (!courier.Active)
+            // 1. Verify courier exists, is active, and is not already on a delivery.
+            var doCourier = s_dal.Courier.Read(courierId)
+                ?? throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
+            if (!doCourier.Active)
                 throw new BO.BlInvalidInputException($"Courier {courierId} is not active.");
-            
-            // Verify courier doesn't have an active delivery
-            if (GetDeliveryByCourier(courierId) != null)
+            if (s_dal.Delivery.ReadAll(d => d.CourierId == courierId && d.DeliveryEndTime == null).Any())
                 throw new BO.BlCourierAlreadyHasDeliveryException(
                     $"Courier ID '{courierId}' already has an active delivery.");
+
+            // 2. Verify order exists and is available for pickup.
+            if (s_dal.Order.Read(orderId) == null)
+                 throw new BO.BlDoesNotExistException($"Order with ID {orderId} not found.");
+            
+            var orderDeliveries = s_dal.Delivery.ReadAll(d => d.OrderId == orderId).ToList();
+            
+            // Determine order status directly from data objects
+            BO.OrderStatus status = OrderManager.DetermineOrderStatus(orderDeliveries);
+
+            if (status == BO.OrderStatus.InProgress)
+                throw new BO.BlOrderAlreadyAssignedException($"Order {orderId} cannot be picked up because it is in status {status}.");
+
+            if (status != BO.OrderStatus.Open)
+                throw new BO.BlDeliveryAlreadyClosedException($"Order {orderId} cannot be picked up because it is {status}.");
+
+            // --- END OPTIMIZED CHECKS ---
 
             // Create a new delivery, which now starts immediately
             Create(orderId, courierId);
@@ -97,24 +122,20 @@ internal static class DeliveryManager
 
     public static void Deliver(int courierId, BO.DeliveryEndTypes endType)
     {
-        // Validate courier exists
-        CourierManager.ReadCourier(courierId);
+        // Validate courier exists - OPTIMIZED
+        if (s_dal.Courier.Read(courierId) == null)
+            throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
         
-        var delivery = s_dal.Delivery.ReadAll().FirstOrDefault(d => d.CourierId == courierId && d.DeliveryStartTime <= AdminManager.Now && d.DeliveryEndTime == null);
+        // Find the active delivery for the courier using a filtered query - OPTIMIZED
+        var delivery = s_dal.Delivery.ReadAll(d => d.CourierId == courierId && d.DeliveryStartTime <= AdminManager.Now && d.DeliveryEndTime == null)
+            .FirstOrDefault();
+        
         if(delivery == null)
             throw new BO.BlCourierHasNoActiveDeliveryException("Courier has no picked-up delivery to deliver.");
 
+        // Update the delivery record
         delivery = delivery with { DeliveryEndTime = AdminManager.Now, DeliveryEndType = (DO.DeliveryEndTypes)endType };
         
-         BO.Order order;
-
-         try
-         {
-             order = OrderManager.Read(delivery.OrderId);
-         } catch (Exception ex) { 
-            
-            throw new BO.BlDoesNotExistException($"order with {delivery.OrderId} was not found", ex);
-         }
         s_dal.Delivery.Update(delivery);
     }
 
@@ -123,9 +144,8 @@ internal static class DeliveryManager
     /// </summary>
     /// <param name="delivery">The delivery for which to calculate the distance.</param>
     /// <returns>The calculated distance.</returns>
-    private static double CalculateActualDistance(DO.Delivery delivery)
+    private static double CalculateActualDistance(DO.Delivery delivery, DO.Order order)
     {
-        var order = OrderManager.Read(delivery.OrderId);
         var config = AdminManager.GetConfig();
         return (BO.DeliveryTypes)delivery.DeliveryType switch
         {
@@ -170,11 +190,23 @@ internal static class DeliveryManager
     /// <exception cref="BO.BlInvalidInputException">Thrown when conversion fails.</exception>
     public static BO.Delivery ConvertDoToBo(DO.Delivery doDelivery)
     {
-        if (s_dal.Delivery.Read(doDelivery.Id) is null) 
-        {
-            throw new BO.BlDoesNotExistException($"Delivery with ID {doDelivery.Id} not found for conversion");
-        }
+        // For single conversions, fetch the required associated order.
+        var order = s_dal.Order.Read(doDelivery.OrderId) ?? 
+            throw new BO.BlDoesNotExistException($"Associated Order with ID {doDelivery.OrderId} not found for Delivery {doDelivery.Id}");
+        
+        // The existence check for the delivery itself is removed to prevent re-querying the database.
+        // It's assumed the caller (`ReadDelivery`) has already validated this.
+        return ConvertDoToBo(doDelivery, order);
+    }
 
+    /// <summary>
+    /// Private worker for converting a DO Delivery to its BO equivalent, using a pre-fetched order.
+    /// </summary>
+    /// <param name="doDelivery">The DO Delivery to convert.</param>
+    /// <param name="order">The pre-fetched associated DO Order.</param>
+    /// <returns>An equivalent BO Delivery entity.</returns>
+    private static BO.Delivery ConvertDoToBo(DO.Delivery doDelivery, DO.Order order)
+    {
         try
         {
             var boDelivery = new BO.Delivery
@@ -198,15 +230,13 @@ internal static class DeliveryManager
                     : 0;
             }
             
-            var order = s_dal.Order.Read(doDelivery.OrderId) ?? 
-                throw new BO.BlDoesNotExistException("Associated Order does not exist )for conversion logic)");
             var config = AdminManager.GetConfig();
             
             boDelivery.MaximumDeliveryTime = order.OrderOpenTime + config.MaxDeliveryTimeSpan;
 
-            boDelivery.ExpectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(doDelivery.DeliveryType, order, doDelivery);
+            boDelivery.ExpectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(doDelivery.DeliveryType, order, config, doDelivery);
 
-            boDelivery.ScheduleStatus = Tools.DetermineScheduleStatus(order, doDelivery);
+            boDelivery.ScheduleStatus = Tools.DetermineScheduleStatus(order, config, doDelivery);
 
 
             return boDelivery;
@@ -315,17 +345,26 @@ internal static class DeliveryManager
     /// <param name="courierId">The ID of the courier.</param>
     public static void Create(int orderId, int courierId)
     {
-        BO.Courier courier = CourierManager.ReadCourier(courierId);
-        var order = OrderManager.Read(orderId);
+        // Read DOs directly for efficiency
+        var doCourier = s_dal.Courier.Read(courierId)
+            ?? throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
+        var doOrder = s_dal.Order.Read(orderId)
+            ?? throw new BO.BlDoesNotExistException($"Order with ID {orderId} not found.");
+
         var config = AdminManager.GetConfig();
 
-        if (!CourierManager.IsOrderInCourierRange(order, courier, (double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0)))
+        // Re-implement IsOrderInCourierRange logic with DOs
+        if (doCourier.PersonalMaxDeliveryDistance.HasValue)
         {
-            throw new BO.BlInvalidInputException($"Order location is too far for this courier. a maximum of {courier.PersonalMaxDeliveryDistance}km is allowed");
+            var distanceToOrder = Tools.GetAerialDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), doOrder.Latitude, doOrder.Longitude);
+            if (distanceToOrder > doCourier.PersonalMaxDeliveryDistance.Value)
+            {
+                throw new BO.BlInvalidInputException($"Order location is too far for this courier. a maximum of {doCourier.PersonalMaxDeliveryDistance}km is allowed");
+            }
         }
 
         // Determine the delivery type based on the courier's vehicle
-        DO.DeliveryTypes deliveryType = (DO.DeliveryTypes)courier.DeliveryType;
+        DO.DeliveryTypes deliveryType = doCourier.DeliveryType;
         
         var tempDelivery = new DO.Delivery(
             Id: 0, 
@@ -338,7 +377,8 @@ internal static class DeliveryManager
             DeliveryEndTime: null
         );
         
-        double distance = CalculateActualDistance(tempDelivery);
+        // Call the helper with the already-fetched DO.Order
+        double distance = CalculateActualDistance(tempDelivery, doOrder);
 
         var newDelivery = tempDelivery with { ActualDistance = distance };
 

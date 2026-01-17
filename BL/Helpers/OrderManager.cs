@@ -107,6 +107,18 @@ internal static class OrderManager
     /// <exception cref="BO.BlInvalidInputException">Thrown when conversion fails.</exception>
     public static BO.Order ConvertDoToBo(DO.Order doOrder)
     {
+        var deliveries = s_dal.Delivery.ReadAll(d => d.OrderId == doOrder.Id);
+        return ConvertDoToBo(doOrder, deliveries);
+    }
+
+    /// <summary>
+    /// Converts a data layer Order entity to its business layer equivalent, using pre-fetched deliveries.
+    /// </summary>
+    /// <param name="doOrder">The DO Order to convert.</param>
+    /// <param name="deliveries">The pre-fetched deliveries for the order.</param>
+    /// <returns>An equivalent BO Order entity.</returns>
+    private static BO.Order ConvertDoToBo(DO.Order doOrder, IEnumerable<DO.Delivery> deliveries)
+    {
         try
         {
             var boOrder = new BO.Order
@@ -128,8 +140,7 @@ internal static class OrderManager
                 TimeOpenedDuration = AdminManager.Now - doOrder.OrderOpenTime,
                 PackageDensity = doOrder.Volume > 0 ? doOrder.Weight / doOrder.Volume : 0
             };
-
-            var deliveries = s_dal.Delivery.ReadAll(d => d.OrderId == doOrder.Id);
+            
             boOrder.OrderStatus = DetermineOrderStatus(deliveries);
             
             return boOrder;
@@ -147,7 +158,7 @@ internal static class OrderManager
     /// </summary>
     /// <param name="deliveries">The list of deliveries associated with the order.</param>
     /// <returns>The calculated order status.</returns>
-    private static BO.OrderStatus DetermineOrderStatus(IEnumerable<DO.Delivery> deliveries)
+    internal static BO.OrderStatus DetermineOrderStatus(IEnumerable<DO.Delivery> deliveries)
     {
         if (!deliveries.Any())
         {
@@ -257,8 +268,8 @@ internal static class OrderManager
     {
         try
         {
-            // Verify that the order does not have a delivery in progress
-            if (DeliveryManager.IsOrderTaken(updatedOrder.Id))
+            // Verify that the order does not have a delivery in progress - OPTIMIZED
+            if (s_dal.Delivery.ReadAll(d => d.OrderId == updatedOrder.Id && d.DeliveryEndTime == null).Any())
                 throw new BO.BlDeliveryInProgressException(
                     $"Order ID '{updatedOrder.Id}' cannot be updated as it is currently being delivered.");
 
@@ -319,8 +330,8 @@ internal static class OrderManager
     {
         try
         {
-            // Verify that the order has not been assigned to a courier
-            if (DeliveryManager.IsOrderTaken(orderId))
+            // Verify that the order has not been assigned to a courier - OPTIMIZED
+            if (s_dal.Delivery.ReadAll(d => d.OrderId == orderId && d.DeliveryEndTime == null).Any())
                 throw new BO.BlOrderAlreadyAssignedException(
                     $"Order ID '{orderId}' cannot be deleted as it is already assigned to a courier.");
             s_dal.Order.Delete(orderId);
@@ -343,20 +354,57 @@ internal static class OrderManager
         try
         {
             // The courier must exist to get available orders.
-            BO.Courier boCourier = CourierManager.ReadCourier(courierId);
+            DO.Courier doCourier = s_dal.Courier.Read(courierId)
+                                   ?? throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
 
-            var allUntakenOrders = ReadAll(order => !DeliveryManager.IsOrderTaken(order.Id))
-                    .Where(o => o.OrderStatus == BO.OrderStatus.Open);
-            if (boCourier.PersonalMaxDeliveryDistance == null)
+            var allOrders = s_dal.Order.ReadAll();
+            var allDeliveries = s_dal.Delivery.ReadAll();
+
+            // Join orders with their deliveries.
+            var ordersWithDeliveries = allOrders.GroupJoin(
+                allDeliveries,
+                order => order.Id,
+                delivery => delivery.OrderId,
+                (order, deliveries) => new { order, deliveries }
+            );
+
+            // Filter for "open" orders. An order is open if it has no deliveries,
+            // or if its last delivery makes it available again.
+            // It is NOT available if any delivery is currently in progress.
+            var openOrders = ordersWithDeliveries.Where(x =>
             {
-                return allUntakenOrders;
+                var deliveries = x.deliveries;
+                // Not available if any delivery is still in progress.
+                if (deliveries.Any(d => d.DeliveryEndTime == null))
+                {
+                    return false;
+                }
+                // Available if it has no deliveries.
+                if (!deliveries.Any())
+                {
+                    return true;
+                }
+                // If it has deliveries, all of which are completed, check the last one.
+                var lastEnded = deliveries.OrderByDescending(d => d.DeliveryEndTime).First();
+                return lastEnded.DeliveryEndType == DO.DeliveryEndTypes.RecipientNotFound ||
+                       lastEnded.DeliveryEndType == DO.DeliveryEndTypes.Failed;
+            });
+
+            // Filter by the courier's personal delivery distance, if specified.
+            var availableForCourier = openOrders; // Type is inferred
+            if (doCourier.PersonalMaxDeliveryDistance != null)
+            {
+                var config = AdminManager.GetConfig();
+                availableForCourier = openOrders.Where(x =>
+                    Tools.GetAerialDistance(
+                        (double)(config.Latitude ?? 0),
+                        (double)(config.Longitude ?? 0),
+                        x.order.Latitude,
+                        x.order.Longitude) <= doCourier.PersonalMaxDeliveryDistance);
             }
 
-            var config = AdminManager.GetConfig();
-            
-            return allUntakenOrders.Where(order =>
-                Tools.GetAerialDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude,
-                    order.Longitude) <= boCourier.PersonalMaxDeliveryDistance);
+            // Convert the final list of DOs to BOs, passing the already-fetched deliveries.
+            return availableForCourier.Select(x => ConvertDoToBo(x.order, x.deliveries));
         }
         catch (Exception ex)
         {
@@ -377,32 +425,52 @@ internal static class OrderManager
 
         var deliveries = s_dal.Delivery.ReadAll(d => d.OrderId == orderId);
         BO.OrderStatus status = DetermineOrderStatus(deliveries);
-        DO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d != null && d?.DeliveryEndTime == null);
+        DO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d != null && d.DeliveryEndTime == null);
 
-        // Get Assigned Courier (only if InProgress)
+        // Get config once at the top
+        var config = AdminManager.GetConfig();
+
+        // Get Assigned Courier (only if InProgress) - OPTIMIZED
         BO.CourierInList? assignedCourier = null;
         if (status == BO.OrderStatus.InProgress && activeDelivery != null)
         {
             try
             {
-                var boCourier = CourierManager.ReadCourier(activeDelivery.CourierId);
-                assignedCourier = CourierManager.ConvertBoToCourierInList(boCourier);
+                var doCourier = s_dal.Courier.Read(activeDelivery.CourierId);
+                if (doCourier != null)
+                {
+                    assignedCourier = new BO.CourierInList
+                    {
+                        Id = doCourier.Id,
+                        FullName = doCourier.FullName,
+                        DeliveryType = (BO.DeliveryTypes)doCourier.DeliveryType,
+                        Active = doCourier.Active
+                    };
+                }
             }
             catch (DO.DalDoesNotExistException) { /* Courier might have been deleted, ignore */ }
         }
 
-        // Map Delivery History
+        // Map Delivery History - OPTIMIZED & FIXED
         IEnumerable<BO.DeliveryInList> history = deliveries
             .OrderBy(d => d.DeliveryStartTime)
-            .Select(d => DeliveryManager.ConvertBoToDeliveryInList(DeliveryManager.ConvertDoToBo(d!)));
+            .Select(d => new BO.DeliveryInList
+            {
+                Id = d.Id,
+                OrderId = d.OrderId,
+                CourierId = d.CourierId,
+                DeliveryStartTime = d.DeliveryStartTime,
+                ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, d), // Pass config
+                DeliveryEndType = d.DeliveryEndType.HasValue ? (BO.DeliveryEndTypes?)d.DeliveryEndType.Value : null,
+                DeliveryEndTime = d.DeliveryEndTime
+            });
 
-        // Calculate Timing Properties
-        var config = AdminManager.GetConfig();
+        // Calculate Timing Properties - FIXED
         DateTime? maxDeliveryTime = doOrder.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
         DateTime? expectedDeliveryTime = null;
         if (activeDelivery != null)
         {
-            expectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(activeDelivery.DeliveryType, doOrder, activeDelivery);
+            expectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(activeDelivery.DeliveryType, doOrder, config, activeDelivery); // Pass config
         }
 
         return new BO.OrderTracking

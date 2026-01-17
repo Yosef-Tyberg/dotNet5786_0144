@@ -193,8 +193,20 @@ internal static class Tools
         if (value is string str)
             return $"\"{str}\"";
 
+        // Handle Enums
+        if (value is Enum)
+            return value.ToString();
+
+        // Handle doubles
+        if (value is double d)
+            return d.ToString("0.##");
+
+        // Handle TimeSpan
+        if (value is TimeSpan ts)
+            return FormatTimeSpan(ts);
+
         // Handle collections (List, IEnumerable, etc.)
-        if (value is IEnumerable enumerable && !(value is string))
+        if (value is IEnumerable enumerable)
         {
             return FormatCollection(enumerable);
         }
@@ -202,7 +214,7 @@ internal static class Tools
         // Handle BO entities (nested objects)
         if (value.GetType().Namespace == "BO")
         {
-            return FormatNestedObject(value);
+            return value.ToString() ?? "null";
         }
 
         // Handle primitive types and other types
@@ -210,57 +222,50 @@ internal static class Tools
     }
 
     /// <summary>
-    /// Formats a collection/list for display using LINQ query syntax.
+    /// Formats a collection/list for display.
     /// </summary>
     /// <param name="enumerable">The collection to format.</param>
     /// <returns>A formatted string representation of the collection.</returns>
     private static string FormatCollection(IEnumerable enumerable)
     {
-        var formattedItems = from object? item in enumerable
-                             select item switch
-                             {
-                                 null => "null",
-                                 string str => $"\"{str}\"",
-                                 _ when item.GetType().Namespace == "BO"
-                                     => $"{item.GetType().Name}(Id={GetIdProperty(item)})",
-                                 _ => item.ToString() ?? "null"
-                             };
-
-        string itemsString = string.Join(", ", formattedItems);
-        return $"[{itemsString}]";
+        var items = new List<string>();
+        foreach (var item in enumerable)
+        {
+            items.Add(FormatPropertyValue(item));
+        }
+        return $"[{string.Join(", ", items)}]";
     }
 
-    /// <summary>
-    /// Formats a nested BO object for display, showing only key identifying properties.
-    /// </summary>
-    /// <param name="obj">The nested BO object to format.</param>
-    /// <returns>A formatted string representation of the nested object.</returns>
-    private static string FormatNestedObject(object obj)
+    private static string FormatTimeSpan(TimeSpan ts)
     {
-        if (obj == null)
-            return "null";
+        bool isNegative = ts < TimeSpan.Zero;
+        ts = ts.Duration();
+        var parts = new List<string>();
 
-        string objTypeName = obj.GetType().Name;
-        object? idValue = GetIdProperty(obj);
+        int days = ts.Days;
+        if (days >= 365)
+        {
+            int years = days / 365;
+            parts.Add($"{years} year{(years > 1 ? "s" : "")}");
+            days %= 365;
+        }
+        if (days >= 30)
+        {
+            int months = days / 30;
+            parts.Add($"{months} month{(months > 1 ? "s" : "")}");
+            days %= 30;
+        }
+        if (days > 0)
+        {
+            parts.Add($"{days} day{(days > 1 ? "s" : "")}");
+        }
 
-        if (idValue != null)
-            return $"{objTypeName}(Id={idValue})";
+        if (ts.Hours > 0) parts.Add($"{ts.Hours} hour{(ts.Hours > 1 ? "s" : "")}");
+        if (ts.Minutes > 0) parts.Add($"{ts.Minutes} minute{(ts.Minutes > 1 ? "s" : "")}");
+        if (ts.Seconds > 0) parts.Add($"{ts.Seconds} second{(ts.Seconds > 1 ? "s" : "")}");
 
-        return objTypeName;
-    }
-
-    /// <summary>
-    /// Retrieves the Id property value of an object if it exists.
-    /// </summary>
-    /// <param name="obj">The object to retrieve the Id from.</param>
-    /// <returns>The Id property value, or null if not found.</returns>
-    private static object? GetIdProperty(object obj)
-    {
-        if (obj == null)
-            return null;
-
-        PropertyInfo? idProp = obj.GetType().GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
-        return idProp?.GetValue(obj);
+        string result = parts.Count > 0 ? string.Join(" ", parts) : "0 seconds";
+        return isNegative ? $"- {result}" : result;
     }
 
     #endregion String Formatting Methods
@@ -410,10 +415,8 @@ internal static class Tools
     /// <param name="order">The associated order.</param>
     /// <returns>The calculated expected delivery time.</returns>
     /// <exception cref="BO.BlMissingPropertyException">Thrown when calculation fails.</exception>
-    internal static DateTime CalculateExpectedDeliveryTime(DO.DeliveryTypes deliveryType, DO.Order order, DO.Delivery? activeDelivery = null)
+    internal static DateTime CalculateExpectedDeliveryTime(DO.DeliveryTypes deliveryType, DO.Order order, BO.Config config, DO.Delivery? activeDelivery = null)
     {
-        var config = AdminManager.GetConfig();
-
         // Determine the start time: if an active delivery exists for the order, use its DeliveryStartTime; otherwise, use AdminManager.Now 
         DateTime startTime = activeDelivery?.DeliveryStartTime ?? AdminManager.Now;
 
@@ -460,10 +463,8 @@ internal static class Tools
         return (distance, speed);
     }
 
-    internal static BO.ScheduleStatus DetermineScheduleStatus(DO.Order order, DO.Delivery? activeDelivery = null)
+    internal static BO.ScheduleStatus DetermineScheduleStatus(DO.Order order, BO.Config config, DO.Delivery? activeDelivery = null)
     {
-        var config = AdminManager.GetConfig();
-        
         var deliveryType = GetFastestType(config);
         
         if (activeDelivery != null)
@@ -471,7 +472,7 @@ internal static class Tools
             deliveryType = activeDelivery.DeliveryType;
         }
         
-        var arrival = CalculateExpectedDeliveryTime(deliveryType, order, activeDelivery);  
+        var arrival = CalculateExpectedDeliveryTime(deliveryType, order, config, activeDelivery);  
         var deadline = order.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
         //late only if current time is after deadline
         if (AdminManager.Now > deadline)

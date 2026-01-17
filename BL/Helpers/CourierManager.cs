@@ -130,7 +130,7 @@ internal static class CourierManager
             var existingCourier = ReadCourier(courier.Id);
 
             // Check if courier has an active delivery
-            if (DeliveryManager.GetDeliveryByCourier(courier.Id) != null)
+            if (IsCourierInDelivery(courier.Id))
             {
                 // If any property besides the allowed ones is changed, throw exception
                 if (existingCourier.Active != courier.Active ||
@@ -175,7 +175,7 @@ internal static class CourierManager
             var courier = ReadCourier(courierId); // Read once at the beginning
 
             // Check if courier has an active delivery
-            if (DeliveryManager.GetDeliveryByCourier(courierId) != null)
+            if (IsCourierInDelivery(courierId))
             {
                 // If in delivery, only allow certain fields to be updated.
                 // DeliveryType is not one of them.
@@ -203,6 +203,11 @@ internal static class CourierManager
             // The message is appropriate for both cases.
             throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.", ex);
         }
+    }
+
+    private static bool IsCourierInDelivery(int courierId)
+    {
+        return s_dal.Delivery.ReadAll(d => d.CourierId == courierId && d.DeliveryEndTime == null).Any();
     }
 
     
@@ -303,10 +308,35 @@ internal static class CourierManager
     /// <returns>An IEnumerable of the courier's deliveries.</returns>
     public static IEnumerable<BO.DeliveryInList> GetCourierDeliveryHistory(int courierId)
     {
-        ReadCourier(courierId); // Validate courier exists
-        var boDeliveries = DeliveryManager.ReadAll(d => d.CourierId == courierId);
-        return boDeliveries.Select(DeliveryManager.ConvertBoToDeliveryInList).OrderBy(d => d.DeliveryStartTime);
-    }
+        // 1. Validate courier exists by reading from DAL.
+        if (s_dal.Courier.Read(courierId) == null)
+            throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
+
+        // 2. Fetch all DO.Delivery for the courier.
+        var doDeliveries = s_dal.Delivery.ReadAll(d => d.CourierId == courierId);
+
+        // 3. Fetch all unique DO.Order for these deliveries and put them in a dictionary for efficient lookup.
+        var orderIds = doDeliveries.Select(d => d.OrderId).Distinct();
+            var doOrders = s_dal.Order.ReadAll(o => orderIds.Contains(o.Id))
+                                        .ToDictionary(o => o.Id);
+        
+            var config = AdminManager.GetConfig();
+            // 4. Create BO.DeliveryInList directly, improving performance.
+            return doDeliveries
+                .Select(d => new BO.DeliveryInList
+                {
+                    Id = d.Id,
+                    OrderId = d.OrderId,
+                    CourierId = d.CourierId,
+                    DeliveryStartTime = d.DeliveryStartTime,
+                    // Look up the order to calculate status. Fallback to a default if order is somehow missing.
+                    ScheduleStatus = doOrders.TryGetValue(d.OrderId, out var order)
+                                         ? Tools.DetermineScheduleStatus(order, config, d)
+                                         : BO.ScheduleStatus.OnTime,
+                    DeliveryEndType = d.DeliveryEndType.HasValue ? (BO.DeliveryEndTypes?)d.DeliveryEndType.Value : null,
+                    DeliveryEndTime = d.DeliveryEndTime
+                })
+                .OrderBy(d => d.DeliveryStartTime);    }
     
     /// <summary>
     /// Retrieves all open orders that are within a courier's maximum delivery distance.
@@ -315,16 +345,56 @@ internal static class CourierManager
     /// <returns>An IEnumerable of open orders available to the courier.</returns>
     public static IEnumerable<BO.OrderInList> GetOpenOrders(int courierId)
     {
-        var courier = ReadCourier(courierId);
-        var openOrders = OrderManager.ReadAll().Where(o => o.OrderStatus == BO.OrderStatus.Open);
+        // 1. Read DO.Courier directly for efficiency.
+        var doCourier = s_dal.Courier.Read(courierId)
+                        ?? throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
 
+        var allOrders = s_dal.Order.ReadAll();
+        var allDeliveries = s_dal.Delivery.ReadAll();
+
+        // 2. Join orders with their deliveries to determine status efficiently.
+        var ordersWithDeliveries = allOrders.GroupJoin(
+            allDeliveries,
+            order => order.Id,
+            delivery => delivery.OrderId,
+            (order, deliveries) => new { order, deliveries }
+        );
+
+        // 3. Filter for "open" orders.
+        var openOrders = ordersWithDeliveries.Where(x =>
+        {
+            var deliveries = x.deliveries;
+            if (deliveries.Any(d => d.DeliveryEndTime == null)) return false; // In progress
+            if (!deliveries.Any()) return true; // No deliveries yet, so it's open
+            
+            // If it has deliveries, check the status of the last one to see if it reopened the order.
+            var lastEnded = deliveries.OrderByDescending(d => d.DeliveryEndTime).First();
+            return lastEnded.DeliveryEndType == DO.DeliveryEndTypes.RecipientNotFound ||
+                   lastEnded.DeliveryEndType == DO.DeliveryEndTypes.Failed;
+        });
+
+        // 4. Filter by the courier's range, if they have one defined.
         var config = AdminManager.GetConfig();
         var hqLatitude = (double)(config.Latitude ?? 0);
         var hqLongitude = (double)(config.Longitude ?? 0);
 
-        return openOrders
-            .Where(order => IsOrderInCourierRange(order, courier, hqLatitude, hqLongitude))
-            .Select(OrderManager.ConvertBoToOrderInList);
+        var availableForCourier = openOrders;
+        if (doCourier.PersonalMaxDeliveryDistance.HasValue)
+        {
+            availableForCourier = openOrders.Where(x =>
+                Tools.GetAerialDistance(hqLatitude, hqLongitude, x.order.Latitude, x.order.Longitude) 
+                <= doCourier.PersonalMaxDeliveryDistance.Value);
+        }
+
+        // 5. Project the final result directly to BO.OrderInList.
+        return availableForCourier.Select(x => new BO.OrderInList
+        {
+            Id = x.order.Id,
+            OrderType = (BO.OrderTypes)x.order.OrderType,
+            CustomerFullName = x.order.CustomerFullName,
+            OrderStatus = BO.OrderStatus.Open, // We know it's open from the filter above
+            OrderOpenTime = x.order.OrderOpenTime
+        });
     }
 
     /// <summary>
@@ -352,26 +422,53 @@ internal static class CourierManager
     /// <returns>A BO.CourierStatistics object.</returns>
     public static BO.CourierStatistics GetCourierStatistics(int courierId)
     {
-        var deliveries = GetCourierDeliveryHistory(courierId);
+        // 1. Validate courier exists
+        if (s_dal.Courier.Read(courierId) == null)
+            throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
 
-        var completedDeliveries = deliveries
-            .Where(d => d.DeliveryEndTime != null)
-            .Select(d => DeliveryManager.ReadDelivery(d.Id)) // Read full delivery for details
-            .ToList();
-        //if no deliveries completed, return empty stats with TotalDeliveries being 1 if there's a delivery in progress
-        if (!completedDeliveries.Any())
+        // 2. Fetch all DO.Delivery for the courier once and materialize the list.
+        var allCourierDeliveries = s_dal.Delivery.ReadAll(d => d.CourierId == courierId).ToList();
+        
+        // Handle case where courier has no deliveries at all.
+        if (!allCourierDeliveries.Any())
         {
-            return new BO.CourierStatistics { TotalDeliveries = deliveries.Count() };
+            return new BO.CourierStatistics();
         }
-        var totalDeliveries = completedDeliveries.Count;
-        var onTimeDeliveries = completedDeliveries.Count(d => d.ScheduleStatus == BO.ScheduleStatus.OnTime);
-        var successfulDeliveries = completedDeliveries.Count(d => d.DeliveryEndType == BO.DeliveryEndTypes.Delivered);
+
+        // 3. Fetch associated orders for all deliveries.
+        var orderIds = allCourierDeliveries.Select(d => d.OrderId).Distinct();
+        var doOrders = s_dal.Order.ReadAll(o => orderIds.Contains(o.Id))
+                                .ToDictionary(o => o.Id);
+
+        // 4. Filter for completed deliveries from the local list.
+        var completedDoDeliveries = allCourierDeliveries.Where(d => d.DeliveryEndTime != null).ToList();
+
+        // Handle case where there are deliveries, but none are completed yet.
+        if (!completedDoDeliveries.Any())
+        {
+            // Still report the total number of deliveries assigned (which are all in-progress).
+            return new BO.CourierStatistics { TotalDeliveries = allCourierDeliveries.Count };
+        }
+
+        // 5. Calculate all statistics directly from the DO collections.
+        var config = AdminManager.GetConfig();
+        var totalDeliveries = completedDoDeliveries.Count;
+
+        var onTimeDeliveries = completedDoDeliveries.Count(d =>
+            doOrders.TryGetValue(d.OrderId, out var order) &&
+            Tools.DetermineScheduleStatus(order, config, d) == BO.ScheduleStatus.OnTime
+        );
+
+        var successfulDeliveries = completedDoDeliveries.Count(d => d.DeliveryEndType == DO.DeliveryEndTypes.Delivered);
+        
+        var deliveryDurations = completedDoDeliveries
+            .Select(d => (d.DeliveryEndTime!.Value - d.DeliveryStartTime).TotalMinutes);
 
         return new BO.CourierStatistics
         {
             TotalDeliveries = totalDeliveries,
-            TotalDistance = completedDeliveries.Sum(d => (double)(d.ActualDistance ?? 0)),
-            AverageDeliveryTime = TimeSpan.FromMinutes(completedDeliveries.Average(d => ((TimeSpan)(d.DeliveryEndTime - d.DeliveryStartTime)).TotalMinutes)),
+            TotalDistance = completedDoDeliveries.Sum(d => d.ActualDistance ?? 0),
+            AverageDeliveryTime = TimeSpan.FromMinutes(deliveryDurations.Any() ? deliveryDurations.Average() : 0),
             OnTimeDeliveries = onTimeDeliveries,
             LateDeliveries = totalDeliveries - onTimeDeliveries,
             SuccessRate = totalDeliveries > 0 ? (double)successfulDeliveries / totalDeliveries * 100 : 0

@@ -108,7 +108,9 @@ public static class Initialization
     private static void InitializeConfig()
     {
         // Example company coordinates - change as appropriate for your tests
-        s_dal.Config.CompanyFullAddress = "Hebron Road (central)";
+        s_dal.Config.AdminId = 123456789;
+        s_dal.Config.AdminPassword = "admin";
+        s_dal.Config.CompanyFullAddress = "Hebron Road (central), Jerusalem";
         s_dal.Config.Latitude = 31.766509;
         s_dal.Config.Longitude = 35.225938;
 
@@ -135,13 +137,13 @@ public static class Initialization
     {
         return new List<TestAddress>
             {
-                new TestAddress("Ben Yehuda Street", 31.781500, 35.217600),
-                new TestAddress("Jaffa Road", 31.784637, 35.215046),
-                new TestAddress("Mahane Yehuda", 31.784700, 35.207300),
-                new TestAddress("Emek Refaim - German Colony", 31.757919, 35.218139),
-                new TestAddress("Givat Shaul", 31.787128, 35.190108),
-                new TestAddress("Ein Kerem (outer)", 31.759164, 35.143000),
-                new TestAddress("Knesset area", 31.776670, 35.205280)
+                new TestAddress("Ben Yehuda Street, Jerusalem", 31.781500, 35.217600),
+                new TestAddress("Jaffa Road, Jerusalem", 31.784637, 35.215046),
+                new TestAddress("Mahane Yehuda, Jerusalem", 31.784700, 35.207300),
+                new TestAddress("Emek Refaim - German Colony, Jerusalem", 31.757919, 35.218139),
+                new TestAddress("Givat Shaul, Jerusalem", 31.787128, 35.190108),
+                new TestAddress("Ein Kerem (outer), Jerusalem", 31.759164, 35.143000),
+                new TestAddress("Knesset area, Jerusalem", 31.776670, 35.205280)
             };
     }
 
@@ -262,6 +264,13 @@ public static class Initialization
         var orderDal = s_dal.Order;
         var created = new List<Order>(totalCount);
         var orderTypes = Enum.GetValues(typeof(OrderTypes)).Cast<OrderTypes>().ToArray();
+        
+        var customerNames = new[]
+        {
+            "Ariel Cohen", "Maya Levi", "Noam Shalev", "Lior Kaplan", "Yael Barak",
+            "Ethan Mizrahi", "Nadav Rosen", "Shira Gold", "Omer Katz", "Talia Aviv",
+            "Daniel Harel", "Roni Peretz", "Galit Stern", "Itai Levy", "Rivka Eitan"
+        };
 
         for (int i = 0; i < totalCount; i++)
         {
@@ -278,7 +287,7 @@ public static class Initialization
                 VerbalDescription: $"{verbal} #{i + 1}",
                 Latitude: addr.Lat,
                 Longitude: addr.Lon,
-                CustomerFullName: $"Customer {i + 1}",
+                CustomerFullName: customerNames[i % customerNames.Length],
                 CustomerMobile: RandomPhone(),
                 Volume: Math.Round(0.1 + s_rnd.NextDouble() * 3.0, 3),
                 Weight: Math.Round(0.1 + s_rnd.NextDouble() * 10.0, 3),
@@ -444,7 +453,7 @@ public static class Initialization
             PersistDelivery(order, courier, start, chosenType, endTime, actual);
 
             // simulate reopened cases
-            if ((chosenType == DeliveryEndTypes.CustomerRefused || chosenType == DeliveryEndTypes.RecipientNotFound) && s_rnd.NextDouble() < 0.5)
+            if ((chosenType == DeliveryEndTypes.RecipientNotFound || chosenType == DeliveryEndTypes.Failed) && s_rnd.NextDouble() < 0.5)
             {
                 var reopenedStart = endTime.AddMinutes(30 + s_rnd.Next(0, 180));
                 var courier2 = FindAvailableCourier(order, reopenedStart);

@@ -159,7 +159,7 @@ public class ToolsTests
             OrderOpenTime = AdminManager.Now
         };
 
-        var result = Tools.CalculateExpectedDeliveryTime(DO.DeliveryTypes.Car, order);
+        var result = Tools.CalculateExpectedDeliveryTime(DO.DeliveryTypes.Car, order, config);
         Assert.IsTrue(result >= AdminManager.Now);
     }
 
@@ -168,8 +168,9 @@ public class ToolsTests
     {
         var order = new BO.Order { Id = 0, CustomerFullName = "TestIII I", CustomerMobile = "0500000000", FullOrderAddress = "Ben Yehuda Street, Jerusalem", VerbalDescription = "Desc", Volume = 1, Weight = 1, Height = 1, Width = 1, OrderOpenTime = AdminManager.Now };
         bl.Order.Create(order);
-        var id =dl.Order.ReadAll(o => o.CustomerFullName == "TestIII I").First(); 
-        var status = Tools.DetermineScheduleStatus(id);
+        var id =dl.Order.ReadAll(o => o.CustomerFullName == "TestIII I").First();
+        var config = bl.Admin.GetConfig();
+        var status = Tools.DetermineScheduleStatus(id, config);
         Assert.AreEqual(ScheduleStatus.OnTime, status);
     }
 
@@ -215,9 +216,10 @@ public class ToolsTests
 
         // Fetch DO record for Tools.DetermineScheduleStatus check
         var doOrder = dl.Order.Read(order.Id);
+        var doDelivery = dl.Delivery.ReadAll(d => d.OrderId == order.Id).First();
 
         // Assert 1: Initially OnTime
-        Assert.AreEqual(ScheduleStatus.OnTime, Tools.DetermineScheduleStatus(doOrder));
+        Assert.AreEqual(ScheduleStatus.OnTime, Tools.DetermineScheduleStatus(doOrder, config, doDelivery));
 
         // 2. Act 2: Forward clock to the "AtRisk" window
         // MaxTime is the hard deadline. AtRisk starts (RiskRange) before MaxTime.
@@ -228,14 +230,14 @@ public class ToolsTests
         bl.Admin.ForwardClock(timeToRiskMidpoint);
 
         // Assert 2: AtRisk
-        Assert.AreEqual(ScheduleStatus.AtRisk, Tools.DetermineScheduleStatus(dl.Order.Read(order.Id)));
+        Assert.AreEqual(ScheduleStatus.AtRisk, Tools.DetermineScheduleStatus(dl.Order.Read(order.Id), config, doDelivery));
 
         // 3. Act 3: Forward past the maximum deadline
         // Moving forward by the full RiskRange + 5 minutes ensures we are well past Late
         bl.Admin.ForwardClock(config.RiskRange.Add(TimeSpan.FromMinutes(5)));
 
         // Assert 3: Late
-        Assert.AreEqual(ScheduleStatus.Late, Tools.DetermineScheduleStatus(dl.Order.Read(order.Id)));
+        Assert.AreEqual(ScheduleStatus.Late, Tools.DetermineScheduleStatus(dl.Order.Read(order.Id), config, doDelivery));
     }
     #endregion
 }
