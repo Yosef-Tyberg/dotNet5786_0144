@@ -100,17 +100,17 @@ internal static class Tools
     /// <summary>
     /// Converts a DAL exception to an appropriate BO exception, preserving the original exception as inner exception.
     /// </summary>
-    /// <param name="dalException">The DAL exception to convert.</param>
+    /// <param name="exception">The DAL exception to convert.</param>
     /// <param name="operationName">Description of the operation for error messaging.</param>
     /// <returns>An appropriate BO exception.</returns>
-    internal static Exception ConvertDalException(Exception dalException)
+    internal static Exception ConvertDalException(Exception exception)
     {
-        return dalException switch
+        return exception switch
         {
             DalDoesNotExistException ex => new BlDoesNotExistException($"{ex.Message}", ex),
             DalAlreadyExistsException ex => new BlAlreadyExistsException($"{ex.Message}", ex),
             DalInvalidInputException ex => new BlInvalidInputException($"{ex.Message}", ex),
-            _ => new BlInvalidInputException($"{dalException.Message}", dalException)
+            _ => exception
         };
     }
 

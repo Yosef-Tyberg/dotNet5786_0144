@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -52,7 +52,8 @@ internal static class DeliveryManager
     {
         try
         {
-            var doDelivery = s_dal.Delivery.Read(deliveryId) ?? throw new BO.BlDoesNotExistException($"Delivery with ID {deliveryId} not found.");
+            var doDelivery = s_dal.Delivery.Read(deliveryId) ?? 
+                throw new BO.BlDoesNotExistException($"Delivery with ID {deliveryId} not found.");
             return ConvertDoToBo(doDelivery);
         }
         catch (DO.DalDoesNotExistException ex)
@@ -113,10 +114,7 @@ internal static class DeliveryManager
         }
         catch (Exception ex)
         {
-            if (ex.GetType().Namespace == "DO")
                 throw Tools.ConvertDalException(ex);
-            
-            throw;
         }
     }
 
@@ -412,6 +410,31 @@ internal static class DeliveryManager
     /// <param name="newClock"></param>
     public static void PeriodicDeliveriesUpdate(DateTime oldClock, DateTime newClock)
     {
-        //implementation will be added in the future
+        var config = AdminManager.GetConfig();
+        var riskThreshold = config.RiskRange / 2;
+        var rnd = new Random();
+        var endTypes = Enum.GetValues(typeof(BO.DeliveryEndTypes));
+
+        var activeDeliveries = s_dal.Delivery.ReadAll(d => d.DeliveryEndTime == null);
+        var orderIds = activeDeliveries.Select(d => d.OrderId).Distinct();
+        var orders = s_dal.Order.ReadAll(o => orderIds.Contains(o.Id)).ToDictionary(o => o.Id);
+
+        (from d in activeDeliveries
+         let order = orders.GetValueOrDefault(d.OrderId)
+         where order != null
+         let expectedTime = Tools.CalculateExpectedDeliveryTime(d.DeliveryType, order!, config, d)
+         where newClock >= expectedTime + riskThreshold
+         select d)
+         .ToList()
+         .ForEach(d =>
+         {
+             var endType = (BO.DeliveryEndTypes)endTypes.GetValue(rnd.Next(endTypes.Length))!;
+             var updatedDelivery = d with
+             {
+                 DeliveryEndTime = newClock,
+                 DeliveryEndType = (DO.DeliveryEndTypes)endType
+             };
+             s_dal.Delivery.Update(updatedDelivery);
+         });
     }
 }

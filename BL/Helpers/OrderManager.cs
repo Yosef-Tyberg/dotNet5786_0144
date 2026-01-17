@@ -316,9 +316,7 @@ internal static class OrderManager
         }
         catch (Exception ex)
         {
-            if (ex.GetType().Namespace == "DO")
                 throw Tools.ConvertDalException(ex);
-            throw;
         }
     }
     
@@ -338,9 +336,7 @@ internal static class OrderManager
         }
         catch (Exception ex)
         {
-            if (ex.GetType().Namespace == "DO")
-                throw Tools.ConvertDalException(ex);
-            throw;
+            throw Tools.ConvertDalException(ex);
         }
     }
     
@@ -360,35 +356,23 @@ internal static class OrderManager
             var allOrders = s_dal.Order.ReadAll();
             var allDeliveries = s_dal.Delivery.ReadAll();
 
-            // Join orders with their deliveries.
-            var ordersWithDeliveries = allOrders.GroupJoin(
-                allDeliveries,
-                order => order.Id,
-                delivery => delivery.OrderId,
-                (order, deliveries) => new { order, deliveries }
-            );
+            // Use Query Syntax (Demonstrates: Join Into, Let, Where, OrderBy)
+            var openOrders = 
+                from order in allOrders
+                join delivery in allDeliveries on order.Id equals delivery.OrderId into deliveries
+                
+                // Filter 1: Must not be currently in progress
+                let inProgress = deliveries.Any(d => d.DeliveryEndTime == null)
+                where !inProgress
 
-            // Filter for "open" orders. An order is open if it has no deliveries,
-            // or if its last delivery makes it available again.
-            // It is NOT available if any delivery is currently in progress.
-            var openOrders = ordersWithDeliveries.Where(x =>
-            {
-                var deliveries = x.deliveries;
-                // Not available if any delivery is still in progress.
-                if (deliveries.Any(d => d.DeliveryEndTime == null))
-                {
-                    return false;
-                }
-                // Available if it has no deliveries.
-                if (!deliveries.Any())
-                {
-                    return true;
-                }
-                // If it has deliveries, all of which are completed, check the last one.
-                var lastEnded = deliveries.OrderByDescending(d => d.DeliveryEndTime).First();
-                return lastEnded.DeliveryEndType == DO.DeliveryEndTypes.RecipientNotFound ||
-                       lastEnded.DeliveryEndType == DO.DeliveryEndTypes.Failed;
-            });
+                // Filter 2: If history exists, last status must be 're-openable'
+                let lastEnded = deliveries.OrderByDescending(d => d.DeliveryEndTime).FirstOrDefault()
+                where lastEnded == null ||
+                      lastEnded.DeliveryEndType == DO.DeliveryEndTypes.RecipientNotFound ||
+                      lastEnded.DeliveryEndType == DO.DeliveryEndTypes.Failed
+                
+                orderby order.OrderOpenTime // Sort by oldest first
+                select new { order, deliveries };
 
             // Filter by the courier's personal delivery distance, if specified.
             var availableForCourier = openOrders; // Type is inferred

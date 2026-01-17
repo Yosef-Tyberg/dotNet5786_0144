@@ -112,7 +112,7 @@ public class AdminTests
 
         // Assert
         Assert.IsNotNull(config);
-        Assert.IsTrue(config.AdminId <= 0, "Admin ID must be positive.");
+        Assert.IsTrue(config.AdminId >= 0, "Admin ID must be positive.");
         Assert.IsFalse(string.IsNullOrWhiteSpace(config.AdminPassword), "Default Admin Password should not be empty");
         Assert.IsTrue(config.AvgCarSpeedKmh > 0, "Default car speed should be positive");
         Assert.IsTrue(config.AvgMotorcycleSpeedKmh > 0, "Default motorcycle speed should be positive");
