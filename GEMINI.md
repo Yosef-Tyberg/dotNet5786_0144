@@ -141,3 +141,65 @@ The `BO.OrderStatus` is derived from the history of deliveries associated with t
 
 ### 9.3. Simulation Control
 - **Clock Management**: The BL must support operations to initialize and advance the System Clock to facilitate simulation scenarios.
+
+---
+## 10. Presentation Layer (PL) Rules and Requirements
+
+This document outlines the mandatory architectural and coding standards for the Presentation Layer (PL) of this WPF application. Adherence to these rules is crucial for maintaining a clean, scalable, and maintainable codebase.
+
+---
+
+### 10.1. Error Handling
+
+- **Catch All Exceptions:** The Presentation Layer must catch all exceptions originating from any layer.
+- **User-Friendly Messages:** Display a `MessageBox` to the user when an error occurs.
+    - The message must be clear, simple, and easily understood by a non-technical user.
+    - Do **not** display raw exception details, stack traces, or internal variable names.
+    - The `MessageBox` must have a meaningful title and an appropriate icon (e.g., Error, Warning, Information).
+
+---
+
+### 10.2. Window Management and Data Flow
+
+- **Automatic Window Closing:**
+    - After a new entity is successfully **added**, the "Add" window must close automatically.
+    - After an entity is successfully **updated**, the "Update" window must close automatically.
+- **Automatic UI Updates:**
+    - The main list window must refresh automatically to show any added or updated entities.
+    - This update mechanism **must** be implemented using the **Observer Design Pattern**. The PL window will register as an observer to the logical layer (BL), which will notify it of any changes.
+- **No Direct Window Communication:** Windows must not share information directly. All data passed between windows must be done through parameters in the window's constructor.
+
+---
+
+### 10.3. MVVM, Data Binding, and Code-Behind Best Practices
+
+The project strictly follows the MVVM (Model-View-ViewModel) pattern to ensure a clean separation of concerns.
+
+- **Minimize Code-Behind:** The code-behind files (`.xaml.cs`) should contain the absolute minimum code necessary. Their role is primarily to handle UI events (like button clicks) and delegate actions. **No business logic should exist in the code-behind.**
+- **Use Data Binding Exclusively:**
+    - **NO `x:Name` for Code-Behind:** Do not name controls in XAML (e.g., `x:Name="MyTextBox"`) to access them in the code-behind. The only exception is for binding one control's property to another's directly within XAML.
+    - **UI Must Update from Data:** All data displayed on screen must be bound to properties in the code-behind. These properties must be implemented in a way that the UI updates automatically when they are changed. You must use one of these two methods:
+        1.  Implement the `INotifyPropertyChanged` interface and raise the `PropertyChanged` event in the property's setter.
+        2.  Define the properties as `DependencyProperty`.
+    - **Bind in XAML:** All data bindings, including setting `DataContext` and `ItemsSource`, must be defined in the XAML file, not in the code-behind.
+- **Rely on DataBinding, Not `sender`:** In event handlers, do not cast the `sender` parameter to access its properties. The required data should always be accessible via data-bound properties.
+- **Use Converters:** For any data conversion, formatting, or conditional logic within a binding (e.g., converting a boolean to `Visibility`, changing a color based on a value), you **must** use a class that implements `IValueConverter`.
+- **Use XAML Comments:** If a control's purpose is not immediately obvious, add a descriptive comment in the XAML: `<!-- This TextBox is for the user's full name -->`.
+
+---
+
+### 10.4. Business Logic (BL) Interaction
+
+- **Single Call per Action:** Any single user action (e.g., one button click) must result in a **maximum of one call** to the Business Logic layer.
+- **Exception Handling for BL Calls:** Every call to the BL must be wrapped in a `try-catch` block to handle potential exceptions gracefully, as per the Error Handling rules above.
+
+---
+
+### 10.5. Advanced WPF Features
+
+While not strictly mandatory until Stage 6, the use of the following advanced WPF features is highly encouraged to create a more robust and maintainable UI:
+
+- **Layout Panels:** `Grid`, `StackPanel`, `DockPanel`, etc.
+- **Resources:** Defining reusable objects and values in `Window.Resources` or `Application.Resources`.
+- **Styles:** Creating consistent appearances for controls using `<Style>`.
+- **Data Templates:** Customizing the visual representation of data objects using `<DataTemplate>`, especially for items in lists.

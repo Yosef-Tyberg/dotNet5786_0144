@@ -179,7 +179,7 @@ the BlImplementation s for the interfaces' implementations
 
 first, i want to fill in the BO folder - the business entities + enums and all exceptions expected in the business layer
 
-Each Data layer entity should have a business equivalent. the business entities do not need to be exact one to one with the DL version - other properties may be added where it makes sense. e.g. in courier, a value for how long a courier was working for the company (derived from EmploymentStartTime current date. i want at least one such addition per entity.
+Each Data layer entity should have a business equivalent. the business entities do not need to be exact one to one with the DL version - other properties may be added where it makes sense. e.g. in courier, a value for how long a courier was working for the company (derived from EmploymentStartTime and current date). i want at least one such addition per entity.
 additionally, each business entity should have an EntityInList (with entity replaced by the appropriate entity name) used for when a more minimal view of the entity when the whole thing would be unnecessary or cumbersome.
 
 add any additional business entities (with no data layer equivalent) that will be useful for the project.

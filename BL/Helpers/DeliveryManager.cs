@@ -136,6 +136,8 @@ internal static class DeliveryManager
         delivery = delivery with { DeliveryEndTime = AdminManager.Now, DeliveryEndType = (DO.DeliveryEndTypes)endType };
         
         s_dal.Delivery.Update(delivery);
+        Observers.NotifyItemUpdated(delivery.Id);
+        Observers.NotifyListUpdated();
     }
 
     /// <summary>
@@ -255,21 +257,6 @@ internal static class DeliveryManager
 
 
 
-    /// <summary>
-
-    /// Determines the schedule status of a delivery.
-
-    /// </summary>
-
-    /// <param name="delivery">The delivery to check.</param>
-
-    /// <param name="riskRange">The time span defining the risk range.</param>
-
-    /// <returns>The calculated schedule status.</returns>
-
-    
-
-
 
     /// <summary>
 
@@ -382,6 +369,7 @@ internal static class DeliveryManager
         var newDelivery = tempDelivery with { ActualDistance = distance };
 
         s_dal.Delivery.Create(newDelivery);
+        Observers.NotifyListUpdated();
     }
 
     /// <summary>
@@ -402,6 +390,7 @@ internal static class DeliveryManager
             ActualDistance: 0
         );
         s_dal.Delivery.Create(dummyDelivery);
+        Observers.NotifyListUpdated();
     }
 
     /// <summary>
@@ -420,22 +409,27 @@ internal static class DeliveryManager
         var orderIds = activeDeliveries.Select(d => d.OrderId).Distinct();
         var orders = s_dal.Order.ReadAll(o => orderIds.Contains(o.Id)).ToDictionary(o => o.Id);
 
-        (from d in activeDeliveries
-         let order = orders.GetValueOrDefault(d.OrderId)
-         where order != null
-         let expectedTime = Tools.CalculateExpectedDeliveryTime(d.DeliveryType, order!, config, d)
-         where newClock >= expectedTime + riskThreshold
-         select d)
-         .ToList() // (required to avoid updating IEnumerable while iterating)
-         .ForEach(d =>
-         {
-             var endType = (BO.DeliveryEndTypes)endTypes.GetValue(rnd.Next(endTypes.Length))!;
-             var updatedDelivery = d with
-             {
-                 DeliveryEndTime = newClock,
-                 DeliveryEndType = (DO.DeliveryEndTypes)endType
-             };
-             s_dal.Delivery.Update(updatedDelivery);
-         });
+        var deliveriesToUpdate = (from d in activeDeliveries
+                                  let order = orders.GetValueOrDefault(d.OrderId)
+                                  where order != null
+                                  let expectedTime = Tools.CalculateExpectedDeliveryTime(d.DeliveryType, order!, config, d)
+                                  where newClock >= expectedTime + riskThreshold
+                                  select d).ToList();
+        
+        if (deliveriesToUpdate.Any())
+        {
+            deliveriesToUpdate.ForEach(d =>
+            {
+                var endType = (BO.DeliveryEndTypes)endTypes.GetValue(rnd.Next(endTypes.Length))!;
+                var updatedDelivery = d with
+                {
+                    DeliveryEndTime = newClock,
+                    DeliveryEndType = (DO.DeliveryEndTypes)endType
+                };
+                s_dal.Delivery.Update(updatedDelivery);
+                Observers.NotifyItemUpdated(d.Id);
+            });
+            Observers.NotifyListUpdated();
+        }
     }
 }

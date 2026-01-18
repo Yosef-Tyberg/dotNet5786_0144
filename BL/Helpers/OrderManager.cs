@@ -255,6 +255,7 @@ internal static class OrderManager
         try
         {
             s_dal.Order.Create(ConvertBoToDo(newOrder));
+            Observers.NotifyListUpdated();
         }
         catch (Exception ex)
         {
@@ -312,10 +313,9 @@ internal static class OrderManager
                 FullOrderAddress: updatedOrder.FullOrderAddress
             );
 
-
-
-
             s_dal.Order.Update(doOrderToUpdate);
+            Observers.NotifyItemUpdated(updatedOrder.Id);
+            Observers.NotifyListUpdated();
         }
         catch (Exception ex)
         {
@@ -336,6 +336,8 @@ internal static class OrderManager
                 throw new BO.BlOrderAlreadyAssignedException(
                     $"Order ID '{orderId}' cannot be deleted as it is already assigned to a courier.");
             s_dal.Order.Delete(orderId);
+            Observers.NotifyListUpdated();
+            Observers.NotifyItemUpdated(orderId);
         }
         catch (Exception ex)
         {
@@ -524,6 +526,8 @@ internal static class OrderManager
                     throw new BO.BlOrderCannotBeCancelledException(
                         $"Order ID '{orderId}' cannot be cancelled as it is already in status {order.OrderStatus}.");
             }
+            Observers.NotifyItemUpdated(orderId);
+            Observers.NotifyListUpdated();
         }
         catch (Exception ex)
         {

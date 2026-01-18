@@ -94,6 +94,7 @@ internal static class CourierManager
         try
         {
             s_dal.Courier.Create(ConvertBoToDo(courier));
+            Observers.NotifyListUpdated();
         }
         catch (DO.DalAlreadyExistsException ex)
         {
@@ -112,6 +113,8 @@ internal static class CourierManager
         {
             // We might want to check if the courier has active deliveries before deleting
             s_dal.Courier.Delete(courierId);
+            Observers.NotifyListUpdated();
+            Observers.NotifyItemUpdated(courierId);
         }
         catch (DO.DalDoesNotExistException ex)
         {
@@ -154,6 +157,8 @@ internal static class CourierManager
 
             // Save the updated courier to the database.
             s_dal.Courier.Update(ConvertBoToDo(existingCourier));
+            Observers.NotifyItemUpdated(courier.Id);
+            Observers.NotifyListUpdated();
         }
         catch (DO.DalDoesNotExistException ex)
         {
@@ -198,6 +203,8 @@ internal static class CourierManager
 
             // Now, call the DAL update directly.
             s_dal.Courier.Update(ConvertBoToDo(courier));
+            Observers.NotifyItemUpdated(courierId);
+            Observers.NotifyListUpdated();
         }
         catch (DO.DalDoesNotExistException ex)
         {
@@ -504,12 +511,16 @@ internal static class CourierManager
             select new { Courier = c };
 
         // Materialize and update (required to avoid updating IEnumerable while iterating)
-        inactiveCouriersQuery
-            .ToList()
-            .ForEach(x =>
+        var couriersToUpdate = inactiveCouriersQuery.ToList();
+        if (couriersToUpdate.Any())
+        {
+            couriersToUpdate.ForEach(x =>
             {
                 Debug.WriteLine($"Deactivating courier ID {x.Courier.Id} due to inactivity.");
                 s_dal.Courier.Update(x.Courier with { Active = false });
+                Observers.NotifyItemUpdated(x.Courier.Id);
             });
+            Observers.NotifyListUpdated();
+        }
     }
 }
