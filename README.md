@@ -188,3 +188,25 @@ next add the BlaPi interfaces + the BlImplementation files.
 any complex logic should be placed in the appropriate Manager class in the Helpers folder. if it is generic and used by multiple implementations it should be placed in the Tools class
 
 finally, create a testing class in BlTest for all functionality required by the project. structure it similarly to the DalTest.Program class
+
+LINQ requirements:
+Methods Using LINQ Extension Syntax (Method Syntax)
+CourierManager.cs:
+ReadAll
+IsCourierInDelivery
+
+DeliveryManager.cs:
+ReadAll
+PickUp
+GetDeliveryByCourier
+IsOrderTaken
+
+OrderManager.cs
+ReadAll
+GetOrderTracking
+
+LINQ Query Syntax (Linq-to-Objects):
+let: Used in GetCourierDeliveryHistory, GetOpenOrders, PeriodicCouriersUpdate, and GetAvailableOrders.
+select new: Used in GetCourierDeliveryHistory, GetCourierStatistics, PeriodicCouriersUpdate, and GetAvailableOrders.
+grouping: Used in GetCourierStatistics (group d by d.DeliveryEndType).
+sorting: Used in GetCourierDeliveryHistory (orderby d.DeliveryStartTime) and GetAvailableOrders (orderby order.OrderOpenTime).

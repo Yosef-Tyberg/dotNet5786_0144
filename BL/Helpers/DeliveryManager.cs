@@ -426,7 +426,7 @@ internal static class DeliveryManager
          let expectedTime = Tools.CalculateExpectedDeliveryTime(d.DeliveryType, order!, config, d)
          where newClock >= expectedTime + riskThreshold
          select d)
-         .ToList()
+         .ToList() // (required to avoid updating IEnumerable while iterating)
          .ForEach(d =>
          {
              var endType = (BO.DeliveryEndTypes)endTypes.GetValue(rnd.Next(endTypes.Length))!;

@@ -502,7 +502,7 @@ internal static class CourierManager
             where (newClock - lastActivity) > inactivityRange
             select new { Courier = c };
 
-        // Materialize and update
+        // Materialize and update (required to avoid updating IEnumerable while iterating)
         inactiveCouriersQuery
             .ToList()
             .ForEach(x =>
