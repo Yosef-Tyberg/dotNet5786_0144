@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<config>
+  <NextOrderId>50</NextOrderId>
+  <NextDeliveryId>33</NextDeliveryId>
+  <AdminId>123456789</AdminId>
+  <AdminPassword>admin</AdminPassword>
+  <AvgCarSpeedKmh>40</AvgCarSpeedKmh>
+  <AvgMotorcycleSpeedKmh>35</AvgMotorcycleSpeedKmh>
+  <AvgBicycleSpeedKmh>15</AvgBicycleSpeedKmh>
+  <AvgWalkingSpeedKmh>5</AvgWalkingSpeedKmh>
+  <MaxDeliveryTimeSpan>7200</MaxDeliveryTimeSpan>
+  <RiskRange>600</RiskRange>
+  <InactivityRange>864000000</InactivityRange>
+  <Clock>1/18/2026 7:21:43 PM</Clock>
+  <CompanyFullAddress>Hebron Road (central), Jerusalem</CompanyFullAddress>
+  <Latitude>31.766509</Latitude>
+  <Longitude>35.225938</Longitude>
+  <MaxGeneralDeliveryDistanceKm>10</MaxGeneralDeliveryDistanceKm>
+</config>
