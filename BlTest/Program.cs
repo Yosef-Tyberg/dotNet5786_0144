@@ -729,24 +729,6 @@ internal static class Program
         Console.Write("Company Full Address (optional): ");
         string? companyAddress = Console.ReadLine();
 
-        Console.Write("Company Latitude (optional): ");
-        string? latStr = Console.ReadLine();
-        double? lat = null;
-        if(!string.IsNullOrEmpty(latStr))
-        {
-            if(!double.TryParse(latStr, out double parsedLat)) throw new BlInvalidInputException("Invalid latitude.");
-            lat = parsedLat;
-        }
-
-        Console.Write("Company Longitude (optional): ");
-        string? lonStr = Console.ReadLine();
-        double? lon = null;
-        if(!string.IsNullOrEmpty(lonStr))
-        {
-            if(!double.TryParse(lonStr, out double parsedLon)) throw new BlInvalidInputException("Invalid longitude.");
-            lon = parsedLon;
-        }
-
         var config = new Config
         {
             AdminId = adminId,
