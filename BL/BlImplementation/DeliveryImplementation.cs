@@ -40,4 +40,15 @@ internal sealed class DeliveryImplementation : IDelivery
     {
         return DeliveryManager.GetDeliveryByCourier(courierId);
     }
+
+    #region Stage 5 
+    public void AddObserver(Action listObserver) =>
+       DeliveryManager.Observers.AddListObserver(listObserver); //stage 5 
+    public void AddObserver(int id, Action observer) =>
+        DeliveryManager.Observers.AddObserver(id, observer); //stage 5 
+    public void RemoveObserver(Action listObserver) =>
+        DeliveryManager.Observers.RemoveListObserver(listObserver); //stage 5 
+    public void RemoveObserver(int id, Action observer) =>
+        DeliveryManager.Observers.RemoveObserver(id, observer); //stage 5 
+    #endregion Stage 5 
 }

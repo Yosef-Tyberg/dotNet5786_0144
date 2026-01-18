@@ -17,6 +17,7 @@ namespace Helpers;
 internal static class CourierManager
 {
     private static DalApi.IDal s_dal = DalApi.Factory.Get;
+    internal static ObserverManager Observers = new();
 
     /// <summary>
     /// Validates a business layer Courier entity.

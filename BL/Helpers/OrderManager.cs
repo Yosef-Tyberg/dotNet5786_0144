@@ -15,6 +15,7 @@ namespace Helpers;
 internal static class OrderManager
 {
     private static DalApi.IDal s_dal = DalApi.Factory.Get;
+    internal static ObserverManager Observers = new();
 
     /// <summary>
     /// Validates a business layer Order entity.

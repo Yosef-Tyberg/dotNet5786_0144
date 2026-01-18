@@ -3,7 +3,7 @@ namespace BlApi;
 /// <summary>
 /// Defines the interface for managing Order entities in the business logic layer.
 /// </summary>
-public interface IOrder
+public interface IOrder : IObservable
 {
     #region Administrator Methods
 

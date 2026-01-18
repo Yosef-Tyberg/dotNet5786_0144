@@ -4,7 +4,7 @@ namespace BlApi;
 /// Defines the interface for managing Courier entities in the business logic layer.
 /// Covers actions for both administrators and couriers.
 /// </summary>
-public interface ICourier
+public interface ICourier : IObservable
 {
     #region Administrator Methods
 

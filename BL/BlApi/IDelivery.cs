@@ -4,7 +4,7 @@ namespace BlApi;
 /// Defines the interface for managing active Delivery entities in the business logic layer.
 /// A Delivery is created when a Courier takes an Order.
 /// </summary>
-public interface IDelivery
+public interface IDelivery : IObservable
 {
     #region Administrator Methods
 

@@ -15,7 +15,7 @@ namespace Helpers;
 internal static class DeliveryManager
 {
     private static DalApi.IDal s_dal = DalApi.Factory.Get;
-
+    internal static ObserverManager Observers = new();
     public static IEnumerable<BO.Delivery> ReadAll(Func<DO.Delivery, bool>? filter = null)
     {
         try
