@@ -23,6 +23,7 @@ public class CourierTests
         // 1. Wipe everything
         dal.ResetDB();
         Tools.ClearCaches();
+        Tools.SeedCoordinateCache();
 
         // 2. Add required test IDs DIRECTLY to DAL (bypasses BL validation triggers)
         
@@ -368,18 +369,19 @@ public class CourierTests
     [TestMethod]
     public void Test_IsOrderInCourierRange_Logic()
     {
+        var dal = DalApi.Factory.Get;
         // Arrange
-        var config = _bl.Admin.GetConfig();
+        var config = dal.Config;
         double lat = (double)config.Latitude!;
         double lon = (double)config.Longitude!;
         
         var courier = new Courier { PersonalMaxDeliveryDistance = 10 }; // 10 km
         
         // Create order ~0.5km away (0.005 deg lat is approx 0.55km)
-        var orderNear = new Order { Latitude = lat + 0.005, Longitude = lon }; 
+        var orderNear = new Order { FullOrderAddress = "Ben Yehuda Street, Jerusalem" }; 
         
         // Create order ~110km away (1.0 deg lat is approx 111km)
-        var orderFar = new Order { Latitude = lat + 1.0, Longitude = lon };
+        var orderFar = new Order { FullOrderAddress = "Test Far Address" };
 
         // Act & Assert
         Assert.IsTrue(CourierManager.IsOrderInCourierRange(orderNear, courier, lat, lon), "Order within distance should be allowed.");

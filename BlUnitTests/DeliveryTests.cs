@@ -126,7 +126,7 @@ public class DeliveryTests
         courier.PersonalMaxDeliveryDistance = 0.1;
         _bl.Courier.Update(courier);
 
-        var order = CreateAndGetTestOrder("Far Away");
+        var order = CreateAndGetTestOrder("Far Away", "Test Far Address");
         _bl.Delivery.PickUp(TEST_COURIER_ID, order.Id);
     }
 
@@ -213,14 +213,14 @@ public class DeliveryTests
 
     #region Private Helpers
 
-    private Order CreateAndGetTestOrder(string customerName)
+    private Order CreateAndGetTestOrder(string customerName, string address = "Hebron Road (central), Jerusalem")
     {
         string validName = customerName.Contains(" ") ? customerName : $"{customerName} Test";
         var newOrder = new Order
         {
             CustomerFullName = validName,
             CustomerMobile = "0501112222",
-            FullOrderAddress = "Hebron Road (central), Jerusalem", // Matched in SeedCoordinateCache
+            FullOrderAddress = address, // Matched in SeedCoordinateCache
             OrderType = OrderTypes.Pizza,
             VerbalDescription = "Valid Description",
             Weight = 5,

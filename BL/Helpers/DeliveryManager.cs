@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -144,7 +144,7 @@ internal static class DeliveryManager
     /// <returns>The calculated distance.</returns>
     private static double CalculateActualDistance(DO.Delivery delivery, DO.Order order)
     {
-        var config = AdminManager.GetConfig();
+        var config = s_dal.Config;
         return (BO.DeliveryTypes)delivery.DeliveryType switch
         {
             BO.DeliveryTypes.Car or BO.DeliveryTypes.Motorcycle => Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude),
@@ -224,11 +224,11 @@ internal static class DeliveryManager
             {
                 boDelivery.DeliveryDuration = (TimeSpan)(boDelivery.DeliveryEndTime - boDelivery.DeliveryStartTime);
                 boDelivery.AverageSpeed = boDelivery.ActualDistance is not null && boDelivery.DeliveryDuration.TotalHours > 0 
-                    ? (double)boDelivery.ActualDistance / boDelivery.DeliveryDuration.TotalHours 
+                    ? Math.Round((double)boDelivery.ActualDistance / boDelivery.DeliveryDuration.TotalHours, 2)
                     : 0;
             }
             
-            var config = AdminManager.GetConfig();
+            var config = s_dal.Config;
             
             boDelivery.MaximumDeliveryTime = order.OrderOpenTime + config.MaxDeliveryTimeSpan;
 
@@ -349,7 +349,7 @@ internal static class DeliveryManager
         var doOrder = s_dal.Order.Read(orderId)
             ?? throw new BO.BlDoesNotExistException($"Order with ID {orderId} not found.");
 
-        var config = AdminManager.GetConfig();
+        var config = s_dal.Config;
 
         // Re-implement IsOrderInCourierRange logic with DOs
         if (doCourier.PersonalMaxDeliveryDistance.HasValue)
@@ -376,7 +376,7 @@ internal static class DeliveryManager
         );
         
         // Call the helper with the already-fetched DO.Order
-        double distance = CalculateActualDistance(tempDelivery, doOrder);
+        double distance = Math.Round(CalculateActualDistance(tempDelivery, doOrder), 2);
 
         var newDelivery = tempDelivery with { ActualDistance = distance };
 
@@ -410,7 +410,7 @@ internal static class DeliveryManager
     /// <param name="newClock"></param>
     public static void PeriodicDeliveriesUpdate(DateTime oldClock, DateTime newClock)
     {
-        var config = AdminManager.GetConfig();
+        var config = s_dal.Config;
         var riskThreshold = config.RiskRange / 2;
         var rnd = new Random();
         var endTypes = Enum.GetValues(typeof(BO.DeliveryEndTypes));

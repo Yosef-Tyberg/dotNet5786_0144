@@ -1,4 +1,4 @@
-﻿﻿using DalApi;
+﻿using DalApi;
 using DO;
 
 namespace DalTest;
@@ -96,6 +96,8 @@ public static class Initialization
 
         // 5. Create Deliveries (assign courier->order respecting distances and no overlapping)
         CreateDeliveries(s_dal, createdCouriers, createdOrders);
+
+        Console.WriteLine("Dates for couriers were assigned to reasonably recent dates. to avoid automatic deactivation, activationRange has been initialized high");
     }
 
     // -----------------------------
@@ -124,7 +126,7 @@ public static class Initialization
         s_dal.Config.MaxGeneralDeliveryDistanceKm = 10.0; // global max radius
         s_dal.Config.MaxDeliveryTimeSpan = TimeSpan.FromHours(2);
         s_dal.Config.RiskRange = TimeSpan.FromMinutes(10);
-        s_dal.Config.InactivityRange = TimeSpan.FromMinutes(30);
+        s_dal.Config.InactivityRange = TimeSpan.FromDays(10000);
 
         // set test clock to now (or any fixed time)
         s_dal.Config.Clock = DateTime.Now;

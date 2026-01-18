@@ -24,16 +24,6 @@ public class Order
     public string VerbalDescription { get; set; }
 
     /// <summary>
-    /// Latitude coordinate of the delivery destination.
-    /// </summary>
-    public double Latitude { get; set; }
-
-    /// <summary>
-    /// Longitude coordinate of the delivery destination.
-    /// </summary>
-    public double Longitude { get; set; }
-
-    /// <summary>
     /// Full name of the customer making the order.
     /// </summary>
     public string CustomerFullName { get; set; }

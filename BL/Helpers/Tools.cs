@@ -48,6 +48,7 @@ internal static class Tools
         s_coordinateCache.TryAdd("Knesset area, Jerusalem", (31.776670, 35.205280));
         s_coordinateCache.TryAdd("Jaffa Road 2, Jerusalem", (31.784637, 35.215046));
         s_coordinateCache.TryAdd("King George Street 1, Jerusalem", (31.782000, 35.218200));
+        s_coordinateCache.TryAdd("Test Far Address", (32.500000, 35.000000)); // Approx Haifa/North
     }
     #region Validation Methods
 
@@ -415,7 +416,7 @@ internal static class Tools
     /// <param name="order">The associated order.</param>
     /// <returns>The calculated expected delivery time.</returns>
     /// <exception cref="BO.BlMissingPropertyException">Thrown when calculation fails.</exception>
-    internal static DateTime CalculateExpectedDeliveryTime(DO.DeliveryTypes deliveryType, DO.Order order, BO.Config config, DO.Delivery? activeDelivery = null)
+    internal static DateTime CalculateExpectedDeliveryTime(DO.DeliveryTypes deliveryType, DO.Order order, DalApi.IConfig config, DO.Delivery? activeDelivery = null)
     {
         // Determine the start time: if an active delivery exists for the order, use its DeliveryStartTime; otherwise, use AdminManager.Now 
         DateTime startTime = activeDelivery?.DeliveryStartTime ?? AdminManager.Now;
@@ -435,7 +436,7 @@ internal static class Tools
         throw new BO.BlMissingPropertyException("Average speed must be >= 1 km/h");
     }
 
-    private static (double distance, double speed) GetDistanceAndSpeed(DO.DeliveryTypes deliveryType, DO.Order order, BO.Config config)
+    private static (double distance, double speed) GetDistanceAndSpeed(DO.DeliveryTypes deliveryType, DO.Order order, DalApi.IConfig config)
     {
         double distance;
         double speed;
@@ -463,7 +464,7 @@ internal static class Tools
         return (distance, speed);
     }
 
-    internal static BO.ScheduleStatus DetermineScheduleStatus(DO.Order order, BO.Config config, DO.Delivery? activeDelivery = null)
+    internal static BO.ScheduleStatus DetermineScheduleStatus(DO.Order order, DalApi.IConfig config, DO.Delivery? activeDelivery = null)
     {
         var deliveryType = GetFastestType(config);
         
@@ -484,7 +485,7 @@ internal static class Tools
         return BO.ScheduleStatus.OnTime;
     }
 
-    internal static DO.DeliveryTypes GetFastestType(BO.Config config)
+    internal static DO.DeliveryTypes GetFastestType(DalApi.IConfig config)
     {
         // Explicitly mapping DO types to speeds from the BO config
         var speeds = new Dictionary<DO.DeliveryTypes, double>

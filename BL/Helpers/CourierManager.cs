@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -265,7 +265,7 @@ internal static class CourierManager
             };
 
             boCourier.EmploymentDuration = AdminManager.Now - boCourier.EmploymentStartTime;
-            boCourier.YearsEmployed = boCourier.EmploymentDuration.TotalDays / 365.25;
+            boCourier.YearsEmployed = Math.Round(boCourier.EmploymentDuration.TotalDays / 365.25, 2);
             
             return boCourier;
         }
@@ -320,7 +320,7 @@ internal static class CourierManager
         var orderIds = doDeliveries.Select(d => d.OrderId).Distinct();
         var doOrders = s_dal.Order.ReadAll(o => orderIds.Contains(o.Id)).ToDictionary(o => o.Id);
         
-        var config = AdminManager.GetConfig();
+        var config = s_dal.Config;
 
         // 4. Create BO.DeliveryInList using Query Syntax (Demonstrates: Sorting, Select New, Let)
         return from d in doDeliveries
@@ -370,7 +370,7 @@ internal static class CourierManager
 
 
         // 4. Filter by the courier's range, if they have one defined.
-        var config = AdminManager.GetConfig();
+        var config = s_dal.Config;
         var hqLatitude = (double)(config.Latitude ?? 0);
         var hqLongitude = (double)(config.Longitude ?? 0);
 
@@ -407,7 +407,8 @@ internal static class CourierManager
         {
             return true;
         }
-        var distance = Tools.GetAerialDistance(hqLatitude, hqLongitude, order.Latitude, order.Longitude);
+        var (lat, lon) = Tools.GetCoordinates(order.FullOrderAddress!);
+        var distance = Tools.GetAerialDistance(hqLatitude, hqLongitude, lat, lon);
         return distance <= courier.PersonalMaxDeliveryDistance.Value;
     }
 
@@ -447,7 +448,7 @@ internal static class CourierManager
         }
 
         // 5. Calculate all statistics directly from the DO collections.
-        var config = AdminManager.GetConfig();
+        var config = s_dal.Config;
         var totalDeliveries = completedDoDeliveries.Count;
 
         var onTimeDeliveries = completedDoDeliveries.Count(d =>
@@ -468,11 +469,11 @@ internal static class CourierManager
         return new BO.CourierStatistics
         {
             TotalDeliveries = totalDeliveries,
-            TotalDistance = completedDoDeliveries.Sum(d => d.ActualDistance ?? 0),
+            TotalDistance = Math.Round(completedDoDeliveries.Sum(d => d.ActualDistance ?? 0), 2),
             AverageDeliveryTime = TimeSpan.FromMinutes(deliveryDurations.Any() ? deliveryDurations.Average() : 0),
             OnTimeDeliveries = onTimeDeliveries,
             LateDeliveries = totalDeliveries - onTimeDeliveries,
-            SuccessRate = totalDeliveries > 0 ? (double)successfulDeliveries / totalDeliveries * 100 : 0
+            SuccessRate = totalDeliveries > 0 ? Math.Round((double)successfulDeliveries / totalDeliveries * 100, 2) : 0
         };
     }
 
@@ -483,7 +484,7 @@ internal static class CourierManager
     /// </summary>
     public static void PeriodicCouriersUpdate(DateTime oldClock, DateTime newClock)
     {
-        var config = AdminManager.GetConfig();
+        var config = s_dal.Config;
         var inactivityRange = config.InactivityRange; //
 
         // Use Query Syntax for the complex correlation logic (Demonstrates: Join Into, Let, Where, Select)

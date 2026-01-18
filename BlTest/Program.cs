@@ -106,17 +106,24 @@ internal static class Program
 
             if (!int.TryParse(Console.ReadLine(), out int choice)) { Console.WriteLine("Invalid choice."); continue; }
 
-            switch (choice)
+            try
             {
-                case 1: GetOrderList(); break;
-                case 2: GetOrderDetails(); break;
-                case 3: AddNewOrder(); break;
-                case 4: UpdateOrder(); break;
-                case 5: DeleteOrder(); break;
-                case 6: GetOrderTracking(); break;
-                case 7: CancelOrder(); break;
-                case 0: return;
-                default: Console.WriteLine("Unknown choice."); break;
+                switch (choice)
+                {
+                    case 1: GetOrderList(); break;
+                    case 2: GetOrderDetails(); break;
+                    case 3: AddNewOrder(); break;
+                    case 4: UpdateOrder(); break;
+                    case 5: DeleteOrder(); break;
+                    case 6: GetOrderTracking(); break;
+                    case 7: CancelOrder(); break;
+                    case 0: return;
+                    default: Console.WriteLine("Unknown choice."); break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
             }
         }
     }
@@ -138,17 +145,24 @@ internal static class Program
 
             if (!int.TryParse(Console.ReadLine(), out int choice)) { Console.WriteLine("Invalid choice."); continue; }
             
-            switch (choice)
+            try
             {
-                case 1: GetCourierList(); break;
-                case 2: GetCourierDetails(); break;
-                case 3: AddNewCourier(); break;
-                case 4: UpdateCourier(); break;
-                case 5: DeleteCourier(); break;
-                case 6: GetCourierDeliveryHistory(); break;
-                case 7: GetCourierStatistics(); break;
-                case 0: return;
-                default: Console.WriteLine("Unknown choice."); break;
+                switch (choice)
+                {
+                    case 1: GetCourierList(); break;
+                    case 2: GetCourierDetails(); break;
+                    case 3: AddNewCourier(); break;
+                    case 4: UpdateCourier(); break;
+                    case 5: DeleteCourier(); break;
+                    case 6: GetCourierDeliveryHistory(); break;
+                    case 7: GetCourierStatistics(); break;
+                    case 0: return;
+                    default: Console.WriteLine("Unknown choice."); break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
             }
         }
     }
@@ -164,12 +178,19 @@ internal static class Program
             Console.Write("Enter your choice: ");
             if (!int.TryParse(Console.ReadLine(), out int choice)) { Console.WriteLine("Invalid choice."); continue; }
 
-            switch (choice)
+            try
             {
-                case 1: GetDeliveryList(); break;
-                case 2: GetDeliveryDetails(); break;
-                case 0: return;
-                default: Console.WriteLine("Unknown choice."); break;
+                switch (choice)
+                {
+                    case 1: GetDeliveryList(); break;
+                    case 2: GetDeliveryDetails(); break;
+                    case 0: return;
+                    default: Console.WriteLine("Unknown choice."); break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
             }
         }
     }
@@ -190,16 +211,23 @@ internal static class Program
 
             if (!int.TryParse(Console.ReadLine(), out int choice)) { Console.WriteLine("Invalid choice."); continue; }
             
-            switch (choice)
+            try
             {
-                case 1: UpdateMyDetails(); break;
-                case 2: GetAvailableOrdersForCourier(); break;
-                case 3: GetOpenOrdersForCourier(); break;
-                case 4: PickUpOrder(); break;
-                case 5: FinalizeDelivery(); break;
-                case 6: GetMyCurrentDelivery(); break;
-                case 0: return;
-                default: Console.WriteLine("Unknown choice."); break;
+                switch (choice)
+                {
+                    case 1: UpdateMyDetails(); break;
+                    case 2: GetAvailableOrdersForCourier(); break;
+                    case 3: GetOpenOrdersForCourier(); break;
+                    case 4: PickUpOrder(); break;
+                    case 5: FinalizeDelivery(); break;
+                    case 6: GetMyCurrentDelivery(); break;
+                    case 0: return;
+                    default: Console.WriteLine("Unknown choice."); break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
             }
         }
     }
@@ -219,16 +247,23 @@ internal static class Program
             Console.Write("Enter your choice: ");
             if (!int.TryParse(Console.ReadLine(), out int choice)) { Console.WriteLine("Invalid choice."); continue; }
             
-            switch (choice)
+            try
             {
-                case 1: Console.WriteLine($"Current system time: {s_bl.Admin.GetClock()}"); break;
-                case 2: AdvanceClock(); break;
-                case 3: Console.WriteLine(s_bl.Admin.GetConfig()); break;
-                case 4: SetConfig(); break;
-                case 5: s_bl.Admin.InitializeDB(); Console.WriteLine("Database initialized."); break;
-                case 6: s_bl.Admin.ResetDB(); Console.WriteLine("Database reset."); break;
-                case 0: return;
-                default: Console.WriteLine("Unknown choice."); break;
+                switch (choice)
+                {
+                    case 1: Console.WriteLine($"Current system time: {s_bl.Admin.GetClock()}"); break;
+                    case 2: AdvanceClock(); break;
+                    case 3: Console.WriteLine(s_bl.Admin.GetConfig()); break;
+                    case 4: SetConfig(); break;
+                    case 5: s_bl.Admin.InitializeDB(); Console.WriteLine("Database initialized."); break;
+                    case 6: s_bl.Admin.ResetDB(); Console.WriteLine("Database reset."); break;
+                    case 0: return;
+                    default: Console.WriteLine("Unknown choice."); break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
             }
         }
     }
@@ -255,18 +290,12 @@ internal static class Program
 
     private static void AddNewOrder()
     {
-        Console.Write("Enter Order Type (e.g., Pizza, Falafel): ");
+        Console.Write($"Enter Order Type ({string.Join("/", Enum.GetNames(typeof(OrderTypes)))}): ");
         if (!Enum.TryParse<OrderTypes>(Console.ReadLine(), true, out var orderType) || !Enum.IsDefined(orderType)) throw new BlInvalidInputException("Invalid Order Type.");
 
         Console.Write("Enter Verbal Description: ");
         string? verbalDescription = Console.ReadLine();
 
-        Console.Write("Enter Latitude: ");
-        if (!double.TryParse(Console.ReadLine(), out double latitude)) throw new BlInvalidInputException("Invalid latitude.");
-
-        Console.Write("Enter Longitude: ");
-        if (!double.TryParse(Console.ReadLine(), out double longitude)) throw new BlInvalidInputException("Invalid longitude.");
-        
         Console.Write("Enter Customer Full Name: ");
         string? customerFullName = Console.ReadLine();
         
@@ -297,8 +326,6 @@ internal static class Program
         {
             OrderType = orderType,
             VerbalDescription = verbalDescription,
-            Latitude = latitude,
-            Longitude = longitude,
             CustomerFullName = customerFullName,
             CustomerMobile = customerMobile,
             FullOrderAddress = fullOrderAddress,
@@ -320,7 +347,7 @@ internal static class Program
 
         Console.WriteLine("Enter new details (leave blank to keep current value):");
 
-        Console.Write($"Order Type ({orderToUpdate.OrderType}): ");
+        Console.Write($"Order Type ({orderToUpdate.OrderType}) ({string.Join("/", Enum.GetNames(typeof(OrderTypes)))}): ");
         string? orderTypeStr = Console.ReadLine();
         if (!string.IsNullOrEmpty(orderTypeStr))
         {
@@ -332,22 +359,6 @@ internal static class Program
         string? newVerbal = Console.ReadLine();
         if (!string.IsNullOrEmpty(newVerbal)) orderToUpdate.VerbalDescription = newVerbal;
         
-        Console.Write($"Latitude ({orderToUpdate.Latitude}): ");
-        string? latStr = Console.ReadLine();
-        if (!string.IsNullOrEmpty(latStr))
-        {
-            if (!double.TryParse(latStr, out double newLat)) throw new BlInvalidInputException("Invalid latitude.");
-            orderToUpdate.Latitude = newLat;
-        }
-
-        Console.Write($"Longitude ({orderToUpdate.Longitude}): ");
-        string? lonStr = Console.ReadLine();
-        if (!string.IsNullOrEmpty(lonStr))
-        {
-            if (!double.TryParse(lonStr, out double newLon)) throw new BlInvalidInputException("Invalid longitude.");
-            orderToUpdate.Longitude = newLon;
-        }
-
         Console.Write($"Customer Full Name ({orderToUpdate.CustomerFullName}): ");
         string? newCustomerFullName = Console.ReadLine();
         if (!string.IsNullOrEmpty(newCustomerFullName)) orderToUpdate.CustomerFullName = newCustomerFullName;
@@ -465,7 +476,7 @@ internal static class Program
         string? maxDistStr = Console.ReadLine();
         if (!double.TryParse(maxDistStr, out double maxDistance)) throw new BlInvalidInputException("Invalid distance.");
         
-        Console.Write("Enter Delivery Type (Car, Motrcycle, Bicycle, OnFoot): ");
+        Console.Write($"Enter Delivery Type ({string.Join("/", Enum.GetNames(typeof(DeliveryTypes)))}): ");
         if (!Enum.TryParse<DeliveryTypes>(Console.ReadLine(), true, out var deliveryType) || !Enum.IsDefined(deliveryType)) throw new BlInvalidInputException("Invalid Delivery Type.");
 
         var newCourier = new Courier
@@ -514,7 +525,7 @@ internal static class Program
             courierToUpdate.PersonalMaxDeliveryDistance = newMaxDist;
         }
 
-        Console.Write($"Delivery Type ({courierToUpdate.DeliveryType}): ");
+        Console.Write($"Delivery Type ({courierToUpdate.DeliveryType}) ({string.Join("/", Enum.GetNames(typeof(DeliveryTypes)))}): ");
         string? delTypeStr = Console.ReadLine();
         if (!string.IsNullOrEmpty(delTypeStr))
         {
@@ -595,7 +606,7 @@ internal static class Program
             maxDistance = newMaxDist;
         }
 
-        Console.Write($"Delivery Type: ");
+        Console.Write($"Delivery Type ({string.Join("/", Enum.GetNames(typeof(DeliveryTypes)))}): ");
         string? delTypeStr = Console.ReadLine();
         DeliveryTypes? deliveryType = null;
         if(!string.IsNullOrEmpty(delTypeStr))
@@ -650,7 +661,7 @@ internal static class Program
         Console.Write("Enter your Courier ID: ");
         if (!int.TryParse(Console.ReadLine(), out int courierId)) throw new BlInvalidInputException("Invalid Courier ID.");
 
-        Console.Write("How did the delivery end? (Delivered, CustomerUnavailable, Refused, Other): ");
+        Console.Write($"How did the delivery end? ({string.Join("/", Enum.GetNames(typeof(DeliveryEndTypes)))}): ");
         if (!Enum.TryParse<DeliveryEndTypes>(Console.ReadLine(), true, out var endType) || !Enum.IsDefined(endType)) throw new BlInvalidInputException("Invalid Delivery End Type.");
 
         s_bl.Delivery.Deliver(courierId, endType);
@@ -669,7 +680,7 @@ internal static class Program
     // --- System Actions ---
     private static void AdvanceClock()
     {
-        Console.Write("Enter hours to advance the clock: ");
+        Console.Write("Enter hours to advance the clock (decimals allowed, e.g. 0.5 for 30 mins): ");
         if (!double.TryParse(Console.ReadLine(), out double hours)) throw new BlInvalidInputException("Invalid number of hours.");
         s_bl.Admin.ForwardClock(TimeSpan.FromHours(hours));
         Console.WriteLine($"Clock advanced. New time: {s_bl.Admin.GetClock()}");
@@ -748,9 +759,7 @@ internal static class Program
             MaxDeliveryTimeSpan = TimeSpan.FromHours(maxHours),
             RiskRange = TimeSpan.FromHours(riskHours),
             InactivityRange = TimeSpan.FromHours(inactiveHours),
-            CompanyFullAddress = string.IsNullOrEmpty(companyAddress) ? null : companyAddress,
-            Latitude = lat,
-            Longitude = lon
+            CompanyFullAddress = string.IsNullOrEmpty(companyAddress) ? null : companyAddress
         };
         s_bl.Admin.SetConfig(config);
         Console.WriteLine("Configuration updated successfully.");

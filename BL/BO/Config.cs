@@ -41,12 +41,6 @@ public class Config
     /// <inheritdoc />
     public string? CompanyFullAddress { get; set; }
 
-    /// <inheritdoc />
-    public double? Latitude { get; set; }
-
-    /// <inheritdoc />
-    public double? Longitude { get; set; }
-
     public override string ToString() => Helpers.Tools.ToStringProperty(this);
 
 }

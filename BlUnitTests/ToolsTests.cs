@@ -20,6 +20,7 @@ public class ToolsTests
     private readonly IBl bl = BlApi.Factory.Get();
     private readonly IDal dl = DalApi.Factory.Get;
 
+    private readonly DalApi.IConfig config = DalApi.Factory.Get.Config;
     [TestInitialize]
     public void Init()
     {
@@ -135,14 +136,11 @@ public class ToolsTests
     [TestMethod]
     public void Test_GetFastestType_ReturnsCorrectType()
     {
-        var config = new BO.Config
-        {
-            AvgCarSpeedKmh = 50,
-            AvgMotorcycleSpeedKmh = 100, // Fastest
-            AvgBicycleSpeedKmh = 20,
-            AvgWalkingSpeedKmh = 5
-        };
 
+        config.AvgCarSpeedKmh = 50;
+        config.AvgMotorcycleSpeedKmh = 100; // Fastest
+        config.AvgBicycleSpeedKmh = 20;
+        config.AvgWalkingSpeedKmh = 5;
         var result = Tools.GetFastestType(config);
         Assert.AreEqual(DO.DeliveryTypes.Motorcycle, result);
     }
@@ -150,7 +148,6 @@ public class ToolsTests
     [TestMethod]
     public void Test_CalculateExpectedDeliveryTime_ReturnsValidTime()
     {
-        var config = AdminManager.GetConfig();
         var order = new DO.Order
         {
             Id = 1,
@@ -169,7 +166,6 @@ public class ToolsTests
         var order = new BO.Order { Id = 0, CustomerFullName = "TestIII I", CustomerMobile = "0500000000", FullOrderAddress = "Ben Yehuda Street, Jerusalem", VerbalDescription = "Desc", Volume = 1, Weight = 1, Height = 1, Width = 1, OrderOpenTime = AdminManager.Now };
         bl.Order.Create(order);
         var id =dl.Order.ReadAll(o => o.CustomerFullName == "TestIII I").First();
-        var config = bl.Admin.GetConfig();
         var status = Tools.DetermineScheduleStatus(id, config);
         Assert.AreEqual(ScheduleStatus.OnTime, status);
     }
@@ -178,7 +174,6 @@ public class ToolsTests
     public void Test_ScheduleStatus_ChangesOverTime()
     {
         // 1. Arrange: Setup dedicated data to avoid seed collisions
-        var config = bl.Admin.GetConfig();
         int testCourierId = 777777777;
 
         // Create a guaranteed active courier who won't be deactivated

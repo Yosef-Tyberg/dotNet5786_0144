@@ -56,7 +56,7 @@ internal static class OrderManager
         // Validate address validity
         Tools.GetCoordinates(boOrder.FullOrderAddress);
 
-        var config = AdminManager.GetConfig();
+        var config = s_dal.Config;
         var distance = Tools.GetAerialDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), lat, lon);
         if (distance > config.MaxGeneralDeliveryDistanceKm)
             throw new BO.BlInvalidInputException($"Order location is too far from the company's location. a maximum of {config.MaxGeneralDeliveryDistanceKm}km is allowed");
@@ -72,16 +72,14 @@ internal static class OrderManager
     {
         var (lat, lon) = Tools.GetCoordinates(boOrder.FullOrderAddress!);
         OrderValidation(boOrder, lat, lon);
-        boOrder.Latitude = lat;
-        boOrder.Longitude = lon;
         try
         {
             return new DO.Order(
                 Id: boOrder.Id,
                 OrderType: (DO.OrderTypes)boOrder.OrderType,
                 VerbalDescription: boOrder.VerbalDescription,
-                Latitude: boOrder.Latitude,
-                Longitude: boOrder.Longitude,
+                Latitude: lat,
+                Longitude: lon,
                 CustomerFullName: boOrder.CustomerFullName,
                 CustomerMobile: boOrder.CustomerMobile,
                 Volume: boOrder.Volume,
@@ -126,8 +124,6 @@ internal static class OrderManager
                 Id = doOrder.Id,
                 OrderType = (BO.OrderTypes)doOrder.OrderType,
                 VerbalDescription = doOrder.VerbalDescription,
-                Latitude = doOrder.Latitude,
-                Longitude = doOrder.Longitude,
                 CustomerFullName = doOrder.CustomerFullName,
                 CustomerMobile = doOrder.CustomerMobile,
                 Volume = doOrder.Volume,
@@ -138,7 +134,7 @@ internal static class OrderManager
                 OrderOpenTime = doOrder.OrderOpenTime,
                 FullOrderAddress = doOrder.FullOrderAddress,
                 TimeOpenedDuration = AdminManager.Now - doOrder.OrderOpenTime,
-                PackageDensity = doOrder.Volume > 0 ? doOrder.Weight / doOrder.Volume : 0
+                PackageDensity = doOrder.Volume > 0 ? Math.Round(doOrder.Weight / doOrder.Volume, 2) : 0
             };
             
             boOrder.OrderStatus = DetermineOrderStatus(deliveries);
@@ -266,6 +262,9 @@ internal static class OrderManager
     
     public static void Update(BO.Order updatedOrder)
     {
+        if (updatedOrder == null)
+            throw new BO.BlInvalidNullInputException("Order object cannot be null.");
+
         try
         {
             // Verify that the order does not have a delivery in progress - OPTIMIZED
@@ -280,7 +279,9 @@ internal static class OrderManager
                 throw new BO.BlDeliveryAlreadyClosedException($"Order {updatedOrder.Id} cannot be updated because it is {status}.");
             
             // Read the original order from DAL to preserve immutable properties
-            DO.Order originalOrder = s_dal.Order.Read(updatedOrder.Id);
+            DO.Order? originalOrder = s_dal.Order.Read(updatedOrder.Id);
+            if (originalOrder == null)
+                throw new BO.BlDoesNotExistException($"Order with ID {updatedOrder.Id} not found.");
 
             var (lat, lon) = (originalOrder.Latitude, originalOrder.Longitude);
             // If address changed, get new coordinates
@@ -378,7 +379,7 @@ internal static class OrderManager
             var availableForCourier = openOrders; // Type is inferred
             if (doCourier.PersonalMaxDeliveryDistance != null)
             {
-                var config = AdminManager.GetConfig();
+                var config = s_dal.Config;
                 availableForCourier = openOrders.Where(x =>
                     Tools.GetAerialDistance(
                         (double)(config.Latitude ?? 0),
@@ -412,7 +413,7 @@ internal static class OrderManager
         DO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d != null && d.DeliveryEndTime == null);
 
         // Get config once at the top
-        var config = AdminManager.GetConfig();
+        var config = s_dal.Config;
 
         // Get Assigned Courier (only if InProgress) - OPTIMIZED
         BO.CourierInList? assignedCourier = null;

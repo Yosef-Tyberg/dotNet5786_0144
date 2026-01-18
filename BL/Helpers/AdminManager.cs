@@ -1,4 +1,4 @@
-﻿﻿//using BO;
+﻿﻿﻿﻿//using BO;
 using System.Runtime.CompilerServices;
 
 namespace Helpers;
@@ -68,9 +68,7 @@ internal static class AdminManager //stage 4
         MaxDeliveryTimeSpan = s_dal.Config.MaxDeliveryTimeSpan,
         RiskRange = s_dal.Config.RiskRange,
         InactivityRange = s_dal.Config.InactivityRange,
-        CompanyFullAddress = s_dal.Config.CompanyFullAddress,
-        Latitude = s_dal.Config.Latitude,
-        Longitude = s_dal.Config.Longitude
+        CompanyFullAddress = s_dal.Config.CompanyFullAddress
     };
 
     /// <summary>
@@ -85,9 +83,9 @@ internal static class AdminManager //stage 4
             throw new BO.BlInvalidInputException("Admin ID must be positive.");
         if (string.IsNullOrWhiteSpace(configuration.AdminPassword))
             throw new BO.BlInvalidInputException("Admin password cannot be empty.");
-        if (configuration.AvgCarSpeedKmh <= 0 || configuration.AvgMotorcycleSpeedKmh <= 0 || 
-            configuration.AvgBicycleSpeedKmh <= 0 || configuration.AvgWalkingSpeedKmh <= 0)
-            throw new BO.BlInvalidInputException("Average speeds must be positive.");
+        if (configuration.AvgCarSpeedKmh < 1 || configuration.AvgMotorcycleSpeedKmh < 1 || 
+            configuration.AvgBicycleSpeedKmh < 1 || configuration.AvgWalkingSpeedKmh < 1)
+            throw new BO.BlInvalidInputException("Average speeds must be at least 1 km/h.");
         if (configuration.MaxGeneralDeliveryDistanceKm.HasValue && configuration.MaxGeneralDeliveryDistanceKm <= 0)
             throw new BO.BlInvalidInputException("Max general delivery distance must be positive.");
         if (configuration.MaxDeliveryTimeSpan <= TimeSpan.Zero)
