@@ -20,7 +20,39 @@ static class DalConfig
 
     static DalConfig()
     {
-        XElement dalConfig = XElement.Load(@"..\xml\dal-config.xml") ??
+        // Try multiple path strategies
+        string configPath = null!;
+        
+        // Strategy 1: Check relative to BaseDirectory with up-navigation
+        var basePath = AppDomain.CurrentDomain.BaseDirectory;
+        var candidates = new[]
+        {
+            Path.Combine(basePath, @"..\..\..\..\xml\dal-config.xml"),
+            Path.Combine(basePath, @"..\..\..\xml\dal-config.xml"),
+            Path.Combine(basePath, @"..\..\xml\dal-config.xml"),
+            Path.Combine(basePath, @"..\xml\dal-config.xml"),
+            Path.Combine(basePath, "xml", "dal-config.xml"),
+            Path.Combine(Directory.GetCurrentDirectory(), "xml", "dal-config.xml"),
+            Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "xml", "dal-config.xml"),
+        };
+
+        foreach (var candidate in candidates)
+        {
+            var fullPath = Path.GetFullPath(candidate);
+            if (File.Exists(fullPath))
+            {
+                configPath = fullPath;
+                break;
+            }
+        }
+
+        if (configPath == null)
+        {
+            throw new DalConfigException(
+                $"dal-config.xml file not found. Searched in: {string.Join(", ", candidates.Select(c => Path.GetFullPath(c)))}");
+        }
+
+        XElement dalConfig = XElement.Load(configPath) ??
             throw new DalConfigException("dal-config.xml file is not found");
 
         s_dalName =
