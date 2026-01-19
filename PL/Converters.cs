@@ -1,0 +1,79 @@
+﻿using System;
+using System.Globalization;
+using System.Windows;
+using System.Windows.Data;
+
+namespace PL;
+
+/// <summary>
+/// Converts an Entity ID to a boolean for IsReadOnly property.
+/// Returns true (ReadOnly) if ID != 0 (Update mode).
+/// Returns false (Editable) if ID == 0 (Add mode).
+/// </summary>
+public class IdToReadOnlyConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is int id && id != 0)
+            return true;
+        return false;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+}
+
+/// <summary>
+/// Converts an Entity ID to Visibility.
+/// Returns Visible if ID != 0 (Update mode).
+/// Returns Collapsed if ID == 0 (Add mode).
+/// </summary>
+public class IdToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        (value is int id && id != 0) ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+}
+
+/// <summary>
+/// Converts a nullable double to string and back.
+/// </summary>
+public class NullableDoubleConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value == null) return string.Empty;
+        if (value is double d) return d.ToString(CultureInfo.InvariantCulture);
+        if (value is double?) return (value as double?)?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+        return value.ToString();
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var s = value?.ToString();
+        if (string.IsNullOrWhiteSpace(s)) return null;
+        if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var d)) return d;
+        return null;
+    }
+}
+
+public class DateTimeToStringConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is DateTime dt ? dt.ToString("yyyy-MM-dd HH:mm:ss") : string.Empty;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        DateTime.TryParse(value?.ToString(), out var dt) ? dt : DateTime.Now;
+}
+
+public class TimeSpanToStringConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is TimeSpan ts ? ts.ToString() : string.Empty;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value == null) return TimeSpan.Zero;
+        return TimeSpan.TryParse(value.ToString(), out var ts) ? ts : TimeSpan.Zero;
+    }
+}

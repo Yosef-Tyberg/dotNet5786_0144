@@ -1,0 +1,24 @@
+﻿using System;
+using System.Windows;
+
+namespace PL;
+
+internal static class Tools
+{
+    public static void ExecuteSafeAction(Window window, Action action, string successMessage = "")
+    {
+        try
+        {
+            action();
+            if (!string.IsNullOrEmpty(successMessage))
+            {
+                MessageBox.Show(successMessage, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            window.Close();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+}

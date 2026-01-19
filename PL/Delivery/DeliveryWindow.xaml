@@ -4,9 +4,73 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PL.Delivery"
+        xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
-        Title="DeliveryWindow" Height="450" Width="800">
+        Title="Delivery Window" Height="450" Width="400"
+        DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
+
+    <Window.Resources>
+        <pl:IdToVisibilityConverter x:Key="IdToVisibilityConverter"/>
+        <pl:DeliveryTypesCollection x:Key="DeliveryTypesCollection"/>
+        <pl:DeliveryEndTypesCollection x:Key="DeliveryEndTypesCollection"/>
+        <pl:ScheduleStatusCollection x:Key="ScheduleStatusCollection"/>
+        <pl:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
+    </Window.Resources>
+
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3" Visibility="{Binding CurrentDelivery.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Margin="3" IsReadOnly="True" Background="LightGray"
+                     Text="{Binding CurrentDelivery.Id, Mode=OneWay}"
+                     Visibility="{Binding CurrentDelivery.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+
+            <Label Grid.Row="1" Grid.Column="0" Content="Courier ID:" Margin="3"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentDelivery.CourierId, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="2" Grid.Column="0" Content="Order ID:" Margin="3"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding CurrentDelivery.OrderId, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="3" Grid.Column="0" Content="Delivery Type:" Margin="3"/>
+            <ComboBox Grid.Row="3" Grid.Column="1" Margin="3" 
+                      ItemsSource="{Binding Source={StaticResource DeliveryTypesCollection}}"
+                      SelectedValue="{Binding CurrentDelivery.DeliveryType, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="4" Grid.Column="0" Content="Start Time:" Margin="3"/>
+            <DatePicker Grid.Row="4" Grid.Column="1" Margin="3" SelectedDate="{Binding CurrentDelivery.DeliveryStartTime, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="5" Grid.Column="0" Content="End Time:" Margin="3"/>
+            <DatePicker Grid.Row="5" Grid.Column="1" Margin="3" SelectedDate="{Binding CurrentDelivery.DeliveryEndTime, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="6" Grid.Column="0" Content="End Type:" Margin="3"/>
+            <ComboBox Grid.Row="6" Grid.Column="1" Margin="3" 
+                      ItemsSource="{Binding Source={StaticResource DeliveryEndTypesCollection}}"
+                      SelectedValue="{Binding CurrentDelivery.DeliveryEndType, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="7" Grid.Column="0" Content="Schedule Status:" Margin="3"/>
+            <ComboBox Grid.Row="7" Grid.Column="1" Margin="3" IsEnabled="False"
+                      ItemsSource="{Binding Source={StaticResource ScheduleStatusCollection}}"
+                      SelectedValue="{Binding CurrentDelivery.ScheduleStatus, Mode=OneWay}"/>
+        </Grid>
+        <!-- Note: Delivery creation/update is usually handled by logic, but this window is provided for completeness/admin override -->
     </Grid>
 </Window>

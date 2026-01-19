@@ -203,3 +203,33 @@ While not strictly mandatory until Stage 6, the use of the following advanced WP
 - **Resources:** Defining reusable objects and values in `Window.Resources` or `Application.Resources`.
 - **Styles:** Creating consistent appearances for controls using `<Style>`.
 - **Data Templates:** Customizing the visual representation of data objects using `<DataTemplate>`, especially for items in lists.
+
+### 10.6. Single Item View Window Rules
+
+- **Modes:** The window must support two modes based on the entity ID passed to the constructor:
+    - **Add Mode (ID = 0):** Create a new BO instance with default values. Button text must be "Add".
+    - **Update Mode (ID != 0):** Retrieve the existing entity from the BL. Button text must be "Update".
+- **Data Binding:**
+    - The window's `DataContext` must be bound to itself (`{Binding RelativeSource={RelativeSource Mode=Self}}`).
+    - Use a **Dependency Property** (e.g., `CurrentEntity`) to hold the BO entity.
+    - Use a **Dependency Property** (e.g., `ButtonText`) for the action button's label.
+    - Bind all UI controls to the properties of `CurrentEntity`.
+    - Use `TwoWay` binding mode where appropriate.
+    - Enable validation notification: `NotifyOnValidationError=true, ValidatesOnExceptions=true`.
+- **Control Behavior:**
+    - **ReadOnly/Visibility:** Use converters (e.g., `IdToReadOnlyConverter`) to toggle `IsReadOnly` or `Visibility` of controls based on the window mode (Add vs. Update).
+    - **ID Field:**
+        - For auto-generated IDs (Order, Delivery): Always ReadOnly.
+        - For manual IDs (Courier): Editable in Add mode, ReadOnly in Update mode.
+- **Action Handling:**
+    - A single button handles both Add and Update actions.
+    - The click handler must check the mode (via `ButtonText` or ID) and call the appropriate BL method (`Create` or `Update`).
+    - **Success:** Show a success message and close the window.
+    - **Failure:** Catch BL exceptions and show a user-friendly `MessageBox`.
+- **Observers:**
+    - In **Update Mode**, the window must register as an observer for the specific entity ID to reflect external changes immediately.
+    - Unregister the observer when the window closes.
+- **UI Layout:**
+    - Use a `Grid` to align labels (description) and controls (values).
+    - Match control types to data types (e.g., `ComboBox` for Enums, `CheckBox` for Booleans, `DatePicker` for DateTime).
+    - Populate `ComboBox` items using `ObjectDataProvider` or static resources defined in `PL/Enums.cs`.

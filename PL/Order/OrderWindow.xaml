@@ -4,9 +4,69 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PL.Order"
+        xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
-        Title="OrderWindow" Height="450" Width="800">
+        Title="Order Window" Height="500" Width="400"
+        DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
+
+    <Window.Resources>
+        <pl:IdToVisibilityConverter x:Key="IdToVisibilityConverter"/>
+        <pl:OrderTypesCollection x:Key="OrderTypesCollection"/>
+        <pl:OrderStatusCollection x:Key="OrderStatusCollection"/>
+        <pl:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
+    </Window.Resources>
+
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3" Visibility="{Binding CurrentOrder.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Margin="3" IsReadOnly="True" Background="LightGray"
+                     Text="{Binding CurrentOrder.Id, Mode=OneWay}"
+                     Visibility="{Binding CurrentOrder.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+
+            <Label Grid.Row="1" Grid.Column="0" Content="Customer Name:" Margin="3"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.CustomerFullName, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="2" Grid.Column="0" Content="Customer Phone:" Margin="3"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.CustomerMobile, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="3" Grid.Column="0" Content="Address:" Margin="3"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.FullOrderAddress, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="4" Grid.Column="0" Content="Order Type:" Margin="3"/>
+            <ComboBox Grid.Row="4" Grid.Column="1" Margin="3" 
+                      ItemsSource="{Binding Source={StaticResource OrderTypesCollection}}"
+                      SelectedValue="{Binding CurrentOrder.OrderType, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="5" Grid.Column="0" Content="Description:" Margin="3"/>
+            <TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.VerbalDescription, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="6" Grid.Column="0" Content="Status:" Margin="3" Visibility="{Binding CurrentOrder.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+            <TextBox Grid.Row="6" Grid.Column="1" Margin="3" IsReadOnly="True" Background="LightGray"
+                     Text="{Binding CurrentOrder.OrderStatus, Mode=OneWay}"
+                     Visibility="{Binding CurrentOrder.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+        </Grid>
+
+        <Button Grid.Row="1" Content="{Binding ButtonText}" Margin="10" Padding="10,5" Click="BtnAddUpdate_Click"/>
     </Grid>
 </Window>

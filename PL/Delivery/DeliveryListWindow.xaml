@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PL.Delivery"
         mc:Ignorable="d"
-        Title="DeliveryListWindow" Height="640" Width="800">
+        Title="Delivery List" Height="640" Width="800"
+        DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
+        Loaded="Window_Loaded" Closed="Window_Closed">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="40*"/>
@@ -25,10 +27,21 @@
                    HorizontalAlignment="Left" 
                    Margin="10,0,0,0"/>
             <ComboBox Grid.Column="1" 
+                      ItemsSource="{Binding Source={StaticResource ScheduleStatusCollectionKey}}"
+                      SelectedValue="{Binding StatusFilter, Mode=TwoWay}"
+                      SelectionChanged="cbStatusSelector_SelectionChanged"
                       VerticalAlignment="Stretch" 
                       HorizontalAlignment="Stretch"/>
         </Grid>
-        <DataGrid Grid.Row="1"/>
+        <DataGrid Grid.Row="1" ItemsSource="{Binding DeliveryList}" AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
+                <DataGridTextColumn Header="Courier ID" Binding="{Binding CourierId}" Width="Auto"/>
+                <DataGridTextColumn Header="Order ID" Binding="{Binding OrderId}" Width="Auto"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding ScheduleStatus}" Width="Auto"/>
+                <DataGridTextColumn Header="Start Time" Binding="{Binding DeliveryStartTime}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
         <Button Content="Add" Grid.Row="2" HorizontalAlignment="Center" Height="50" 
             Width="100"/>
     </Grid>
