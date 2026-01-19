@@ -21,7 +21,7 @@ namespace PL.Order
     {
         public OrderInListWindow()
         {
-            InitializeComponent();
+            //InitializeComponent();
         }
     }
 }

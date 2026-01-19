@@ -15,13 +15,13 @@ using System.Windows.Shapes;
 namespace PL.Delivery
 {
     /// <summary>
-    /// Interaction logic for DeliveryInLisWindow.xaml
+    /// Interaction logic for DeliveryInListWindow.xaml
     /// </summary>
-    public partial class DeliveryInLisWindow : Window
+    public partial class DeliveryListWindow : Window
     {
-        public DeliveryInLisWindow()
+        public DeliveryListWindow()
         {
-            InitializeComponent();
+            //InitializeComponent();
         }
     }
 }
