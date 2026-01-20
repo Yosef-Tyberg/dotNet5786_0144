@@ -151,7 +151,7 @@ public partial class MainWindow : Window
         {
             s_bl!.Admin.ForwardClock(span);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             MessageBox.Show(
                 ex.Message,

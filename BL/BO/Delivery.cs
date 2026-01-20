@@ -50,13 +50,13 @@ public class Delivery
     /// <summary>
     /// Time elapsed during the delivery. Set by the BL.
     /// </summary>
-    public TimeSpan DeliveryDuration { get; set; }
+    public TimeSpan? DeliveryDuration { get; set; }
 
     /// <summary>
     /// Average speed during the delivery (in km/h). Set by the BL.
     /// </summary>
 
-    public double AverageSpeed { get; set; }
+    public double? AverageSpeed { get; set; }
 
     
     /// <summary>
