@@ -230,6 +230,10 @@ internal static class DeliveryManager
                     ? Math.Round((double)boDelivery.ActualDistance / boDelivery.DeliveryDuration.TotalHours, 2)
                     : 0;
             }
+            else
+            {
+                boDelivery.DeliveryDuration = AdminManager.Now - boDelivery.DeliveryStartTime;
+            }
             
             var config = s_dal.Config;
             
