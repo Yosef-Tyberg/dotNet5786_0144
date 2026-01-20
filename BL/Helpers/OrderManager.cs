@@ -265,6 +265,9 @@ internal static class OrderManager
     /// <param name="newOrder">The BO.Order object for the new order.</param>
     public static void Create(BO.Order newOrder)
     {
+        
+        if (s_dal.Config.CompanyFullAddress == null)
+            throw new BO.BlOrderNotDeliverableException("Orders can't be opened when the company HQ address is null");
         try
         {
             s_dal.Order.Create(ConvertBoToDo(newOrder));
