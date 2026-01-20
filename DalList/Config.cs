@@ -9,7 +9,7 @@ internal static class Config
     /// <summary>
     /// Starting value for the order ID sequence generator.
     /// </summary>
-    internal const int startOrderId = 0;
+    internal const int startOrderId = 1;
 
     private static int nextOrderId = startOrderId;
 
@@ -21,7 +21,7 @@ internal static class Config
     /// <summary>
     /// Starting value for the delivery ID sequence generator.
     /// </summary>
-    internal const int startDeliveryId = 0;
+    internal const int startDeliveryId = 1;
 
     private static int nextDeliveryId = startDeliveryId;
 

@@ -427,8 +427,8 @@ internal static class Config
     internal static void Reset()
     {
         var root = new System.Xml.Linq.XElement("config");
-        root.Add(new System.Xml.Linq.XElement("NextOrderId", 0));
-        root.Add(new System.Xml.Linq.XElement("NextDeliveryId", 0));
+        root.Add(new System.Xml.Linq.XElement("NextOrderId", 1));
+        root.Add(new System.Xml.Linq.XElement("NextDeliveryId", 1));
         root.Add(new System.Xml.Linq.XElement("AdminId", 0));
         root.Add(new System.Xml.Linq.XElement("AdminPassword", "Admin"));
         root.Add(new System.Xml.Linq.XElement("AvgCarSpeedKmh", 0));
