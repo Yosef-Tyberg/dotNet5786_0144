@@ -1,4 +1,4 @@
-﻿using DalApi;
+﻿﻿using DalApi;
 using DO;
 
 namespace DalTest;
@@ -476,6 +476,9 @@ public static class Initialization
     // Small utility helpers
     // -----------------------------
 
+    /// <summary>
+    /// Generates a random Israeli mobile phone number.
+    /// </summary>
     private static string RandomPhone()
     {
         var prefixChoices = new[] { "050", "052", "054", "058" };
@@ -484,6 +487,9 @@ public static class Initialization
         return $"{prefix}{num}";
     }
 
+    /// <summary>
+    /// Creates a sanitized email local part from a full name.
+    /// </summary>
     private static string SanitizeEmailLocalPart(string fullName)
     {
         var p = fullName.ToLowerInvariant().Replace(" ", ".").Replace("-", "").Replace("'", "");

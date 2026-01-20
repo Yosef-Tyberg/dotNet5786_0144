@@ -12,12 +12,18 @@ using System.Diagnostics;
 namespace BlUnitTests;
 
 
+/// <summary>
+/// Unit tests for Courier logic in the Business Layer.
+/// </summary>
 [TestClass]
 public class CourierTests
 {
     private readonly IBl _bl = Factory.Get();
 
 
+    /// <summary>
+    /// Initializes the test environment before each test run.
+    /// </summary>
     [TestInitialize]
     public void TestInitialize()
     {
@@ -59,6 +65,9 @@ public class CourierTests
     }
     #region Create Tests
 
+    /// <summary>
+    /// Tests successful creation of a courier.
+    /// </summary>
     [TestMethod]
     public void Test_CreateCourier_Success()
     {
@@ -85,6 +94,9 @@ public class CourierTests
         Assert.AreEqual("New Courier", createdCourier.FullName);
     }
 
+    /// <summary>
+    /// Tests that creating a courier with an existing ID throws an exception.
+    /// </summary>
     [TestMethod]
     [ExpectedException(typeof(BlAlreadyExistsException))]
     public void Test_CreateCourier_AlreadyExists_ThrowsException()
@@ -107,6 +119,9 @@ public class CourierTests
         _bl.Courier.Create(newCourierWithSameId);
     }
 
+    /// <summary>
+    /// Tests that creating a courier with invalid data throws an exception.
+    /// </summary>
     [TestMethod]
     [ExpectedException(typeof(BlInvalidInputException))]
     public void Test_CreateCourier_InvalidData_ThrowsException()
@@ -128,6 +143,9 @@ public class CourierTests
         _bl.Courier.Create(invalidCourier);
     }
 
+    /// <summary>
+    /// Tests that creating a courier with negative distance throws an exception.
+    /// </summary>
     [TestMethod]
     [ExpectedException(typeof(BlInvalidInputException))]
     public void Test_CreateCourier_NegativeDistance_ThrowsException()
@@ -154,6 +172,9 @@ public class CourierTests
 
     #region Read Tests
 
+    /// <summary>
+    /// Tests successful reading of a courier by ID.
+    /// </summary>
     [TestMethod]
     public void Test_ReadCourier_Success()
     {
@@ -168,6 +189,9 @@ public class CourierTests
         Assert.AreEqual(courierToRead.Id, readCourier.Id);
     }
 
+    /// <summary>
+    /// Tests that reading a non-existent courier throws an exception.
+    /// </summary>
     [TestMethod]
     [ExpectedException(typeof(BlDoesNotExistException))]
     public void Test_ReadCourier_NotFound_ThrowsException()
@@ -176,6 +200,9 @@ public class CourierTests
         _bl.Courier.Read(12345); // Non-existent ID
     }
 
+    /// <summary>
+    /// Tests that reading all couriers returns a list.
+    /// </summary>
     [TestMethod]
     public void Test_ReadAllCouriers_ReturnsData()
     {
@@ -186,6 +213,9 @@ public class CourierTests
         Assert.IsTrue(couriers.Any(), "ReadAll should return a list of couriers.");
     }
 
+    /// <summary>
+    /// Tests that reading all couriers with a filter returns filtered data.
+    /// </summary>
     [TestMethod]
     public void Test_ReadAllCouriers_WithFilter_ReturnsFilteredData()
     {
@@ -205,6 +235,9 @@ public class CourierTests
 
     #region Update Tests
 
+    /// <summary>
+    /// Tests successful update of a courier.
+    /// </summary>
     [TestMethod]
     public void Test_UpdateCourier_Success()
     {
@@ -222,6 +255,9 @@ public class CourierTests
         Assert.AreEqual("updated@email.com", updatedCourier.Email);
     }
     
+    /// <summary>
+    /// Tests successful update of courier's own details.
+    /// </summary>
     [TestMethod]
     public void Test_UpdateMyDetails_Success()
     {
@@ -237,6 +273,9 @@ public class CourierTests
         Assert.AreEqual("0509876543", updatedCourier.MobilePhone);
     }
 
+    /// <summary>
+    /// Tests that updating a courier with invalid data throws an exception.
+    /// </summary>
     [TestMethod]
     [ExpectedException(typeof(BlInvalidInputException))]
     public void Test_UpdateCourier_InvalidData_ThrowsException()
@@ -249,6 +288,9 @@ public class CourierTests
         _bl.Courier.Update(courierToUpdate);
     }
 
+    /// <summary>
+    /// Tests that updating a non-existent courier throws an exception.
+    /// </summary>
     [TestMethod]
     [ExpectedException(typeof(BlDoesNotExistException))]
     public void Test_UpdateCourier_NotFound_ThrowsException()
@@ -264,6 +306,9 @@ public class CourierTests
 
     #region Delete Tests
 
+    /// <summary>
+    /// Tests successful deletion of a courier.
+    /// </summary>
     [TestMethod]
     public void Test_DeleteCourier_Success()
     {
@@ -277,6 +322,9 @@ public class CourierTests
         Assert.ThrowsException<BlDoesNotExistException>(() => _bl.Courier.Read(courierToDelete.Id));
     }
 
+    /// <summary>
+    /// Tests that deleting a non-existent courier throws an exception.
+    /// </summary>
     [TestMethod]
     [ExpectedException(typeof(BlDoesNotExistException))]
     public void Test_DeleteCourier_NotFound_ThrowsException()
@@ -289,6 +337,9 @@ public class CourierTests
 
     #region Specific Logic Tests
 
+    /// <summary>
+    /// Tests that courier delivery history is returned correctly.
+    /// </summary>
     [TestMethod]
     public void Test_GetCourierDeliveryHistory_ReturnsHistory()
     {
@@ -308,6 +359,9 @@ public class CourierTests
         Assert.IsTrue(history.All(d => d.CourierId == courier.Id));
     }
 
+    /// <summary>
+    /// Tests that courier statistics are calculated correctly.
+    /// </summary>
     [TestMethod]
     public void Test_GetCourierStatistics_CalculatesCorrectly()
     {
@@ -328,6 +382,10 @@ public class CourierTests
         Assert.IsTrue(stats.TotalDeliveries > 0);
         Assert.IsTrue(stats.SuccessRate > 0);
     }
+
+    /// <summary>
+    /// Tests that open orders are returned for a courier with a max distance.
+    /// </summary>
     [TestMethod]
     public void Test_GetOpenOrders_ReturnsAvailableOrders()
     {
@@ -344,6 +402,9 @@ public class CourierTests
         Assert.IsTrue(openOrders.All(o => o.OrderStatus == OrderStatus.Open));
     }
 
+    /// <summary>
+    /// Tests that all open orders are returned for a courier with no max distance.
+    /// </summary>
     [TestMethod]
     public void Test_GetOpenOrders_NoDistanceSet_ReturnsAll()
     {
@@ -368,6 +429,9 @@ public class CourierTests
         Assert.IsTrue(same, "Courier with no max distance should see all open orders.");
     }
 
+    /// <summary>
+    /// Tests the logic for checking if an order is within a courier's range.
+    /// </summary>
     [TestMethod]
     public void Test_IsOrderInCourierRange_Logic()
     {
@@ -390,6 +454,9 @@ public class CourierTests
         Assert.IsFalse(CourierManager.IsOrderInCourierRange(orderFar, courier, lat, lon), "Order beyond distance should be rejected.");
     }
 
+    /// <summary>
+    /// Tests that a courier becomes inactive after the inactivity range.
+    /// </summary>
     [TestMethod]
     public void Test_CourierBecomesInactive_AfterInactivityRange()
     {

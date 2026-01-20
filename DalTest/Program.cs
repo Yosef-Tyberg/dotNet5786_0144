@@ -1,4 +1,4 @@
-﻿﻿using Dal;
+﻿﻿﻿﻿using Dal;
 using DalApi;
 using DO;
 
@@ -41,12 +41,18 @@ namespace DalTest;
  */ 
 
 
+/// <summary>
+/// Main program class for testing the Data Access Layer.
+/// </summary>
 internal static class Program
 {
     // The DAL instance used by the test program. It is created once and reused.
     //static readonly IDal s_dal = new DalList(); // stage2
     //static readonly IDal s_dal = new DalXml(); //stage 3 
     static readonly IDal s_dal = Factory.Get; // stage4
+    /// <summary>
+    /// Main entry point of the application.
+    /// </summary>
     // Main entry point: repeatedly show main menu and handle user's top-level choice.
     private static void Main()
     {
@@ -113,6 +119,9 @@ internal static class Program
         }
     }
 
+    /// <summary>
+    /// Prints the main menu options to the console.
+    /// </summary>
     // Print the top-level main menu options.
     private static void PrintMainMenu()
     {
@@ -132,6 +141,9 @@ internal static class Program
     // -------------------------
     // Courier submenu
     // -------------------------
+    /// <summary>
+    /// Displays the courier management menu and handles user input.
+    /// </summary>
     // This method shows the courier submenu and routes user choices to specific courier operations.
     private static void CourierMenu()
     {
@@ -190,6 +202,9 @@ internal static class Program
     }
 
 
+    /// <summary>
+    /// Prompts user for input to create a new courier.
+    /// </summary>
     // Create a new courier by prompting user for all required fields.
     // Input is validated using TryParse / string checks and exceptions are thrown for invalid inputs.
     private static void CreateCourier()
@@ -268,6 +283,9 @@ internal static class Program
         Console.WriteLine("Courier created.");
     }
 
+    /// <summary>
+    /// Prompts user for ID and displays the corresponding courier.
+    /// </summary>
     // Read and display a single courier identified by Id.
     private static void ReadCourier()
     {
@@ -287,6 +305,9 @@ internal static class Program
         Console.WriteLine(c.ToString());
     }
 
+    /// <summary>
+    /// Displays all couriers in the system.
+    /// </summary>
     // Read and display all couriers stored in the DAL.
     private static void ReadAllCouriers()
     {
@@ -352,6 +373,9 @@ internal static class Program
         foreach (var c in list) Console.WriteLine(c);
     }
 
+    /// <summary>
+    /// Prompts user for ID and updates the corresponding courier.
+    /// </summary>
     // Update existing courier - empty inputs keep current values (no change).
     private static void UpdateCourier()
     {
@@ -446,6 +470,9 @@ internal static class Program
         Console.WriteLine("Courier updated.");
     }
 
+    /// <summary>
+    /// Prompts user for ID and deletes the corresponding courier.
+    /// </summary>
     // Delete a courier identified by Id. DAL is expected to throw if the id does not exist.
     private static void DeleteCourier()
     {
@@ -461,6 +488,9 @@ internal static class Program
     // -------------------------
     // Order submenu
     // -------------------------
+    /// <summary>
+    /// Displays the order management menu and handles user input.
+    /// </summary>
     // Shows order submenu and routes user choices to order-specific operations.
     private static void OrderMenu()
     {
@@ -518,6 +548,9 @@ internal static class Program
    
 
 
+    /// <summary>
+    /// Prompts user for input to create a new order.
+    /// </summary>
     // Create a new order. Empty FullOrderAccess auto-generates a GUID string.
     private static void CreateOrder()
     {
@@ -601,6 +634,9 @@ internal static class Program
         Console.WriteLine("Order created (Id assigned by DAL).");
     }
 
+    /// <summary>
+    /// Prompts user for ID and displays the corresponding order.
+    /// </summary>
     // Read and display a single order by its Id.
     private static void ReadOrder()
     {
@@ -618,6 +654,9 @@ internal static class Program
         Console.WriteLine(o.ToString());
     }
 
+    /// <summary>
+    /// Displays all orders in the system.
+    /// </summary>
     // Read and display all orders.
     private static void ReadAllOrders()
     {
@@ -676,6 +715,9 @@ internal static class Program
     }
 
     
+    /// <summary>
+    /// Prompts user for ID and updates the corresponding order.
+    /// </summary>
     // Update an existing order; empty inputs keep current values.
     private static void UpdateOrder()
     {
@@ -813,6 +855,9 @@ internal static class Program
         Console.WriteLine("Order updated.");
     }
 
+    /// <summary>
+    /// Prompts user for ID and deletes the corresponding order.
+    /// </summary>
     // Delete an order by Id.
     private static void DeleteOrder()
     {
@@ -827,6 +872,9 @@ internal static class Program
     // -------------------------
     // Delivery submenu
     // -------------------------
+    /// <summary>
+    /// Displays the delivery management menu and handles user input.
+    /// </summary>
     // Shows delivery submenu and routes user choices to delivery-specific operations.
     private static void DeliveryMenu()
     {
@@ -881,6 +929,9 @@ internal static class Program
         }
     }
 
+    /// <summary>
+    /// Prompts user for input to create a new delivery.
+    /// </summary>
     // Create a delivery record and write it to DAL.
     private static void CreateDelivery()
     {
@@ -946,6 +997,9 @@ internal static class Program
         Console.WriteLine("Delivery created.");
     }
 
+    /// <summary>
+    /// Prompts user for ID and displays the corresponding delivery.
+    /// </summary>
     // Read and display a single delivery by Id.
     private static void ReadDelivery()
     {
@@ -963,6 +1017,9 @@ internal static class Program
         Console.WriteLine(d.ToString());
     }
 
+    /// <summary>
+    /// Displays all deliveries in the system.
+    /// </summary>
     // Read and display all deliveries.
     private static void ReadAllDeliveries()
     {
@@ -1022,6 +1079,9 @@ internal static class Program
     }
 
 
+    /// <summary>
+    /// Prompts user for ID and updates the corresponding delivery.
+    /// </summary>
     // Update existing delivery. Empty fields keep current values.
     private static void UpdateDelivery()
     {
@@ -1124,6 +1184,9 @@ internal static class Program
         Console.WriteLine("Delivery updated.");
     }
 
+    /// <summary>
+    /// Prompts user for ID and deletes the corresponding delivery.
+    /// </summary>
     // Delete a delivery by Id.
     private static void DeleteDelivery()
     {
@@ -1138,6 +1201,9 @@ internal static class Program
     // -------------------------
     // Configuration menu
     // -------------------------
+    /// <summary>
+    /// Displays the configuration menu and handles user input.
+    /// </summary>
     // Configuration and simulated clock control. The menu allows incrementing the clock by minutes/hours/days/months,
     // setting and displaying various configuration variables, and resetting configuration to defaults.
     private static void ConfigMenu()
@@ -1211,6 +1277,9 @@ internal static class Program
         }
     }
 
+    /// <summary>
+    /// Displays the menu for setting configuration variables.
+    /// </summary>
     // Set configuration variables submenu. Uses input parsing and validation for each variable.
     private static void SetConfigMenu()
     {
@@ -1352,6 +1421,9 @@ internal static class Program
         }
     }
 
+    /// <summary>
+    /// Displays the menu for viewing configuration variables.
+    /// </summary>
     // Display configuration variables individually or all at once.
     private static void DisplayConfigMenu()
     {
@@ -1460,6 +1532,9 @@ internal static class Program
     // -------------------------
     // Utilities
     // -------------------------
+    /// <summary>
+    /// Displays all data (couriers, orders, deliveries) currently in the system.
+    /// </summary>
     // Read and display all data categories (couriers, orders, deliveries) with counts.
     private static void DisplayAllData()
     {
@@ -1485,6 +1560,9 @@ internal static class Program
         }
     }
 
+    /// <summary>
+    /// Resets all data and configuration to default values.
+    /// </summary>
     // Reset databases and configuration to defaults via DAL implementation.
     private static void ResetAllDataAndConfig()
     {

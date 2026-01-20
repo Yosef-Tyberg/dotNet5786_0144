@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿using System.Text;
+﻿﻿﻿﻿﻿﻿﻿﻿using System.Text;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -51,6 +51,9 @@ public partial class MainWindow : Window
 
     #endregion
 
+    /// <summary>
+    /// Initializes the main window and registers event handlers.
+    /// </summary>
     public MainWindow()
     {
         InitializeComponent();
@@ -62,6 +65,9 @@ public partial class MainWindow : Window
 
     #region Window Lifecycle
 
+    /// <summary>
+    /// Handles the window loaded event to initialize BL and observers.
+    /// </summary>
     // Initialize BL and Observers when window loads
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
@@ -90,6 +96,9 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>
+    /// Handles the window closing event to cleanup observers.
+    /// </summary>
     // Cleanup observers when window closes
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
@@ -111,6 +120,9 @@ public partial class MainWindow : Window
 
     #region Observer Methods (6g)
 
+    /// <summary>
+    /// Observer callback for clock updates.
+    /// </summary>
     // Updates CurrentTime when the BL clock changes
     private void ClockObserver()
     {
@@ -118,6 +130,9 @@ public partial class MainWindow : Window
             CurrentTime = s_bl!.Admin.GetClock());
     }
 
+    /// <summary>
+    /// Observer callback for configuration updates.
+    /// </summary>
     // Updates Configuration when BL config changes
     private void ConfigObserver()
     {
@@ -129,22 +144,40 @@ public partial class MainWindow : Window
 
     #region Clock Controls
 
+    /// <summary>
+    /// Advances the clock by one minute.
+    /// </summary>
     // Methods to advance the system clock by various intervals
     private void AdvanceMinute_Click(object sender, RoutedEventArgs e) =>
         AdvanceClock(TimeSpan.FromMinutes(1));
 
+    /// <summary>
+    /// Advances the clock by one hour.
+    /// </summary>
     private void AdvanceHour_Click(object sender, RoutedEventArgs e) =>
         AdvanceClock(TimeSpan.FromHours(1));
 
+    /// <summary>
+    /// Advances the clock by one day.
+    /// </summary>
     private void AdvanceDay_Click(object sender, RoutedEventArgs e) =>
         AdvanceClock(TimeSpan.FromDays(1));
 
+    /// <summary>
+    /// Advances the clock by one month (30 days).
+    /// </summary>
     private void AdvanceMonth_Click(object sender, RoutedEventArgs e) =>
         AdvanceClock(TimeSpan.FromDays(30));
 
+    /// <summary>
+    /// Advances the clock by one year (365 days).
+    /// </summary>
     private void AdvanceYear_Click(object sender, RoutedEventArgs e) =>
         AdvanceClock(TimeSpan.FromDays(365));
 
+    /// <summary>
+    /// Advances the system clock by the specified time span.
+    /// </summary>
     private void AdvanceClock(TimeSpan span)
     {
         try
@@ -165,6 +198,9 @@ public partial class MainWindow : Window
 
     #region Configuration
 
+    /// <summary>
+    /// Saves the current configuration settings to the BL.
+    /// </summary>
     // Saves the modified configuration back to the BL
     private void SaveConfiguration_Click(object sender, RoutedEventArgs e)
     {
@@ -195,6 +231,9 @@ public partial class MainWindow : Window
 
     #region Database Management (6k)
 
+    /// <summary>
+    /// Initializes the database with seed data after confirmation.
+    /// </summary>
     // Re-initializes the database with seed data
     private void InitializeDb_Click(object sender, RoutedEventArgs e)
     {
@@ -226,6 +265,9 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>
+    /// Resets the database to an empty state after confirmation.
+    /// </summary>
     // Resets the database to an empty state
     private void ResetDb_Click(object sender, RoutedEventArgs e)
     {
@@ -257,6 +299,9 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>
+    /// Closes all windows except the main window.
+    /// </summary>
     // Helper to close other windows during DB operations
     private static void CloseAllSecondaryWindows()
     {
@@ -271,14 +316,23 @@ public partial class MainWindow : Window
 
     #region Navigation Buttons (6j)
 
+    /// <summary>
+    /// Opens the Courier List window.
+    /// </summary>
     // Open the Courier List Window
     private void OpenCourierList_Click(object sender, RoutedEventArgs e) =>
         new Courier.CourierListWindow().Show();
 
+    /// <summary>
+    /// Opens the Order List window.
+    /// </summary>
     // Open the Order List Window
     private void OpenOrderList_Click(object sender, RoutedEventArgs e) =>
         new Order.OrderListWindow().Show();
 
+    /// <summary>
+    /// Opens the Delivery List window.
+    /// </summary>
     // Open the Delivery List Window
     private void OpenDeliveryList_Click(object sender, RoutedEventArgs e) =>
         new Delivery.DeliveryListWindow().Show();

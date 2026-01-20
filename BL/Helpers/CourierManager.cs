@@ -227,6 +227,16 @@ internal static class CourierManager
         if (s_dal.Courier.Read(courierId) != null)
             return s_dal.Delivery.ReadAll(d => d.CourierId == courierId && d.DeliveryEndTime == null).Any();
         throw new BO.BlDoesNotExistException();
+        try
+        {
+            if (s_dal.Courier.Read(courierId) != null)
+                return s_dal.Delivery.ReadAll(d => d.CourierId == courierId && d.DeliveryEndTime == null).Any();
+            throw new BO.BlDoesNotExistException();
+        }
+        catch (Exception ex)
+        {
+            throw Tools.ConvertDalException(ex);
+        }
     }
 
     
@@ -367,9 +377,16 @@ internal static class CourierManager
         // 1. Read DO.Courier directly for efficiency.
         var doCourier = s_dal.Courier.Read(courierId)
                         ?? throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
+        try
+        {
+            // 1. Read DO.Courier directly for efficiency.
+            var doCourier = s_dal.Courier.Read(courierId)
+                            ?? throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
 
         var allOrders = s_dal.Order.ReadAll();
         var allDeliveries = s_dal.Delivery.ReadAll();
+            var allOrders = s_dal.Order.ReadAll();
+            var allDeliveries = s_dal.Delivery.ReadAll();
 
         // 2. Use Query Syntax to join, filter, and project (Demonstrates: Join Into, Let, Where, Select New)
         var openOrders = from order in allOrders
@@ -378,6 +395,9 @@ internal static class CourierManager
                          // Logic: Order is open if no active delivery exists...
                          let activeDelivery = deliveries.Any(d => d.DeliveryEndTime == null)
                          where !activeDelivery
+            // 2. Use Query Syntax to join, filter, and project (Demonstrates: Join Into, Let, Where, Select New)
+            var openOrders = from order in allOrders
+                             join delivery in allDeliveries on order.Id equals delivery.OrderId into deliveries
 
                          // ...and if it has history, the last one must be a failure/not-found type
                          let lastEnded = deliveries.OrderByDescending(d => d.DeliveryEndTime).FirstOrDefault()
@@ -386,19 +406,54 @@ internal static class CourierManager
                                lastEnded.DeliveryEndType == DO.DeliveryEndTypes.Failed
                          
                          select order;
+                             // Logic: Order is open if no active delivery exists...
+                             let activeDelivery = deliveries.Any(d => d.DeliveryEndTime == null)
+                             where !activeDelivery
 
+                             // ...and if it has history, the last one must be a failure/not-found type
+                             let lastEnded = deliveries.OrderByDescending(d => d.DeliveryEndTime).FirstOrDefault()
+                             where lastEnded == null ||
+                                   lastEnded.DeliveryEndType == DO.DeliveryEndTypes.RecipientNotFound ||
+                                   lastEnded.DeliveryEndType == DO.DeliveryEndTypes.Failed
 
         // 4. Filter by the courier's range, if they have one defined.
         var config = s_dal.Config;
         var hqLatitude = (double)(config.Latitude ?? 0);
         var hqLongitude = (double)(config.Longitude ?? 0);
+                             select order;
 
         var availableForCourier = openOrders;
         if (doCourier.PersonalMaxDeliveryDistance.HasValue)
+
+            // 4. Filter by the courier's range, if they have one defined.
+            var config = s_dal.Config;
+            var hqLatitude = (double)(config.Latitude ?? 0);
+            var hqLongitude = (double)(config.Longitude ?? 0);
+
+            var availableForCourier = openOrders;
+            if (doCourier.PersonalMaxDeliveryDistance.HasValue)
+            {
+                availableForCourier = openOrders.Where(x =>
+                    Tools.GetAerialDistance(hqLatitude, hqLongitude, x.Latitude, x.Longitude)
+                    <= doCourier.PersonalMaxDeliveryDistance.Value);
+            }
+
+            // 5. Project the final result directly to BO.OrderInList.
+            return availableForCourier.Select(x => new BO.OrderInList
+            {
+                Id = x.Id,
+                OrderType = (BO.OrderTypes)x.OrderType,
+                CustomerFullName = x.CustomerFullName,
+                OrderStatus = BO.OrderStatus.Open, // We know it's open from the filter above
+                OrderOpenTime = x.OrderOpenTime
+            });
+        }
+        catch (Exception ex)
         {
             availableForCourier = openOrders.Where(x =>
                 Tools.GetAerialDistance(hqLatitude, hqLongitude, x.Latitude, x.Longitude) 
                 <= doCourier.PersonalMaxDeliveryDistance.Value);
+            throw Tools.ConvertDalException(ex);
         }
 
         // 5. Project the final result directly to BO.OrderInList.
@@ -447,17 +502,28 @@ internal static class CourierManager
         
         // Handle case where courier has no deliveries at all.
         if (!allCourierDeliveries.Any())
+        try
         {
             return new BO.CourierStatistics();
         }
+            // 1. Validate courier exists
+            if (s_dal.Courier.Read(courierId) == null)
+                throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
 
         // 3. Fetch associated orders for all deliveries.
         var orderIds = allCourierDeliveries.Select(d => d.OrderId).Distinct();
         var doOrders = s_dal.Order.ReadAll(o => orderIds.Contains(o.Id))
                                 .ToDictionary(o => o.Id);
+            // 2. Fetch all DO.Delivery for the courier once and materialize the list.
+            var allCourierDeliveries = s_dal.Delivery.ReadAll(d => d.CourierId == courierId).ToList();
 
         // 4. Filter for completed deliveries from the local list.
         var completedDoDeliveries = allCourierDeliveries.Where(d => d.DeliveryEndTime != null).ToList();
+            // Handle case where courier has no deliveries at all.
+            if (!allCourierDeliveries.Any())
+            {
+                return new BO.CourierStatistics();
+            }
 
         // Handle case where there are deliveries, but none are completed yet.
         if (!completedDoDeliveries.Any())
@@ -465,27 +531,67 @@ internal static class CourierManager
             // Still report the total number of deliveries assigned (which are all in-progress).
             return new BO.CourierStatistics { TotalDeliveries = allCourierDeliveries.Count };
         }
+            // 3. Fetch associated orders for all deliveries.
+            var orderIds = allCourierDeliveries.Select(d => d.OrderId).Distinct();
+            var doOrders = s_dal.Order.ReadAll(o => orderIds.Contains(o.Id))
+                                    .ToDictionary(o => o.Id);
 
         // 5. Calculate all statistics directly from the DO collections.
         var config = s_dal.Config;
         var totalDeliveries = completedDoDeliveries.Count;
+            // 4. Filter for completed deliveries from the local list.
+            var completedDoDeliveries = allCourierDeliveries.Where(d => d.DeliveryEndTime != null).ToList();
 
         var onTimeDeliveries = completedDoDeliveries.Count(d =>
             doOrders.TryGetValue(d.OrderId, out var order) &&
             Tools.DetermineScheduleStatus(order, config, d) == BO.ScheduleStatus.OnTime
         );
+            // Handle case where there are deliveries, but none are completed yet.
+            if (!completedDoDeliveries.Any())
+            {
+                // Still report the total number of deliveries assigned (which are all in-progress).
+                return new BO.CourierStatistics { TotalDeliveries = allCourierDeliveries.Count };
+            }
 
         // Demonstrate Grouping using Query Syntax
         var deliveryOutcomes = from d in completedDoDeliveries
                                group d by d.DeliveryEndType into g
                                select new { Status = g.Key, Count = g.Count() };
+            // 5. Calculate all statistics directly from the DO collections.
+            var config = s_dal.Config;
+            var totalDeliveries = completedDoDeliveries.Count;
 
         var successfulDeliveries = deliveryOutcomes.FirstOrDefault(x => x.Status == DO.DeliveryEndTypes.Delivered)?.Count ?? 0;
         
         var deliveryDurations = completedDoDeliveries
             .Select(d => (d.DeliveryEndTime!.Value - d.DeliveryStartTime).TotalMinutes);
+            var onTimeDeliveries = completedDoDeliveries.Count(d =>
+                doOrders.TryGetValue(d.OrderId, out var order) &&
+                Tools.DetermineScheduleStatus(order, config, d) == BO.ScheduleStatus.OnTime
+            );
 
         return new BO.CourierStatistics
+            // Demonstrate Grouping using Query Syntax
+            var deliveryOutcomes = from d in completedDoDeliveries
+                                   group d by d.DeliveryEndType into g
+                                   select new { Status = g.Key, Count = g.Count() };
+
+            var successfulDeliveries = deliveryOutcomes.FirstOrDefault(x => x.Status == DO.DeliveryEndTypes.Delivered)?.Count ?? 0;
+
+            var deliveryDurations = completedDoDeliveries
+                .Select(d => (d.DeliveryEndTime!.Value - d.DeliveryStartTime).TotalMinutes);
+
+            return new BO.CourierStatistics
+            {
+                TotalDeliveries = totalDeliveries,
+                TotalDistance = Math.Round(completedDoDeliveries.Sum(d => d.ActualDistance ?? 0), 2),
+                AverageDeliveryTime = TimeSpan.FromMinutes(deliveryDurations.Any() ? deliveryDurations.Average() : 0),
+                OnTimeDeliveries = onTimeDeliveries,
+                LateDeliveries = totalDeliveries - onTimeDeliveries,
+                SuccessRate = totalDeliveries > 0 ? Math.Round((double)successfulDeliveries / totalDeliveries * 100, 2) : 0
+            };
+        }
+        catch (Exception ex)
         {
             TotalDeliveries = totalDeliveries,
             TotalDistance = Math.Round(completedDoDeliveries.Sum(d => d.ActualDistance ?? 0), 2),
@@ -494,6 +600,8 @@ internal static class CourierManager
             LateDeliveries = totalDeliveries - onTimeDeliveries,
             SuccessRate = totalDeliveries > 0 ? Math.Round((double)successfulDeliveries / totalDeliveries * 100, 2) : 0
         };
+            throw Tools.ConvertDalException(ex);
+        }
     }
 
 
@@ -505,6 +613,10 @@ internal static class CourierManager
     {
         var config = s_dal.Config;
         var inactivityRange = config.InactivityRange; //
+        try
+        {
+            var config = s_dal.Config;
+            var inactivityRange = config.InactivityRange; //
 
         // Use Query Syntax for the complex correlation logic (Demonstrates: Join Into, Let, Where, Select)
         var inactiveCouriersQuery = 
@@ -519,18 +631,46 @@ internal static class CourierManager
                 .Max()
             where (newClock - lastActivity) > inactivityRange
             select new { Courier = c };
+            // Use Query Syntax for the complex correlation logic (Demonstrates: Join Into, Let, Where, Select)
+            var inactiveCouriersQuery =
+                from c in s_dal.Courier.ReadAll(c => c.Active)
+                join d in s_dal.Delivery.ReadAll() on c.Id equals d.CourierId into deliveries
 
         // Materialize and update (required to avoid updating IEnumerable while iterating)
         var couriersToUpdate = inactiveCouriersQuery.ToList();
         if (couriersToUpdate.Any())
         {
             couriersToUpdate.ForEach(x =>
+                where !deliveries.Any(d => d.DeliveryEndTime == null) // Not currently busy
+
+                let lastActivity = deliveries
+                    .Select(d => d.DeliveryEndTime ?? DateTime.MinValue)
+                    .DefaultIfEmpty(c.EmploymentStartTime)
+                    .Max()
+                where (newClock - lastActivity) > inactivityRange
+                select new { Courier = c };
+
+            // Materialize and update (required to avoid updating IEnumerable while iterating)
+            var couriersToUpdate = inactiveCouriersQuery.ToList();
+            if (couriersToUpdate.Any())
             {
                 Debug.WriteLine($"Deactivating courier ID {x.Courier.Id} due to inactivity.");
                 s_dal.Courier.Update(x.Courier with { Active = false });
                 Observers.NotifyItemUpdated(x.Courier.Id);
             });
             Observers.NotifyListUpdated();
+                couriersToUpdate.ForEach(x =>
+                {
+                    Debug.WriteLine($"Deactivating courier ID {x.Courier.Id} due to inactivity.");
+                    s_dal.Courier.Update(x.Courier with { Active = false });
+                    Observers.NotifyItemUpdated(x.Courier.Id);
+                });
+                Observers.NotifyListUpdated();
+            }
+        }
+        catch (Exception ex)
+        {
+            throw Tools.ConvertDalException(ex);
         }
     }
 }
