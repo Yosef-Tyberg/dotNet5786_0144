@@ -222,12 +222,17 @@ internal static class DeliveryManager
                 DeliveryEndTime = doDelivery.DeliveryEndTime
             };
             
+            //cancelled dummy orders don't need calculated properties
+            if (boDelivery.CourierId == 0)
+            {
+                return boDelivery;
+            }
             //add business logic
             if(boDelivery.DeliveryEndTime is not null)
             {
                 boDelivery.DeliveryDuration = (TimeSpan)(boDelivery.DeliveryEndTime - boDelivery.DeliveryStartTime);
-                boDelivery.AverageSpeed = boDelivery.ActualDistance is not null && boDelivery.DeliveryDuration.TotalHours > 0 
-                    ? Math.Round((double)boDelivery.ActualDistance / boDelivery.DeliveryDuration.TotalHours, 2)
+                boDelivery.AverageSpeed = boDelivery.ActualDistance is not null && ((TimeSpan)boDelivery.DeliveryDuration).TotalHours > 0 
+                    ? Math.Round((double)boDelivery.ActualDistance / ((TimeSpan)boDelivery.DeliveryDuration).TotalHours, 2)
                     : 0;
             }
             else
