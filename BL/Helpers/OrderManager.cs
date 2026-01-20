@@ -140,7 +140,22 @@ internal static class OrderManager
             };
             
             boOrder.OrderStatus = DetermineOrderStatus(deliveries);
-            
+
+            var lastDelivery = deliveries.OrderByDescending(d => d.DeliveryStartTime).First();
+            var config = s_dal.Config;
+            //if not closed, calculate
+            if (boOrder.OrderStatus == BO.OrderStatus.InProgress || boOrder.OrderStatus == BO.OrderStatus.Open)
+            {
+                boOrder.ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, lastDelivery);
+            }
+            //if closed, compare to max allowed time
+            else
+            {
+                if (lastDelivery.DeliveryEndTime > (doOrder.OrderOpenTime + config.MaxDeliveryTimeSpan))
+                    boOrder.ScheduleStatus = BO.ScheduleStatus.Late;
+                else
+                    boOrder.ScheduleStatus = BO.ScheduleStatus.OnTime;
+            }
             return boOrder;
         }
         catch (Exception ex)
@@ -198,7 +213,8 @@ internal static class OrderManager
                 OrderType = boOrder.OrderType,
                 CustomerFullName = boOrder.CustomerFullName,
                 OrderStatus = boOrder.OrderStatus,
-                OrderOpenTime = boOrder.OrderOpenTime
+                OrderOpenTime = boOrder.OrderOpenTime,
+                ScheduleStatus = boOrder.ScheduleStatus
             };
         }
         catch (Exception ex)
