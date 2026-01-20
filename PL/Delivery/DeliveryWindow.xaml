@@ -6,105 +6,120 @@
         xmlns:local="clr-namespace:PL.Delivery"
         xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
-        Title="Delivery Window" Height="600" Width="500"
+        Title="Delivery Details" Width="450" SizeToContent="Height"
+        ResizeMode="NoResize"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
 
     <Window.Resources>
-        <!-- Converters and Collections -->
-        <pl:IdToVisibilityConverter x:Key="IdToVisibilityConverter"/>
-        <pl:DeliveryTypesCollection x:Key="DeliveryTypesCollection"/>
-        <pl:DeliveryEndTypesCollection x:Key="DeliveryEndTypesCollection"/>
-        <pl:ScheduleStatusCollection x:Key="ScheduleStatusCollection"/>
-        <pl:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
         <pl:DateTimeToStringConverter x:Key="DateTimeToStringConverter"/>
         <pl:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
+        
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#555"/>
+        </Style>
+        
+        <Style TargetType="TextBlock" x:Key="ValueStyle">
+            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
     </Window.Resources>
 
-    <Grid>
+    <Grid Margin="15">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/> <!-- Button -->
         </Grid.RowDefinitions>
 
-        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-        <!-- Main Grid: 4 Columns (Label, Input, Label, Input) -->
-        <Grid Margin="10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+        <TextBlock Text="{Binding CurrentDelivery.Id, StringFormat='Delivery #{0}'}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,15"/>
 
-            <!-- Column 1: Editable/Basic Info -->
-            <!-- ID Field: Visible only in Update mode -->
-            <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3" Visibility="{Binding CurrentDelivery.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
-            <TextBox Grid.Row="0" Grid.Column="1" Margin="3" IsReadOnly="True" Background="LightGray"
-                     Text="{Binding CurrentDelivery.Id, Mode=OneWay}"
-                     Visibility="{Binding CurrentDelivery.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+        <StackPanel Grid.Row="1">
+            <!-- General Info -->
+            <GroupBox Header="General Information" Margin="0,0,0,10" Padding="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-            <!-- Delivery Details -->
-            <Label Grid.Row="1" Grid.Column="0" Content="Courier ID:" Margin="3"/>
-            <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentDelivery.CourierId, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+                    <TextBlock Text="Order ID:" Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.OrderId}" Style="{StaticResource ValueStyle}" Grid.Row="0" Grid.Column="1"/>
 
-            <Label Grid.Row="2" Grid.Column="0" Content="Order ID:" Margin="3"/>
-            <TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding CurrentDelivery.OrderId, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+                    <TextBlock Text="Courier ID:" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.CourierId}" Style="{StaticResource ValueStyle}" Grid.Row="1" Grid.Column="1"/>
 
-            <Label Grid.Row="3" Grid.Column="0" Content="Delivery Type:" Margin="3"/>
-            <ComboBox Grid.Row="3" Grid.Column="1" Margin="3" 
-                      ItemsSource="{Binding Source={StaticResource DeliveryTypesCollection}}"
-                      SelectedValue="{Binding CurrentDelivery.DeliveryType, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+                    <TextBlock Text="Transport:" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.DeliveryType}" Style="{StaticResource ValueStyle}" Grid.Row="2" Grid.Column="1"/>
+                </Grid>
+            </GroupBox>
 
-            <Label Grid.Row="4" Grid.Column="0" Content="Distance (km):" Margin="3"/>
-            <TextBox Grid.Row="4" Grid.Column="1" Margin="3" Text="{Binding CurrentDelivery.ActualDistance, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <!-- Status & Timeline -->
+            <GroupBox Header="Status &amp; Timeline" Margin="0,0,0,10" Padding="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-            <Label Grid.Row="5" Grid.Column="0" Content="Start Time:" Margin="3"/>
-            <TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding CurrentDelivery.DeliveryStartTime, Mode=TwoWay, Converter={StaticResource DateTimeToStringConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+                    <TextBlock Text="Schedule:" Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.ScheduleStatus}" Style="{StaticResource ValueStyle}" Grid.Row="0" Grid.Column="1"/>
 
-            <Label Grid.Row="6" Grid.Column="0" Content="End Time:" Margin="3"/>
-            <TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding CurrentDelivery.DeliveryEndTime, Mode=TwoWay, Converter={StaticResource DateTimeToStringConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+                    <TextBlock Text="Start Time:" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.DeliveryStartTime, Converter={StaticResource DateTimeToStringConverter}}" Style="{StaticResource ValueStyle}" Grid.Row="1" Grid.Column="1"/>
 
-            <Label Grid.Row="7" Grid.Column="0" Content="End Type:" Margin="3"/>
-            <ComboBox Grid.Row="7" Grid.Column="1" Margin="3" 
-                      ItemsSource="{Binding Source={StaticResource DeliveryEndTypesCollection}}"
-                      SelectedValue="{Binding CurrentDelivery.DeliveryEndType, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+                    <TextBlock Text="Expected:" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.ExpectedDeliveryTime, Converter={StaticResource DateTimeToStringConverter}}" Style="{StaticResource ValueStyle}" Grid.Row="2" Grid.Column="1"/>
 
-            <!-- Column 2: Read-Only Stats -->
-            <!-- Calculated Statistics and Status -->
-            <Label Grid.Row="0" Grid.Column="2" Content="Schedule:" Margin="3"/>
-            <TextBox Grid.Row="0" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
-                     Text="{Binding CurrentDelivery.ScheduleStatus, Mode=OneWay}"/>
+                    <TextBlock Text="End Time:" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.DeliveryEndTime, Converter={StaticResource DateTimeToStringConverter}, TargetNullValue='In Progress'}" Style="{StaticResource ValueStyle}" Grid.Row="3" Grid.Column="1"/>
 
-            <Label Grid.Row="1" Grid.Column="2" Content="Expected Time:" Margin="3"/>
-            <TextBox Grid.Row="1" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
-                     Text="{Binding CurrentDelivery.ExpectedDeliveryTime, Mode=OneWay, Converter={StaticResource DateTimeToStringConverter}}"/>
+                    <TextBlock Text="Outcome:" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.DeliveryEndType, TargetNullValue='--'}" Style="{StaticResource ValueStyle}" Grid.Row="4" Grid.Column="1"/>
+                </Grid>
+            </GroupBox>
 
-            <Label Grid.Row="2" Grid.Column="2" Content="Max Time:" Margin="3"/>
-            <TextBox Grid.Row="2" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
-                     Text="{Binding CurrentDelivery.MaximumDeliveryTime, Mode=OneWay, Converter={StaticResource DateTimeToStringConverter}}"/>
+            <!-- Performance -->
+            <GroupBox Header="Performance Metrics" Margin="0,0,0,10" Padding="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-            <Label Grid.Row="3" Grid.Column="2" Content="Duration:" Margin="3"/>
-            <TextBox Grid.Row="3" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
-                     Text="{Binding CurrentDelivery.DeliveryDuration, Mode=OneWay, Converter={StaticResource TimeSpanToStringConverter}}"/>
+                    <TextBlock Text="Distance:" Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.ActualDistance, StringFormat='{}{0} km', TargetNullValue='--'}" Style="{StaticResource ValueStyle}" Grid.Row="0" Grid.Column="1"/>
 
-            <Label Grid.Row="4" Grid.Column="2" Content="Avg Speed:" Margin="3"/>
-            <TextBox Grid.Row="4" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
-                     Text="{Binding CurrentDelivery.AverageSpeed, Mode=OneWay, Converter={StaticResource NullableDoubleConverter}}"/>
-        </Grid>
-        </ScrollViewer>
-        <!-- Note: Delivery creation/update is usually handled by logic, but this window is provided for completeness/admin override -->
+                    <TextBlock Text="Duration:" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.DeliveryDuration, Converter={StaticResource TimeSpanToStringConverter}}" Style="{StaticResource ValueStyle}" Grid.Row="1" Grid.Column="1"/>
+
+                    <TextBlock Text="Avg Speed:" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.AverageSpeed, StringFormat='{}{0} km/h'}" Style="{StaticResource ValueStyle}" Grid.Row="2" Grid.Column="1"/>
+                </Grid>
+            </GroupBox>
+        </StackPanel>
+
+        <Button Grid.Row="2" Content="Close" Click="BtnClose_Click" HorizontalAlignment="Center" Padding="30,8" Margin="0,10,0,0"/>
     </Grid>
 </Window>

@@ -1,5 +1,4 @@
-﻿﻿﻿﻿using System;
-﻿﻿﻿﻿using System;
+﻿﻿﻿using System;
 using System.Windows;
 using BlApi;
 
@@ -23,48 +22,25 @@ public partial class DeliveryWindow : Window
     public static readonly DependencyProperty CurrentDeliveryProperty =
         DependencyProperty.Register("CurrentDelivery", typeof(BO.Delivery), typeof(DeliveryWindow), new PropertyMetadata(null));
 
-    // Button text ("Add" or "Update")
-    public string ButtonText
-    {
-        get { return (string)GetValue(ButtonTextProperty); }
-        set { SetValue(ButtonTextProperty, value); }
-    }
-
-    public static readonly DependencyProperty ButtonTextProperty =
-        DependencyProperty.Register("ButtonText", typeof(string), typeof(DeliveryWindow), new PropertyMetadata("Close"));
-
     /// <summary>
     /// Constructor for DeliveryWindow.
     /// </summary>
-    /// <param name="id">ID of the delivery (0 for new).</param>
-    public DeliveryWindow(int id = 0)
+    /// <param name="id">ID of the delivery to view.</param>
+    public DeliveryWindow(int id)
     {
-        ButtonText = "Close";
         InitializeComponent();
-        Init(id);
+        LoadDelivery(id);
     }
 
     // Initialize window state
-    private void Init(int id)
+    private void LoadDelivery(int id)
     {
         try
         {
-            if (id == 0)
-            {
-                // Add Mode: Initialize default delivery
-                CurrentDelivery = new BO.Delivery
-                {
-                    DeliveryStartTime = s_bl.Admin.GetClock(),
-                    DeliveryType = BO.DeliveryTypes.Motorcycle
-                };
-            }
-            else
-            {
-                // Update Mode: Load delivery and register observer
-                CurrentDelivery = s_bl.Delivery.Read(id);
-                s_bl.Delivery.AddObserver(id, Observer);
-                Closing += (s, e) => s_bl.Delivery.RemoveObserver(id, Observer);
-            }
+            CurrentDelivery = s_bl.Delivery.Read(id);
+            // Register observer to keep view updated if delivery changes while open
+            s_bl.Delivery.AddObserver(id, Observer);
+            Closing += (s, e) => s_bl.Delivery.RemoveObserver(id, Observer);
         }
         catch (Exception ex)
         {
@@ -76,18 +52,14 @@ public partial class DeliveryWindow : Window
     // Observer to refresh delivery data
     private void Observer()
     {
-        Dispatcher.Invoke(() => CurrentDelivery = s_bl.Delivery.Read(CurrentDelivery.Id));
+        Dispatcher.Invoke(() => 
+        {
+            try { CurrentDelivery = s_bl.Delivery.Read(CurrentDelivery.Id); } catch { }
+        });
     }
 
-    // Handle Add/Update action
-    private void BtnAddUpdate_Click(object sender, RoutedEventArgs e)
+    private void BtnClose_Click(object sender, RoutedEventArgs e)
     {
-        // Delivery updates are generally restricted by BL logic (e.g. PickUp, Deliver).
-        // This button is a placeholder for generic update if supported by BL, 
-        // or specific actions should be implemented instead.
-        // For strict adherence to the generic instructions, we leave this empty or show a message
-        // as the BL interface for generic 'Update(Delivery)' might not exist or be intended for this use.
-        MessageBox.Show("Generic update for Delivery is not supported via this window in the current BL implementation.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
         Close();
     }
 }

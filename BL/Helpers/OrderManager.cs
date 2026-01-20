@@ -28,9 +28,6 @@ internal static class OrderManager
         if (boOrder == null)
             throw new BO.BlInvalidNullInputException("Order object cannot be null.");
 
-        if (boOrder.Id < 0)
-            throw new BO.BlInvalidIdException($"Order ID '{boOrder.Id}' cannot be negative.");
-
         if (!Enum.IsDefined(typeof(BO.OrderTypes), boOrder.OrderType))
             throw new BO.BlInvalidInputException("Invalid order type.");
 

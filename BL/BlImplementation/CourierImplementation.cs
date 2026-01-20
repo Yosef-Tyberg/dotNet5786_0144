@@ -67,7 +67,7 @@ internal sealed class CourierImplementation : ICourier
     }
 
     /// <inheritdoc />
-    public static bool IsCourierInDelivery(int courierId)
+    public bool IsCourierInDelivery(int courierId)
     {
         return CourierManager.IsCourierInDelivery(courierId);
     }
