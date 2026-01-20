@@ -5,16 +5,21 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PL.Courier"
+        xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
-        Title="Courier List" Height="640" Width="800"
+        Title="Courier List" Height="640" Width="500"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
         Loaded="Window_Loaded" Closed="Window_Closed">
     <Window.Resources>
+        <!-- Collection for Filter ComboBox -->
+        <pl:DeliveryTypesCollection x:Key="DeliveryTypesCollection"/>
+        <!-- Style for centering content inside columns -->
+        <Style x:Key="CenterAligned" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
         <!-- Style for centering DataGrid cell content -->
         <Style TargetType="DataGridCell">
             <Setter Property="Padding" Value="5"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
         <!-- Style for centering DataGrid column headers -->
         <Style TargetType="DataGridColumnHeader">
@@ -42,7 +47,7 @@
                    HorizontalAlignment="Left" 
                    Margin="10,0,0,0"/>
             <ComboBox Grid.Column="1" 
-                      ItemsSource="{Binding Source={StaticResource DeliveryTypesCollectionKey}}"
+                      ItemsSource="{Binding Source={StaticResource DeliveryTypesCollection}}"
                       SelectedValue="{Binding StatusFilter, Mode=TwoWay}"
                       SelectionChanged="cbStatusSelector_SelectionChanged"
                       VerticalAlignment="Stretch" 
@@ -50,24 +55,23 @@
         </Grid>
         
         <!-- DataGrid Section (Row 1): Displays the list of couriers -->
-        <DataGrid Grid.Row="1" ItemsSource="{Binding CourierList}" SelectedItem="{Binding SelectedCourier}" MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="None">
+        <DataGrid Grid.Row="1" ItemsSource="{Binding CourierList}" SelectedItem="{Binding SelectedCourier}" 
+                  MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEE"
+                  RowBackground="White" AlternatingRowBackground="#F9F9F9" HeadersVisibility="Column"
+                  BorderThickness="0" Margin="10">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
-                <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*"/>
-                <DataGridTextColumn Header="Type" Binding="{Binding DeliveryType}" Width="Auto"/>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding DeliveryType}" Width="Auto" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridCheckBoxColumn Header="Active" Binding="{Binding Active}" Width="Auto"/>
-                <DataGridTemplateColumn Header="Actions" Width="Auto">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="Delete" Click="BtnDelete_Click" Padding="5"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
         
-        <!-- Add Button (Row 2): Opens the window to create a new courier -->
-        <Button Content="Add" Grid.Row="2" HorizontalAlignment="Center" Height="50" 
-            Width="100" Click="BtnAdd_Click"/>
+        <!-- Action Buttons (Row 2) -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Add Courier" Height="50" Width="120" Click="BtnAdd_Click" Margin="10"/>
+            <Button Content="Delete Selected" Height="50" Width="120" Click="BtnDelete_Click" Margin="10"/>
+        </StackPanel>
     </Grid>
 </Window>

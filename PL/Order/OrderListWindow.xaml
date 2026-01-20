@@ -97,18 +97,12 @@
                 <DataGridTextColumn Header="Order Time" Binding="{Binding OrderOpenTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Status" Binding="{Binding OrderStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Schedule" Binding="{Binding ScheduleStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
-                <!-- Actions -->
-                <DataGridTemplateColumn Header="Actions" Width="Auto">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="Cancel" Click="BtnCancel_Click" Padding="5"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
-        <!-- Add Button (Row 2) -->
-        <Button Content="Add" Grid.Row="2" HorizontalAlignment="Center" Height="50" 
-            Width="100" Click="BtnAdd_Click"/>
+        <!-- Action Buttons (Row 2) -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Add Order" Height="50" Width="120" Click="BtnAdd_Click" Margin="10"/>
+            <Button Content="Cancel Selected" Height="50" Width="120" Click="BtnCancel_Click" Margin="10"/>
+        </StackPanel>
     </Grid>
 </Window>

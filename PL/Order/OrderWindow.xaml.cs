@@ -37,10 +37,10 @@ public partial class OrderWindow : Window
     /// <summary>
     /// Constructor for OrderWindow.
     /// </summary>
-    /// <param name="id">Order ID (null for new).</param>
-    public OrderWindow(int? id = null)
+    /// <param name="id">Order ID (0 for new).</param>
+    public OrderWindow(int id = 0)
     {
-        ButtonText = id == null ? "Add" : "Update";
+        ButtonText = id == 0 ? "Add" : "Update";
         InitializeComponent();
         Init(id);
     }
@@ -48,11 +48,11 @@ public partial class OrderWindow : Window
     /// <summary>
     /// Initialize window state.
     /// </summary>
-    private void Init(int? id)
+    private void Init(int id)
     {
         try
         {
-            if (id == null)
+            if (id == 0)
             {
                 // Add Mode: Default values
                 CurrentOrder = new BO.Order
@@ -65,9 +65,9 @@ public partial class OrderWindow : Window
             else
             {
                 // Update Mode: Load order and register observer
-                CurrentOrder = s_bl.Order.Read(id.Value);
-                s_bl.Order.AddObserver(id.Value, Observer);
-                Closing += (s, e) => s_bl.Order.RemoveObserver(id.Value, Observer);
+                CurrentOrder = s_bl.Order.Read(id);
+                s_bl.Order.AddObserver(id, Observer);
+                Closing += (s, e) => s_bl.Order.RemoveObserver(id, Observer);
             }
         }
         catch (Exception ex)

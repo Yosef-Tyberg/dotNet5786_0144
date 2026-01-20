@@ -31,8 +31,8 @@ internal static class CourierManager
     {
         if (boCourier == null)
             throw new BO.BlInvalidNullInputException("Courier object cannot be null.");
-        //0 is for dummy deliveries
-        if ((boCourier.Id < 100000000 || boCourier.Id > 999999999) && boCourier.Id != 0)
+            
+        if ((boCourier.Id < 100000000 || boCourier.Id > 999999999))
             throw new BO.BlInvalidIdException($"Courier ID '{boCourier.Id}' is not valid. It must be a 9-digit number.");
 
         Tools.ValidateFullName(boCourier.FullName, "Courier full name");

@@ -46,10 +46,10 @@ public partial class CourierWindow : Window
     /// <summary>
     /// Constructor for CourierWindow.
     /// </summary>
-    /// <param name="id">The ID of the courier to update, or null to add a new courier.</param>
-    public CourierWindow(int? id = null)
+    /// <param name="id">The ID of the courier to update, or 0 to add a new courier.</param>
+    public CourierWindow(int id = 0)
     {
-        ButtonText = id == null ? "Add" : "Update";
+        ButtonText = id == 0 ? "Add" : "Update";
         InitializeComponent();
         Init(id);
     }
@@ -57,12 +57,12 @@ public partial class CourierWindow : Window
     /// <summary>
     /// Initializes the window state based on the mode (Add vs Update).
     /// </summary>
-    private void Init(int? id)
+    private void Init(int id)
     {
-        IsIdReadOnly = id != null;
+        IsIdReadOnly = id != 0;
         try
         {
-            if (id == null)
+            if (id == 0)
             {
                 // Add Mode: Initialize with default values
                 CurrentCourier = new BO.Courier
@@ -75,9 +75,9 @@ public partial class CourierWindow : Window
             else
             {
                 // Update Mode: Load existing courier and register observer
-                CurrentCourier = s_bl.Courier.Read(id.Value);
-                s_bl.Courier.AddObserver(id.Value, Observer);
-                Closing += (s, e) => s_bl.Courier.RemoveObserver(id.Value, Observer);
+                CurrentCourier = s_bl.Courier.Read(id);
+                s_bl.Courier.AddObserver(id, Observer);
+                Closing += (s, e) => s_bl.Courier.RemoveObserver(id, Observer);
             }
         }
         catch (Exception ex)

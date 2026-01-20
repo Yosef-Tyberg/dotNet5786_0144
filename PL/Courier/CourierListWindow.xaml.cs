@@ -23,8 +23,13 @@ namespace PL.Courier;
         // Access to the Business Layer
         static readonly BlApi.IBl s_bl = BlApi.Factory.Get();
 
-        // Using object to allow "None" (string) or Enum value
-        public object StatusFilter { get; set; } = "None";
+        public object StatusFilter
+        {
+            get { return (object)GetValue(StatusFilterProperty); }
+            set { SetValue(StatusFilterProperty, value); }
+        }
+        public static readonly DependencyProperty StatusFilterProperty =
+            DependencyProperty.Register("StatusFilter", typeof(object), typeof(CourierListWindow), new PropertyMetadata("None"));
 
         // Dependency Property for the list of couriers bound to the DataGrid
         public IEnumerable<BO.CourierInList> CourierList
@@ -86,8 +91,8 @@ namespace PL.Courier;
         /// </summary>
         private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (sender is DataGrid grid && grid.SelectedItem is BO.CourierInList courier)
-                new CourierWindow(courier.Id).Show();
+            if (SelectedCourier != null)
+                new CourierWindow(SelectedCourier.Id).Show();
         }
 
         /// <summary>
@@ -103,13 +108,13 @@ namespace PL.Courier;
         /// </summary>
         private void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is BO.CourierInList courier)
+            if (SelectedCourier != null)
             {
-                if (MessageBox.Show($"Are you sure you want to delete courier {courier.Id}?", "Delete Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                if (MessageBox.Show($"Are you sure you want to delete courier {SelectedCourier.Id}?", "Delete Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                 {
                     try
                     {
-                        s_bl.Courier.Delete(courier.Id);
+                        s_bl.Courier.Delete(SelectedCourier.Id);
                     }
                     catch (Exception ex)
                     {

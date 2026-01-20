@@ -23,8 +23,21 @@ namespace PL.Delivery;
         // Access to the Business Layer
         static readonly BlApi.IBl s_bl = BlApi.Factory.Get();
 
-        public object StatusFilter { get; set; } = "None";
-        public object EndTypeFilter { get; set; } = "None";
+        public object StatusFilter
+        {
+            get { return (object)GetValue(StatusFilterProperty); }
+            set { SetValue(StatusFilterProperty, value); }
+        }
+        public static readonly DependencyProperty StatusFilterProperty =
+            DependencyProperty.Register("StatusFilter", typeof(object), typeof(DeliveryListWindow), new PropertyMetadata("None"));
+
+        public object EndTypeFilter
+        {
+            get { return (object)GetValue(EndTypeFilterProperty); }
+            set { SetValue(EndTypeFilterProperty, value); }
+        }
+        public static readonly DependencyProperty EndTypeFilterProperty =
+            DependencyProperty.Register("EndTypeFilter", typeof(object), typeof(DeliveryListWindow), new PropertyMetadata("None"));
 
         // Dependency Property for the list of deliveries
         public IEnumerable<BO.DeliveryInList> DeliveryList
@@ -80,20 +93,28 @@ namespace PL.Delivery;
         /// <summary>
         /// Registers the observer when the window is loaded.
         /// </summary>
-        private void Window_Loaded(object sender, RoutedEventArgs e) => s_bl.Delivery.AddObserver(deliveryListObserver);
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            s_bl.Delivery.AddObserver(deliveryListObserver);
+            s_bl.Order.AddObserver(deliveryListObserver);
+        }
 
         /// <summary>
         /// Unregisters the observer when the window is closed.
         /// </summary>
-        private void Window_Closed(object sender, EventArgs e) => s_bl.Delivery.RemoveObserver(deliveryListObserver);
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            s_bl.Delivery.RemoveObserver(deliveryListObserver);
+            s_bl.Order.RemoveObserver(deliveryListObserver);
+        }
 
         /// <summary>
         /// Opens DeliveryWindow in Update mode.
         /// </summary>
         private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (sender is DataGrid grid && grid.SelectedItem is BO.DeliveryInList delivery)
-                new DeliveryWindow(delivery.Id).Show();
+            if (SelectedDelivery != null)
+                new DeliveryWindow(SelectedDelivery.Id).Show();
         }
 
         /// <summary>
@@ -109,13 +130,13 @@ namespace PL.Delivery;
         /// </summary>
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is BO.DeliveryInList delivery)
+            if (SelectedDelivery != null)
             {
-                if (MessageBox.Show($"Are you sure you want to cancel delivery {delivery.Id}?", "Cancel Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                if (MessageBox.Show($"Are you sure you want to cancel delivery {SelectedDelivery.Id}?", "Cancel Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                 {
                     try
                     {
-                        s_bl.Order.Cancel(delivery.OrderId);
+                        s_bl.Order.Cancel(SelectedDelivery.OrderId);
                     }
                     catch (Exception ex)
                     {

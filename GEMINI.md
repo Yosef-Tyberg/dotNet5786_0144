@@ -145,53 +145,36 @@ The `BO.OrderStatus` is derived from the history of deliveries associated with t
 ---
 ## 10. Presentation Layer (PL) Rules and Requirements
 
-This document outlines the mandatory architectural and coding standards for the Presentation Layer (PL) of this WPF application. Adherence to these rules is crucial for maintaining a clean, scalable, and maintainable codebase.
-
----
-
 ### 10.1. Error Handling
-
-- **Catch All Exceptions:** The Presentation Layer must catch all exceptions originating from any layer.
-- **User-Friendly Messages:** Display a `MessageBox` to the user when an error occurs.
-    - The message must be clear, simple, and easily understood by a non-technical user.
-    - Do **not** display raw exception details, stack traces, or internal variable names.
-    - The `MessageBox` must have a meaningful title and an appropriate icon (e.g., Error, Warning, Information).
-
----
+- **Catch All Exceptions:** In the Presentation Layer (PL), it is mandatory to catch all exceptions and display a well-organized message to the user (MessageBox) about the problem.
+- **User-Friendly Messages:** The error message must be clear and understandable to the system user (an ordinary person and not just a programmer). The goal is not to display the exception message, variable names, etc., but to display an informative message with a meaningful title, understandable content, and an appropriate icon.
 
 ### 10.2. Window Management and Data Flow
-
 - **Automatic Window Closing:**
-    - After a new entity is successfully **added**, the "Add" window must close automatically.
-    - After an entity is successfully **updated**, the "Update" window must close automatically.
+    - In entity addition screens, after successful addition, the addition screen must close automatically.
+    - In entity update screens, after successful update, the update screen must close automatically.
 - **Automatic UI Updates:**
-    - The main list window must refresh automatically to show any added or updated entities.
-    - This update mechanism **must** be implemented using the **Observer Design Pattern**. The PL window will register as an observer to the logical layer (BL), which will notify it of any changes.
-- **No Direct Window Communication:** Windows must not share information directly. All data passed between windows must be done through parameters in the window's constructor.
-
----
+    - The list screen must update automatically to include the newly added or updated entity.
+    - This automatic update must be performed using the **Observer design pattern** in the Logical Layer (BL), and the registration for the observers will be done from the PL layer.
+- **No Direct Window Communication:** There will be no direct information sharing between screens. Information transfer will be performed by passing arguments for the screen's constructor parameters.
 
 ### 10.3. MVVM, Data Binding, and Code-Behind Best Practices
-
-The project strictly follows the MVVM (Model-View-ViewModel) pattern to ensure a clean separation of concerns.
-
-- **Minimize Code-Behind:** The code-behind files (`.xaml.cs`) should contain the absolute minimum code necessary. Their role is primarily to handle UI events (like button clicks) and delegate actions. **No business logic should exist in the code-behind.**
-- **Use Data Binding Exclusively:**
-    - **NO `x:Name` for Code-Behind:** Do not name controls in XAML (e.g., `x:Name="MyTextBox"`) to access them in the code-behind. The only exception is for binding one control's property to another's directly within XAML.
-    - **UI Must Update from Data:** All data displayed on screen must be bound to properties in the code-behind. These properties must be implemented in a way that the UI updates automatically when they are changed. You must use one of these two methods:
-        1.  Implement the `INotifyPropertyChanged` interface and raise the `PropertyChanged` event in the property's setter.
-        2.  Define the properties as `DependencyProperty`.
-    - **Bind in XAML:** All data bindings, including setting `DataContext` and `ItemsSource`, must be defined in the XAML file, not in the code-behind.
-- **Rely on DataBinding, Not `sender`:** In event handlers, do not cast the `sender` parameter to access its properties. The required data should always be accessible via data-bound properties.
-- **Use Converters:** For any data conversion, formatting, or conditional logic within a binding (e.g., converting a boolean to `Visibility`, changing a color based on a value), you **must** use a class that implements `IValueConverter`.
-- **Use XAML Comments:** If a control's purpose is not immediately obvious, add a descriptive comment in the XAML: `<!-- This TextBox is for the user's full name -->`.
-
----
+To maintain the MVVM principle (Model-View-ViewModel), which separates logic from design:
+- **No x:Name for Logic:** It is forbidden to name controls via XAML to use them in the Code-behind. Instead, you must use the Data Binding mechanism.
+- **Minimize Code-Behind:** The Code-behind must be minimized to the necessary minimum for handling user input and other WPF events. Project logic will not be performed in this layer, except for basic input validation.
+- **Data Binding Mandatory:**
+    - For data displayed on the screen (single entity or list), it is mandatory to define corresponding properties in the Code-behind.
+    - Updating these properties via the Code-behind must automatically update the display.
+    - Properties must be defined using `INotifyPropertyChanged` or as `Dependency Properties`.
+    - Binding of control attributes to data must be done only through XAML.
+    - **Forbidden:** Changing `DataContext` or `ItemsSource` through Code-behind is forbidden. They must be bound from XAML.
+- **No Sender Access:** It is forbidden to access the properties of `sender` that comes as a parameter in event handling methods (even after casting). Instead, you must always rely on Data Binding.
+- **Converters:** Use `IConverter` in combination with Data Binding for conversions, dynamic input blocking, or dynamic hiding of controls.
+- **Comments:** Use XAML comments (`<!-- ... -->`) to describe controls.
 
 ### 10.4. Business Logic (BL) Interaction
-
-- **Single Call per Action:** Any single user action (e.g., one button click) must result in a **maximum of one call** to the Business Logic layer.
-- **Exception Handling for BL Calls:** Every call to the BL must be wrapped in a `try-catch` block to handle potential exceptions gracefully, as per the Error Handling rules above.
+- **Single Call per Action:** In every operation performed from the GUI, a maximum of one request should be sent to the BL.
+- **Exception Handling:** Remember to catch the possible exceptions resulting from this operation.
 
 ---
 
@@ -207,8 +190,8 @@ While not strictly mandatory until Stage 6, the use of the following advanced WP
 ### 10.6. Single Item View Window Rules
 
 - **Modes:** The window must support two modes based on the entity ID passed to the constructor:
-    - **Add Mode (ID = 0):** Create a new BO instance with default values. Button text must be "Add".
-    - **Update Mode (ID != 0):** Retrieve the existing entity from the BL. Button text must be "Update".
+    - **Add Mode (ID = null):** Create a new BO instance with default values. Button text must be "Add".
+    - **Update Mode (ID != null):** Retrieve the existing entity from the BL. Button text must be "Update".
 - **Data Binding:**
     - The window's `DataContext` must be bound to itself (`{Binding RelativeSource={RelativeSource Mode=Self}}`).
     - Use a **Dependency Property** (e.g., `CurrentEntity`) to hold the BO entity.

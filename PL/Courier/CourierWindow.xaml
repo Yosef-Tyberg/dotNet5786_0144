@@ -13,6 +13,7 @@
     <Window.Resources>
         <!-- Converters and Collections for data binding -->
         <pl:IdToReadOnlyConverter x:Key="IdToReadOnlyConverter"/>
+        <pl:IdToVisibilityConverter x:Key="IdToVisibilityConverter"/>
         <pl:DeliveryTypesCollection x:Key="DeliveryTypesCollection"/>
         <pl:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
 
@@ -96,14 +97,11 @@
             <CheckBox Grid.Row="7" Grid.Column="1" Margin="3" VerticalAlignment="Center" IsChecked="{Binding CurrentCourier.Active, Mode=TwoWay}"/>
 
             <!-- Employment Data (ReadOnly/Calculated) -->
-            <Label Grid.Row="8" Grid.Column="0" Content="Start Date:" Margin="3"/>
-            <DatePicker Grid.Row="8" Grid.Column="1" SelectedDate="{Binding CurrentCourier.EmploymentStartTime, Mode=OneWay}" IsEnabled="False"/>
+            <Label Grid.Row="8" Grid.Column="0" Content="Start Date:" Margin="3" Visibility="{Binding CurrentCourier.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+            <DatePicker Grid.Row="8" Grid.Column="1" SelectedDate="{Binding CurrentCourier.EmploymentStartTime, Mode=OneWay}" IsEnabled="False" Visibility="{Binding CurrentCourier.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
 
-            <Label Grid.Row="9" Grid.Column="0" Content="Employment Duration:" Margin="3"/>
-            <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding CurrentCourier.EmploymentDuration, StringFormat=d\'d \'h\'h \'m\'m}" IsReadOnly="True"/>
-
-            <Label Grid.Row="10" Grid.Column="0" Content="Years Employed:" Margin="3"/>
-            <TextBox Grid.Row="10" Grid.Column="1" Text="{Binding CurrentCourier.YearsEmployed}" IsReadOnly="True"/>
+            <Label Grid.Row="9" Grid.Column="0" Content="Years Employed:" Margin="3" Visibility="{Binding CurrentCourier.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+            <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding CurrentCourier.YearsEmployed}" IsReadOnly="True" Visibility="{Binding CurrentCourier.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
         </Grid>
 
         <!-- Action Button (Add or Update) -->
