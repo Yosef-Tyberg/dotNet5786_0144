@@ -1,9 +1,10 @@
-﻿<Window x:Class="PL.Delivery.DeliveryListWindow"
+﻿﻿<Window x:Class="PL.Delivery.DeliveryListWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PL.Delivery"
+        xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
         Title="Delivery List" Height="640" Width="800"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
@@ -14,32 +15,73 @@
             <RowDefinition Height="500*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
+        <Window.Resources>
+            <pl:ScheduleStatusCollection x:Key="ScheduleStatusCollection"/>
+            <pl:DeliveryEndTypesCollection x:Key="DeliveryEndTypesCollection"/>
+        </Window.Resources>
+
         <!--Internal, Upper Grid-->
         <Grid HorizontalAlignment="Stretch" Height="Auto" Grid.Row="0" 
               VerticalAlignment="Stretch" Width="Auto">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Label Grid.Column="0" 
-                   Content="Select Delivery Status:" 
-                   VerticalAlignment="Center" 
-                   HorizontalAlignment="Left" 
-                   Margin="10,0,0,0"/>
+            
+            <Label Grid.Column="0" Content="Schedule Status:" VerticalAlignment="Center" Margin="10,0,0,0"/>
             <ComboBox Grid.Column="1" 
-                      ItemsSource="{Binding Source={StaticResource ScheduleStatusCollectionKey}}"
+                      ItemsSource="{Binding Source={StaticResource ScheduleStatusCollection}}"
                       SelectedValue="{Binding StatusFilter, Mode=TwoWay}"
-                      SelectionChanged="cbStatusSelector_SelectionChanged"
-                      VerticalAlignment="Stretch" 
-                      HorizontalAlignment="Stretch"/>
+                      SelectionChanged="cbFilter_SelectionChanged"
+                      Width="150" Margin="5"/>
+
+            <Label Grid.Column="2" Content="End Type:" VerticalAlignment="Center" Margin="10,0,0,0"/>
+            <ComboBox Grid.Column="3" 
+                      ItemsSource="{Binding Source={StaticResource DeliveryEndTypesCollection}}"
+                      SelectedValue="{Binding EndTypeFilter, Mode=TwoWay}"
+                      SelectionChanged="cbFilter_SelectionChanged"
+                      Width="150" Margin="5"/>
         </Grid>
-        <DataGrid Grid.Row="1" ItemsSource="{Binding DeliveryList}" SelectedItem="{Binding SelectedDelivery}" MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True">
+        
+        <DataGrid Grid.Row="1" ItemsSource="{Binding DeliveryList}" SelectedItem="{Binding SelectedDelivery}" 
+                  MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEE" VerticalGridLinesVisibility="None"
+                  RowBackground="White" AlternatingRowBackground="#F9F9F9" HeadersVisibility="Column"
+                  BorderThickness="0" Margin="10">
+            <DataGrid.Resources>
+                <Style x:Key="CenterAligned" TargetType="TextBlock">
+                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                </Style>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Padding" Value="5"/>
+                    <Setter Property="Background" Value="#F0F0F0"/>
+                </Style>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="Padding" Value="5"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="DataGridCell">
+                                <Border Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                                    <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </DataGrid.Resources>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
-                <DataGridTextColumn Header="Courier ID" Binding="{Binding CourierId}" Width="Auto"/>
-                <DataGridTextColumn Header="Order ID" Binding="{Binding OrderId}" Width="Auto"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding ScheduleStatus}" Width="Auto"/>
-                <DataGridTextColumn Header="Start Time" Binding="{Binding DeliveryStartTime}" Width="*"/>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Courier ID" Binding="{Binding CourierId}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Order ID" Binding="{Binding OrderId}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Start Time" Binding="{Binding DeliveryStartTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="End Time" Binding="{Binding DeliveryEndTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Schedule" Binding="{Binding ScheduleStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="End Type" Binding="{Binding DeliveryEndType}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTemplateColumn Header="Actions" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

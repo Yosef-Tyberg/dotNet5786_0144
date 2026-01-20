@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +22,7 @@ namespace PL.Delivery;
         static readonly BlApi.IBl s_bl = BlApi.Factory.Get();
 
         public object StatusFilter { get; set; } = "None";
+        public object EndTypeFilter { get; set; } = "None";
 
         public IEnumerable<BO.DeliveryInList> DeliveryList
         {
@@ -41,12 +42,18 @@ namespace PL.Delivery;
 
         private void RefreshList()
         {
-            DeliveryList = (StatusFilter is BO.ScheduleStatus status)
-                ? s_bl.Delivery.ReadAll(d => d.ScheduleStatus == status)
-                : s_bl.Delivery.ReadAll();
+            var deliveries = s_bl.Delivery.ReadAll();
+
+            if (StatusFilter is BO.ScheduleStatus status)
+                deliveries = deliveries.Where(d => d.ScheduleStatus == status);
+
+            if (EndTypeFilter is BO.DeliveryEndTypes endType)
+                deliveries = deliveries.Where(d => d.DeliveryEndType == endType);
+
+            DeliveryList = deliveries;
         }
 
-        private void cbStatusSelector_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshList();
+        private void cbFilter_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshList();
 
         private void deliveryListObserver() => Dispatcher.Invoke(RefreshList);
         private void Window_Loaded(object sender, RoutedEventArgs e) => s_bl.Delivery.AddObserver(deliveryListObserver);

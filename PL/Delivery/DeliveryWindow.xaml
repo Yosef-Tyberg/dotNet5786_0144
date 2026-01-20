@@ -1,4 +1,4 @@
-﻿<Window x:Class="PL.Delivery.DeliveryWindow"
+﻿﻿<Window x:Class="PL.Delivery.DeliveryWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PL.Delivery"
         xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
-        Title="Delivery Window" Height="450" Width="400"
+        Title="Delivery Window" Height="600" Width="500"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
 
     <Window.Resources>
@@ -15,6 +15,8 @@
         <pl:DeliveryEndTypesCollection x:Key="DeliveryEndTypesCollection"/>
         <pl:ScheduleStatusCollection x:Key="ScheduleStatusCollection"/>
         <pl:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
+        <pl:DateTimeToStringConverter x:Key="DateTimeToStringConverter"/>
+        <pl:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -23,8 +25,11 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="10">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+        <Grid Margin="10">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
@@ -37,8 +42,12 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
+            <!-- Column 1: Editable/Basic Info -->
             <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3" Visibility="{Binding CurrentDelivery.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
             <TextBox Grid.Row="0" Grid.Column="1" Margin="3" IsReadOnly="True" Background="LightGray"
                      Text="{Binding CurrentDelivery.Id, Mode=OneWay}"
@@ -55,22 +64,42 @@
                       ItemsSource="{Binding Source={StaticResource DeliveryTypesCollection}}"
                       SelectedValue="{Binding CurrentDelivery.DeliveryType, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
-            <Label Grid.Row="4" Grid.Column="0" Content="Start Time:" Margin="3"/>
-            <DatePicker Grid.Row="4" Grid.Column="1" Margin="3" SelectedDate="{Binding CurrentDelivery.DeliveryStartTime, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <Label Grid.Row="4" Grid.Column="0" Content="Distance (km):" Margin="3"/>
+            <TextBox Grid.Row="4" Grid.Column="1" Margin="3" Text="{Binding CurrentDelivery.ActualDistance, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
-            <Label Grid.Row="5" Grid.Column="0" Content="End Time:" Margin="3"/>
-            <DatePicker Grid.Row="5" Grid.Column="1" Margin="3" SelectedDate="{Binding CurrentDelivery.DeliveryEndTime, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <Label Grid.Row="5" Grid.Column="0" Content="Start Time:" Margin="3"/>
+            <TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding CurrentDelivery.DeliveryStartTime, Mode=TwoWay, Converter={StaticResource DateTimeToStringConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
-            <Label Grid.Row="6" Grid.Column="0" Content="End Type:" Margin="3"/>
-            <ComboBox Grid.Row="6" Grid.Column="1" Margin="3" 
+            <Label Grid.Row="6" Grid.Column="0" Content="End Time:" Margin="3"/>
+            <TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding CurrentDelivery.DeliveryEndTime, Mode=TwoWay, Converter={StaticResource DateTimeToStringConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+
+            <Label Grid.Row="7" Grid.Column="0" Content="End Type:" Margin="3"/>
+            <ComboBox Grid.Row="7" Grid.Column="1" Margin="3" 
                       ItemsSource="{Binding Source={StaticResource DeliveryEndTypesCollection}}"
                       SelectedValue="{Binding CurrentDelivery.DeliveryEndType, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
-            <Label Grid.Row="7" Grid.Column="0" Content="Schedule Status:" Margin="3"/>
-            <ComboBox Grid.Row="7" Grid.Column="1" Margin="3" IsEnabled="False"
-                      ItemsSource="{Binding Source={StaticResource ScheduleStatusCollection}}"
-                      SelectedValue="{Binding CurrentDelivery.ScheduleStatus, Mode=OneWay}"/>
+            <!-- Column 2: Read-Only Stats -->
+            <Label Grid.Row="0" Grid.Column="2" Content="Schedule:" Margin="3"/>
+            <TextBox Grid.Row="0" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
+                     Text="{Binding CurrentDelivery.ScheduleStatus, Mode=OneWay}"/>
+
+            <Label Grid.Row="1" Grid.Column="2" Content="Expected Time:" Margin="3"/>
+            <TextBox Grid.Row="1" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
+                     Text="{Binding CurrentDelivery.ExpectedDeliveryTime, Mode=OneWay, Converter={StaticResource DateTimeToStringConverter}}"/>
+
+            <Label Grid.Row="2" Grid.Column="2" Content="Max Time:" Margin="3"/>
+            <TextBox Grid.Row="2" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
+                     Text="{Binding CurrentDelivery.MaximumDeliveryTime, Mode=OneWay, Converter={StaticResource DateTimeToStringConverter}}"/>
+
+            <Label Grid.Row="3" Grid.Column="2" Content="Duration:" Margin="3"/>
+            <TextBox Grid.Row="3" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
+                     Text="{Binding CurrentDelivery.DeliveryDuration, Mode=OneWay, Converter={StaticResource TimeSpanToStringConverter}}"/>
+
+            <Label Grid.Row="4" Grid.Column="2" Content="Avg Speed:" Margin="3"/>
+            <TextBox Grid.Row="4" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
+                     Text="{Binding CurrentDelivery.AverageSpeed, Mode=OneWay, Converter={StaticResource NullableDoubleConverter}}"/>
         </Grid>
+        </ScrollViewer>
         <!-- Note: Delivery creation/update is usually handled by logic, but this window is provided for completeness/admin override -->
     </Grid>
 </Window>
