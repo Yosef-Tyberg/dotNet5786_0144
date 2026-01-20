@@ -47,7 +47,7 @@
         
         <DataGrid Grid.Row="1" ItemsSource="{Binding DeliveryList}" SelectedItem="{Binding SelectedDelivery}" 
                   MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True"
-                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEE" VerticalGridLinesVisibility="None"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEE"
                   RowBackground="White" AlternatingRowBackground="#F9F9F9" HeadersVisibility="Column"
                   BorderThickness="0" Margin="10">
             <DataGrid.Resources>
