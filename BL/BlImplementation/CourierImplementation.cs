@@ -66,6 +66,13 @@ internal sealed class CourierImplementation : ICourier
         return CourierManager.GetCourierStatistics(courierId);
     }
 
+    /// <inheritdoc />
+    public static bool IsCourierInDelivery(int courierId)
+    {
+        return CourierManager.IsCourierInDelivery(courierId);
+    }
+
+
 #region Stage 5 
 
     public void AddObserver(Action listObserver) =>

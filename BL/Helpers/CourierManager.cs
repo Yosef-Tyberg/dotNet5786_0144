@@ -217,9 +217,17 @@ internal static class CourierManager
         }
     }
 
-    private static bool IsCourierInDelivery(int courierId)
-    {
-        return s_dal.Delivery.ReadAll(d => d.CourierId == courierId && d.DeliveryEndTime == null).Any();
+    /// <summary>
+    /// Checks if a courier is in middle of a delivery.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier to update.</param>
+    /// /// <returns>True if courier is in middle of a delivery.</returns>
+    /// <exception cref="BO.BlDoesNotExistException">Thrown if courier doesn't exist.</exception>
+    public static bool IsCourierInDelivery(int courierId)
+    {   
+        if (s_dal.Courier.Read(courierId) != null)
+            return s_dal.Delivery.ReadAll(d => d.CourierId == courierId && d.DeliveryEndTime == null).Any();
+        throw new BlDoesNotExistException();
     }
 
     

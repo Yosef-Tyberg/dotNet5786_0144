@@ -54,6 +54,14 @@ public interface ICourier : IObservable
     /// <returns>A BO.CourierStatistics object.</returns>
     BO.CourierStatistics GetCourierStatistics(int courierId);
 
+    /// <summary>
+    /// Checks if a courier is in middle of a delivery.
+    /// </summary>
+    /// <param name="courierId">The ID of the courier to update.</param>
+    /// /// <returns>True if courier is in middle of a delivery.</returns>
+    /// <exception cref="BO.BlDoesNotExistException">Thrown if courier doesn't exist.</exception>
+    bool IsCourierInDelivery(int courierId);
+
     #endregion
 
     #region Courier Methods

@@ -1,4 +1,5 @@
 ﻿﻿﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.Windows;
 using BlApi;
 
@@ -30,7 +31,7 @@ public partial class DeliveryWindow : Window
     }
 
     public static readonly DependencyProperty ButtonTextProperty =
-        DependencyProperty.Register("ButtonText", typeof(string), typeof(DeliveryWindow), new PropertyMetadata("Add"));
+        DependencyProperty.Register("ButtonText", typeof(string), typeof(DeliveryWindow), new PropertyMetadata("Close"));
 
     /// <summary>
     /// Constructor for DeliveryWindow.
@@ -38,7 +39,7 @@ public partial class DeliveryWindow : Window
     /// <param name="id">ID of the delivery (0 for new).</param>
     public DeliveryWindow(int id = 0)
     {
-        ButtonText = id == 0 ? "Add" : "Update";
+        ButtonText = "Close";
         InitializeComponent();
         Init(id);
     }
@@ -87,5 +88,6 @@ public partial class DeliveryWindow : Window
         // For strict adherence to the generic instructions, we leave this empty or show a message
         // as the BL interface for generic 'Update(Delivery)' might not exist or be intended for this use.
         MessageBox.Show("Generic update for Delivery is not supported via this window in the current BL implementation.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+        Close();
     }
 }

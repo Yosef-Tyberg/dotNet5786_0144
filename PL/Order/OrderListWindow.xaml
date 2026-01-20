@@ -33,7 +33,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            
+
             <!-- Status Filter -->
             <Label Grid.Column="0" Content="Status:" VerticalAlignment="Center" Margin="10,0,0,0"/>
             <ComboBox Grid.Column="1" 
@@ -58,7 +58,6 @@
                       SelectionChanged="cbFilter_SelectionChanged"
                       Width="150" Margin="5"/>
         </Grid>
-        
         <!-- DataGrid Section (Row 1) -->
         <DataGrid Grid.Row="1" ItemsSource="{Binding OrderList}" SelectedItem="{Binding SelectedOrder}" 
                   MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True"

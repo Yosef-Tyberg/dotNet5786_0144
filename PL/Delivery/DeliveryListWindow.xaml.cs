@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -75,7 +75,7 @@ namespace PL.Delivery;
         // Opens DeliveryWindow in Add mode
         private void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
-            new DeliveryWindow().Show();
+            new DeliveryAssignmentWindow().Show();
         }
 
         // Cancels the delivery (via Order cancellation logic)

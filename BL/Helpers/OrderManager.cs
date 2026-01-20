@@ -141,7 +141,7 @@ internal static class OrderManager
             
             boOrder.OrderStatus = DetermineOrderStatus(deliveries);
 
-            var lastDelivery = deliveries.OrderByDescending(d => d.DeliveryStartTime).First();
+            var lastDelivery = deliveries.OrderByDescending(d => d.DeliveryStartTime).FirstOrDefault();
             var config = s_dal.Config;
             //if not closed, calculate
             if (boOrder.OrderStatus == BO.OrderStatus.InProgress || boOrder.OrderStatus == BO.OrderStatus.Open)

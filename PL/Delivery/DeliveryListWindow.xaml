@@ -1,4 +1,4 @@
-﻿<Window x:Class="PL.Delivery.DeliveryListWindow"
+﻿﻿<Window x:Class="PL.Delivery.DeliveryListWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -98,7 +98,7 @@
             </DataGrid.Columns>
         </DataGrid>
         <!-- Add Button (Row 2) -->
-        <Button Content="Add" Grid.Row="2" HorizontalAlignment="Center" Height="50" 
-            Width="100" Click="BtnAdd_Click"/>
+        <Button Content="Assign Delivery" Grid.Row="2" HorizontalAlignment="Center" Height="50" 
+            Width="120" Click="BtnAdd_Click"/>
     </Grid>
 </Window>
