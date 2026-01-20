@@ -211,3 +211,19 @@ let: Used in GetCourierDeliveryHistory, GetOpenOrders, PeriodicCouriersUpdate, a
 select new: Used in GetCourierDeliveryHistory, GetCourierStatistics, PeriodicCouriersUpdate, and GetAvailableOrders.
 grouping: Used in GetCourierStatistics (group d by d.DeliveryEndType).
 sorting: Used in GetCourierDeliveryHistory (orderby d.DeliveryStartTime) and GetAvailableOrders (orderby order.OrderOpenTime).
+
+# Stage 5:
+I first gave Gemini the relevant sections of the Stage 5 instruction document (the rules and requirements) and told it to synthesize the rules and requirements it found into the GEMINI.md file. Then I told it to implement the instructions found thereign in the appropriate files using the prompt:
+
+I'd like to implement the Presentation Layer (PL) now using WPF. Please follow the rules in the GEMINI.md file I created.
+I need a MainWindow for the system clock and config, and list windows for Couriers, Orders, and Deliveries. For the lists, use DataGrid, not ListView.
+I also need windows to add/update the entities, and a window to assign deliveries.
+Please make sure to check the BO folder for the correct names of classes and properties instead of guessing.
+
+example of later follow up prompt:
+examine the window files in the Order folder of the PL project (added in the context). I need a few changes made, all adhering to the rules in the GEMINI.md file. 
+first make sure the list window has columns for every property of OrderInList. 
+second, i would like the list window to also look more professional and modern (instead of actual grid lines like it is now). this should include better placement of the text in 'cells' where appropriate. maybe center aligned instead of left? you decide. 
+third - the list should be filterable by OrderStatus and/or DeliveryStatus. 
+fourth - in the update version of the item view window that opens upon doubleclicking on the list, all properties of BO.Order should be shown. variables that are not updatable (e.g. for order opening time, all calculated properties) should not be able to be selected for change by the user. you can refer to the gemini file and the update method in OrderManager for specifics. in the item window opened by update, all fields which are not set by the user (e,g. order opening time which is set by the clock on creation) should be either invisible or just unchangeable, whichever is easier. 
+in both cases, any property which cannot be changed should have some (professional, modern) visual indication of such in the window.
