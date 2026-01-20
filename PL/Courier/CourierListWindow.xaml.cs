@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,6 +33,8 @@ namespace PL.Courier;
         public static readonly DependencyProperty CourierListProperty =
             DependencyProperty.Register("CourierList", typeof(IEnumerable<BO.CourierInList>), typeof(CourierListWindow), new PropertyMetadata(null));
 
+        public BO.CourierInList? SelectedCourier { get; set; }
+
         public CourierListWindow()
         {
             InitializeComponent();
@@ -50,4 +52,33 @@ namespace PL.Courier;
         private void courierListObserver() => Dispatcher.Invoke(RefreshList);
         private void Window_Loaded(object sender, RoutedEventArgs e) => s_bl.Courier.AddObserver(courierListObserver);
         private void Window_Closed(object sender, EventArgs e) => s_bl.Courier.RemoveObserver(courierListObserver);
+
+        private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (SelectedCourier != null)
+                new CourierWindow(SelectedCourier.Id).Show();
+        }
+
+        private void BtnAdd_Click(object sender, RoutedEventArgs e)
+        {
+            new CourierWindow().Show();
+        }
+
+        private void BtnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is BO.CourierInList courier)
+            {
+                if (MessageBox.Show($"Are you sure you want to delete courier {courier.Id}?", "Delete Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        s_bl.Courier.Delete(courier.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message, "Deletion Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+        }
     }

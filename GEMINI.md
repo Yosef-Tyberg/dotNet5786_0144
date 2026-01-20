@@ -233,3 +233,11 @@ While not strictly mandatory until Stage 6, the use of the following advanced WP
     - Use a `Grid` to align labels (description) and controls (values).
     - Match control types to data types (e.g., `ComboBox` for Enums, `CheckBox` for Booleans, `DatePicker` for DateTime).
     - Populate `ComboBox` items using `ObjectDataProvider` or static resources defined in `PL/Enums.cs`.
+
+### 10.7. List to Detail View Interaction
+
+- **Selection Binding:** Define a simple public property (getter/setter) in the code-behind for the selected item (e.g., `SelectedEntity`). Bind the `SelectedItem` of the list control (DataGrid/ListView) to this property.
+- **Opening Details:**
+    - **Update Mode:** Handle `MouseDoubleClick` on the list control. If the selected item property is not null, open the Single Item Window passing the entity's ID.
+    - **Add Mode:** Handle the 'Add' button click. Open the Single Item Window without passing an ID (or passing 0).
+    - **Window Mode:** Use `.Show()` to allow multiple windows to be open simultaneously.

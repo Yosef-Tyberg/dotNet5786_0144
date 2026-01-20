@@ -32,6 +32,11 @@ public class OrderInList
     public OrderStatus OrderStatus { get; set; }
 
     /// <summary>
+    /// The schedule status of the order (e.g. OnTime, Late).
+    /// </summary>
+    public ScheduleStatus ScheduleStatus { get; set; }
+
+    /// <summary>
     /// Returns a string representation of the OrderInList entity.
     /// </summary>
     public override string ToString() => Helpers.Tools.ToStringProperty(this);

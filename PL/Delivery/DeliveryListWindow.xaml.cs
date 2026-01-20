@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,6 +32,8 @@ namespace PL.Delivery;
         public static readonly DependencyProperty DeliveryListProperty =
             DependencyProperty.Register("DeliveryList", typeof(IEnumerable<BO.DeliveryInList>), typeof(DeliveryListWindow), new PropertyMetadata(null));
 
+        public BO.DeliveryInList? SelectedDelivery { get; set; }
+
         public DeliveryListWindow()
         {
             InitializeComponent();
@@ -49,4 +51,33 @@ namespace PL.Delivery;
         private void deliveryListObserver() => Dispatcher.Invoke(RefreshList);
         private void Window_Loaded(object sender, RoutedEventArgs e) => s_bl.Delivery.AddObserver(deliveryListObserver);
         private void Window_Closed(object sender, EventArgs e) => s_bl.Delivery.RemoveObserver(deliveryListObserver);
+
+        private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (SelectedDelivery != null)
+                new DeliveryWindow(SelectedDelivery.Id).Show();
+        }
+
+        private void BtnAdd_Click(object sender, RoutedEventArgs e)
+        {
+            new DeliveryWindow().Show();
+        }
+
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is BO.DeliveryInList delivery)
+            {
+                if (MessageBox.Show($"Are you sure you want to cancel delivery {delivery.Id}?", "Cancel Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        s_bl.Order.Cancel(delivery.OrderId);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message, "Cancellation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+        }
     }

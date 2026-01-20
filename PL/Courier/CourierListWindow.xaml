@@ -8,6 +8,16 @@
         Title="Courier List" Height="640" Width="800"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
         Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="40*"/>
@@ -33,15 +43,22 @@
                       VerticalAlignment="Stretch" 
                       HorizontalAlignment="Stretch"/>
         </Grid>
-        <DataGrid Grid.Row="1" ItemsSource="{Binding CourierList}" AutoGenerateColumns="False" IsReadOnly="True">
+        <DataGrid Grid.Row="1" ItemsSource="{Binding CourierList}" SelectedItem="{Binding SelectedCourier}" MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="None">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
                 <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*"/>
                 <DataGridTextColumn Header="Type" Binding="{Binding DeliveryType}" Width="Auto"/>
                 <DataGridCheckBoxColumn Header="Active" Binding="{Binding Active}" Width="Auto"/>
+                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Delete" Click="BtnDelete_Click" Padding="5"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
         <Button Content="Add" Grid.Row="2" HorizontalAlignment="Center" Height="50" 
-            Width="100"/>
+            Width="100" Click="BtnAdd_Click"/>
     </Grid>
 </Window>

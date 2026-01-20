@@ -33,16 +33,23 @@
                       VerticalAlignment="Stretch" 
                       HorizontalAlignment="Stretch"/>
         </Grid>
-        <DataGrid Grid.Row="1" ItemsSource="{Binding DeliveryList}" AutoGenerateColumns="False" IsReadOnly="True">
+        <DataGrid Grid.Row="1" ItemsSource="{Binding DeliveryList}" SelectedItem="{Binding SelectedDelivery}" MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
                 <DataGridTextColumn Header="Courier ID" Binding="{Binding CourierId}" Width="Auto"/>
                 <DataGridTextColumn Header="Order ID" Binding="{Binding OrderId}" Width="Auto"/>
                 <DataGridTextColumn Header="Status" Binding="{Binding ScheduleStatus}" Width="Auto"/>
                 <DataGridTextColumn Header="Start Time" Binding="{Binding DeliveryStartTime}" Width="*"/>
+                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Cancel" Click="BtnCancel_Click" Padding="5"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
         <Button Content="Add" Grid.Row="2" HorizontalAlignment="Center" Height="50" 
-            Width="100"/>
+            Width="100" Click="BtnAdd_Click"/>
     </Grid>
 </Window>

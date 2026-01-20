@@ -1,9 +1,10 @@
-﻿<Window x:Class="PL.Order.OrderListWindow"
+﻿﻿<Window x:Class="PL.Order.OrderListWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PL.Order"
+        xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
         Title="Order List" Height="640" Width="800"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
@@ -14,34 +15,92 @@
             <RowDefinition Height="500*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
+        <Window.Resources>
+            <pl:OrderStatusCollection x:Key="OrderStatusCollection"/>
+            <pl:OrderTypesCollection x:Key="OrderTypesCollection"/>
+            <pl:ScheduleStatusCollection x:Key="ScheduleStatusCollection"/>
+        </Window.Resources>
+
         <!--Internal, Upper Grid-->
         <Grid HorizontalAlignment="Stretch" Height="Auto" Grid.Row="0" 
               VerticalAlignment="Stretch" Width="Auto">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Label Grid.Column="0" 
-                   Content="Select Order Type:" 
-                   VerticalAlignment="Center" 
-                   HorizontalAlignment="Left" 
-                   Margin="10,0,0,0"/>
+            
+            <Label Grid.Column="0" Content="Status:" VerticalAlignment="Center" Margin="10,0,0,0"/>
             <ComboBox Grid.Column="1" 
-                      ItemsSource="{Binding Source={StaticResource OrderStatusCollectionKey}}"
+                      ItemsSource="{Binding Source={StaticResource OrderStatusCollection}}"
                       SelectedValue="{Binding StatusFilter, Mode=TwoWay}"
-                      SelectionChanged="cbStatusSelector_SelectionChanged"
-                      VerticalAlignment="Stretch" 
-                      HorizontalAlignment="Stretch"/>
+                      SelectionChanged="cbFilter_SelectionChanged"
+                      Width="150" Margin="5"/>
+
+            <Label Grid.Column="2" Content="Type:" VerticalAlignment="Center" Margin="10,0,0,0"/>
+            <ComboBox Grid.Column="3" 
+                      ItemsSource="{Binding Source={StaticResource OrderTypesCollection}}"
+                      SelectedValue="{Binding TypeFilter, Mode=TwoWay}"
+                      SelectionChanged="cbFilter_SelectionChanged"
+                      Width="150" Margin="5"/>
+
+            <Label Grid.Column="4" Content="Schedule:" VerticalAlignment="Center" Margin="10,0,0,0"/>
+            <ComboBox Grid.Column="5" 
+                      ItemsSource="{Binding Source={StaticResource ScheduleStatusCollection}}"
+                      SelectedValue="{Binding ScheduleStatusFilter, Mode=TwoWay}"
+                      SelectionChanged="cbFilter_SelectionChanged"
+                      Width="150" Margin="5"/>
         </Grid>
-        <DataGrid Grid.Row="1" ItemsSource="{Binding OrderList}" AutoGenerateColumns="False" IsReadOnly="True">
+        
+        <DataGrid Grid.Row="1" ItemsSource="{Binding OrderList}" SelectedItem="{Binding SelectedOrder}" 
+                  MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEE" VerticalGridLinesVisibility="None"
+                  RowBackground="White" AlternatingRowBackground="#F9F9F9" HeadersVisibility="Column"
+                  BorderThickness="0" Margin="10">
+            <DataGrid.Resources>
+                <Style x:Key="CenterAligned" TargetType="TextBlock">
+                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                </Style>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Padding" Value="5"/>
+                    <Setter Property="Background" Value="#F0F0F0"/>
+                </Style>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="Padding" Value="5"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="DataGridCell">
+                                <Border Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                                    <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </DataGrid.Resources>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding OrderType}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Customer Name" Binding="{Binding CustomerFullName}" Width="*"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding OrderStatus}" Width="Auto"/>
-                <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="Auto"/>
+                <DataGridTextColumn Header="Order Time" Binding="{Binding OrderOpenTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding OrderStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Schedule" Binding="{Binding ScheduleStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Cancel" Click="BtnCancel_Click" Padding="5"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
         <Button Content="Add" Grid.Row="2" HorizontalAlignment="Center" Height="50" 
-            Width="100"/>
+            Width="100" Click="BtnAdd_Click"/>
     </Grid>
 </Window>

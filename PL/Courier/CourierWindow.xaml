@@ -1,4 +1,4 @@
-﻿﻿<Window x:Class="PL.Courier.CourierWindow"
+﻿<Window x:Class="PL.Courier.CourierWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,13 +6,30 @@
         xmlns:local="clr-namespace:PL.Courier"
         xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
-        Title="Courier Window" Height="450" Width="400"
+        Title="Courier Window" Height="550" Width="450"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
-    
+
     <Window.Resources>
         <pl:IdToReadOnlyConverter x:Key="IdToReadOnlyConverter"/>
         <pl:DeliveryTypesCollection x:Key="DeliveryTypesCollection"/>
         <pl:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Margin" Value="3"/>
+            <Style.Triggers>
+                <Trigger Property="IsReadOnly" Value="True">
+                    <Setter Property="Background" Value="#EEE"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="DatePicker">
+            <Setter Property="Margin" Value="3"/>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#EEE"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -36,38 +53,46 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3"/>
-            <TextBox Grid.Row="0" Grid.Column="1" Margin="3" 
+            <TextBox Grid.Row="0" Grid.Column="1" 
                      Text="{Binding CurrentCourier.Id, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"
                      IsReadOnly="{Binding CurrentCourier.Id, Converter={StaticResource IdToReadOnlyConverter}}"/>
 
             <Label Grid.Row="1" Grid.Column="0" Content="Full Name:" Margin="3"/>
-            <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentCourier.FullName, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CurrentCourier.FullName, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
             <Label Grid.Row="2" Grid.Column="0" Content="Phone:" Margin="3"/>
-            <TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding CurrentCourier.MobilePhone, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CurrentCourier.MobilePhone, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
             <Label Grid.Row="3" Grid.Column="0" Content="Email:" Margin="3"/>
-            <TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding CurrentCourier.Email, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding CurrentCourier.Email, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
             <Label Grid.Row="4" Grid.Column="0" Content="Password:" Margin="3"/>
-            <TextBox Grid.Row="4" Grid.Column="1" Margin="3" Text="{Binding CurrentCourier.Password, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
-
-            <Label Grid.Row="5" Grid.Column="0" Content="Max Distance (km):" Margin="3"/>
-            <TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding CurrentCourier.PersonalMaxDeliveryDistance, Converter={StaticResource NullableDoubleConverter}, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
-
-            <Label Grid.Row="6" Grid.Column="0" Content="Delivery Type:" Margin="3"/>
-            <ComboBox Grid.Row="6" Grid.Column="1" Margin="3" 
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding CurrentCourier.Password, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            
+            <Label Grid.Row="5" Grid.Column="0" Content="Delivery Type:" Margin="3"/>
+            <ComboBox Grid.Row="5" Grid.Column="1" Margin="3" 
                       ItemsSource="{Binding Source={StaticResource DeliveryTypesCollection}}"
                       SelectedValue="{Binding CurrentCourier.DeliveryType, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            
+            <Label Grid.Row="6" Grid.Column="0" Content="Max Distance (km):" Margin="3"/>
+            <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding CurrentCourier.PersonalMaxDeliveryDistance, Converter={StaticResource NullableDoubleConverter}, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
             <Label Grid.Row="7" Grid.Column="0" Content="Active:" Margin="3"/>
             <CheckBox Grid.Row="7" Grid.Column="1" Margin="3" VerticalAlignment="Center" IsChecked="{Binding CurrentCourier.Active, Mode=TwoWay}"/>
-            
+
             <Label Grid.Row="8" Grid.Column="0" Content="Start Date:" Margin="3"/>
-            <DatePicker Grid.Row="8" Grid.Column="1" Margin="3" SelectedDate="{Binding CurrentCourier.EmploymentStartTime, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <DatePicker Grid.Row="8" Grid.Column="1" SelectedDate="{Binding CurrentCourier.EmploymentStartTime, Mode=OneWay}" IsEnabled="False"/>
+
+            <Label Grid.Row="9" Grid.Column="0" Content="Employment Duration:" Margin="3"/>
+            <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding CurrentCourier.EmploymentDuration, StringFormat=d'd 'h'h 'm'm'}" IsReadOnly="True"/>
+
+            <Label Grid.Row="10" Grid.Column="0" Content="Years Employed:" Margin="3"/>
+            <TextBox Grid.Row="10" Grid.Column="1" Text="{Binding CurrentCourier.YearsEmployed}" IsReadOnly="True"/>
         </Grid>
 
         <Button Grid.Row="1" Content="{Binding ButtonText}" Margin="10" Padding="10,5" Click="BtnAddUpdate_Click"/>
