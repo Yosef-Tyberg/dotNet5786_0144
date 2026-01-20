@@ -25,40 +25,47 @@ internal static class OrderManager
     /// <param name="lon">The longitude of the order's address.</param>
     public static void OrderValidation(BO.Order boOrder, double lat, double lon)
     {
-        if (boOrder == null)
-            throw new BO.BlInvalidNullInputException("Order object cannot be null.");
+        try
+        {
+            if (boOrder == null)
+                throw new BO.BlInvalidNullInputException("Order object cannot be null.");
 
-        if (!Enum.IsDefined(typeof(BO.OrderTypes), boOrder.OrderType))
-            throw new BO.BlInvalidInputException("Invalid order type.");
+            if (!Enum.IsDefined(typeof(BO.OrderTypes), boOrder.OrderType))
+                throw new BO.BlInvalidInputException("Invalid order type.");
 
-        if (string.IsNullOrWhiteSpace(boOrder.VerbalDescription))
-            throw new BO.BlInvalidInputException("Order verbal description cannot be empty.");
+            if (string.IsNullOrWhiteSpace(boOrder.VerbalDescription))
+                throw new BO.BlInvalidInputException("Order verbal description cannot be empty.");
 
-        Tools.ValidateFullName(boOrder.CustomerFullName, "Customer full name");
-        Tools.ValidatePhoneNumber(boOrder.CustomerMobile, "Customer mobile");
+            Tools.ValidateFullName(boOrder.CustomerFullName, "Customer full name");
+            Tools.ValidatePhoneNumber(boOrder.CustomerMobile, "Customer mobile");
 
-        if (boOrder.Volume <= 0)
-            throw new BO.BlInvalidInputException($"Volume {boOrder.Volume} must be positive.");
+            if (boOrder.Volume <= 0)
+                throw new BO.BlInvalidInputException($"Volume {boOrder.Volume} must be positive.");
 
-        if (boOrder.Weight <= 0)
-            throw new BO.BlInvalidInputException($"Weight {boOrder.Weight} must be positive.");
+            if (boOrder.Weight <= 0)
+                throw new BO.BlInvalidInputException($"Weight {boOrder.Weight} must be positive.");
 
-        if (boOrder.Height <= 0)
-            throw new BO.BlInvalidInputException($"Height {boOrder.Height} must be positive.");
+            if (boOrder.Height <= 0)
+                throw new BO.BlInvalidInputException($"Height {boOrder.Height} must be positive.");
 
-        if (boOrder.Width <= 0)
-            throw new BO.BlInvalidInputException($"Width {boOrder.Width} must be positive.");
+            if (boOrder.Width <= 0)
+                throw new BO.BlInvalidInputException($"Width {boOrder.Width} must be positive.");
 
-        if (string.IsNullOrWhiteSpace(boOrder.FullOrderAddress))
-            throw new BO.BlInvalidAddressException("Order address cannot be empty.");
+            if (string.IsNullOrWhiteSpace(boOrder.FullOrderAddress))
+                throw new BO.BlInvalidAddressException("Order address cannot be empty.");
 
-        // Validate address validity
-        Tools.GetCoordinates(boOrder.FullOrderAddress);
+            // Validate address validity
+            Tools.GetCoordinates(boOrder.FullOrderAddress);
 
-        var config = s_dal.Config;
-        var distance = Tools.GetAerialDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), lat, lon);
-        if (distance > config.MaxGeneralDeliveryDistanceKm)
-            throw new BO.BlInvalidInputException($"Order location is too far from the company's location. a maximum of {config.MaxGeneralDeliveryDistanceKm}km is allowed");
+            var config = s_dal.Config;
+            var distance = Tools.GetAerialDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), lat, lon);
+            if (distance > config.MaxGeneralDeliveryDistanceKm)
+                throw new BO.BlInvalidInputException($"Order location is too far from the company's location. a maximum of {config.MaxGeneralDeliveryDistanceKm}km is allowed");
+        }
+        catch (Exception ex)
+        {
+            throw Tools.ConvertDalException(ex);
+        }
     }
 
     /// <summary>
@@ -425,72 +432,79 @@ internal static class OrderManager
     /// <returns>the tracking information for the order</returns>
     public static BO.OrderTracking GetOrderTracking(int orderId)
     {
-        DO.Order doOrder = s_dal.Order.Read(orderId) ?? 
-            throw new BO.BlDoesNotExistException($"Order with ID {orderId} does not exist");
-
-        var deliveries = s_dal.Delivery.ReadAll(d => d.OrderId == orderId);
-        BO.OrderStatus status = DetermineOrderStatus(deliveries);
-        DO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d != null && d.DeliveryEndTime == null);
-
-        // Get config once at the top
-        var config = s_dal.Config;
-
-        // Get Assigned Courier (only if InProgress) - OPTIMIZED
-        BO.CourierInList? assignedCourier = null;
-        if (status == BO.OrderStatus.InProgress && activeDelivery != null)
+        try
         {
-            try
+            DO.Order doOrder = s_dal.Order.Read(orderId) ??
+                throw new BO.BlDoesNotExistException($"Order with ID {orderId} does not exist");
+
+            var deliveries = s_dal.Delivery.ReadAll(d => d.OrderId == orderId);
+            BO.OrderStatus status = DetermineOrderStatus(deliveries);
+            DO.Delivery? activeDelivery = deliveries.FirstOrDefault(d => d != null && d.DeliveryEndTime == null);
+
+            // Get config once at the top
+            var config = s_dal.Config;
+
+            // Get Assigned Courier (only if InProgress) - OPTIMIZED
+            BO.CourierInList? assignedCourier = null;
+            if (status == BO.OrderStatus.InProgress && activeDelivery != null)
             {
-                var doCourier = s_dal.Courier.Read(activeDelivery.CourierId);
-                if (doCourier != null)
+                try
                 {
-                    assignedCourier = new BO.CourierInList
+                    var doCourier = s_dal.Courier.Read(activeDelivery.CourierId);
+                    if (doCourier != null)
                     {
-                        Id = doCourier.Id,
-                        FullName = doCourier.FullName,
-                        DeliveryType = (BO.DeliveryTypes)doCourier.DeliveryType,
-                        Active = doCourier.Active
-                    };
+                        assignedCourier = new BO.CourierInList
+                        {
+                            Id = doCourier.Id,
+                            FullName = doCourier.FullName,
+                            DeliveryType = (BO.DeliveryTypes)doCourier.DeliveryType,
+                            Active = doCourier.Active
+                        };
+                    }
                 }
+                catch (DO.DalDoesNotExistException) { /* Courier might have been deleted, ignore */ }
             }
-            catch (DO.DalDoesNotExistException) { /* Courier might have been deleted, ignore */ }
-        }
 
-        // Map Delivery History - OPTIMIZED & FIXED
-        IEnumerable<BO.DeliveryInList> history = deliveries
-            .OrderBy(d => d.DeliveryStartTime)
-            .Select(d => new BO.DeliveryInList
+            // Map Delivery History - OPTIMIZED & FIXED
+            IEnumerable<BO.DeliveryInList> history = deliveries
+                .OrderBy(d => d.DeliveryStartTime)
+                .Select(d => new BO.DeliveryInList
+                {
+                    Id = d.Id,
+                    OrderId = d.OrderId,
+                    CourierId = d.CourierId,
+                    DeliveryStartTime = d.DeliveryStartTime,
+                    ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, d), // Pass config
+                    DeliveryEndType = d.DeliveryEndType.HasValue ? (BO.DeliveryEndTypes?)d.DeliveryEndType.Value : null,
+                    DeliveryEndTime = d.DeliveryEndTime
+                });
+
+            // Calculate Timing Properties - FIXED
+            DateTime? maxDeliveryTime = doOrder.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
+            DateTime? expectedDeliveryTime = null;
+            if (activeDelivery != null)
             {
-                Id = d.Id,
-                OrderId = d.OrderId,
-                CourierId = d.CourierId,
-                DeliveryStartTime = d.DeliveryStartTime,
-                ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, d), // Pass config
-                DeliveryEndType = d.DeliveryEndType.HasValue ? (BO.DeliveryEndTypes?)d.DeliveryEndType.Value : null,
-                DeliveryEndTime = d.DeliveryEndTime
-            });
+                expectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(activeDelivery.DeliveryType, doOrder, config, activeDelivery); // Pass config
+            }
 
-        // Calculate Timing Properties - FIXED
-        DateTime? maxDeliveryTime = doOrder.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
-        DateTime? expectedDeliveryTime = null;
-        if (activeDelivery != null)
-        {
-            expectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(activeDelivery.DeliveryType, doOrder, config, activeDelivery); // Pass config
+            return new BO.OrderTracking
+            {
+                Id = doOrder.Id,
+                Status = status,
+                AssignedCourier = assignedCourier,
+                DeliveryHistory = history,
+                VerbalDescription = doOrder.VerbalDescription,
+                CustomerFullName = doOrder.CustomerFullName,
+                OrderOpenTime = doOrder.OrderOpenTime,
+                ExpectedDeliveryTime = expectedDeliveryTime,
+                MaxDeliveryTime = maxDeliveryTime,
+                FullOrderAddress = doOrder.FullOrderAddress
+            };
         }
-
-        return new BO.OrderTracking
+        catch (Exception ex)
         {
-            Id = doOrder.Id,
-            Status = status,
-            AssignedCourier = assignedCourier,
-            DeliveryHistory = history,
-            VerbalDescription = doOrder.VerbalDescription,
-            CustomerFullName = doOrder.CustomerFullName,
-            OrderOpenTime = doOrder.OrderOpenTime,
-            ExpectedDeliveryTime = expectedDeliveryTime,
-            MaxDeliveryTime = maxDeliveryTime,
-            FullOrderAddress = doOrder.FullOrderAddress
-        };
+            throw Tools.ConvertDalException(ex);
+        }
     }
 
 
