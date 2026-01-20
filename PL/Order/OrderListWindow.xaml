@@ -9,6 +9,7 @@
         Title="Order List" Height="640" Width="800"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
         Loaded="Window_Loaded" Closed="Window_Closed">
+    <!-- Window Resources: Collections for filtering -->
     <Window.Resources>
         <pl:OrderStatusCollection x:Key="OrderStatusCollection"/>
         <pl:OrderTypesCollection x:Key="OrderTypesCollection"/>
@@ -21,7 +22,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!--Internal, Upper Grid-->
+        <!-- Filter Section (Row 0): Filters for Status, Type, and Schedule -->
         <Grid HorizontalAlignment="Stretch" Height="Auto" Grid.Row="0" 
               VerticalAlignment="Stretch" Width="Auto">
             <Grid.ColumnDefinitions>
@@ -33,6 +34,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             
+            <!-- Status Filter -->
             <Label Grid.Column="0" Content="Status:" VerticalAlignment="Center" Margin="10,0,0,0"/>
             <ComboBox Grid.Column="1" 
                       ItemsSource="{Binding Source={StaticResource OrderStatusCollection}}"
@@ -40,6 +42,7 @@
                       SelectionChanged="cbFilter_SelectionChanged"
                       Width="150" Margin="5"/>
 
+            <!-- Type Filter -->
             <Label Grid.Column="2" Content="Type:" VerticalAlignment="Center" Margin="10,0,0,0"/>
             <ComboBox Grid.Column="3" 
                       ItemsSource="{Binding Source={StaticResource OrderTypesCollection}}"
@@ -47,6 +50,7 @@
                       SelectionChanged="cbFilter_SelectionChanged"
                       Width="150" Margin="5"/>
 
+            <!-- Schedule Filter -->
             <Label Grid.Column="4" Content="Schedule:" VerticalAlignment="Center" Margin="10,0,0,0"/>
             <ComboBox Grid.Column="5" 
                       ItemsSource="{Binding Source={StaticResource ScheduleStatusCollection}}"
@@ -55,11 +59,13 @@
                       Width="150" Margin="5"/>
         </Grid>
         
+        <!-- DataGrid Section (Row 1) -->
         <DataGrid Grid.Row="1" ItemsSource="{Binding OrderList}" SelectedItem="{Binding SelectedOrder}" 
                   MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True"
                   GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEE"
                   RowBackground="White" AlternatingRowBackground="#F9F9F9" HeadersVisibility="Column"
                   BorderThickness="0" Margin="10">
+            <!-- DataGrid Styles -->
             <DataGrid.Resources>
                 <Style x:Key="CenterAligned" TargetType="TextBlock">
                     <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -83,6 +89,7 @@
                     </Setter>
                 </Style>
             </DataGrid.Resources>
+            <!-- Columns -->
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Type" Binding="{Binding OrderType}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
@@ -90,6 +97,7 @@
                 <DataGridTextColumn Header="Order Time" Binding="{Binding OrderOpenTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Status" Binding="{Binding OrderStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Schedule" Binding="{Binding ScheduleStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
+                <!-- Actions -->
                 <DataGridTemplateColumn Header="Actions" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -99,6 +107,7 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
+        <!-- Add Button (Row 2) -->
         <Button Content="Add" Grid.Row="2" HorizontalAlignment="Center" Height="50" 
             Width="100" Click="BtnAdd_Click"/>
     </Grid>

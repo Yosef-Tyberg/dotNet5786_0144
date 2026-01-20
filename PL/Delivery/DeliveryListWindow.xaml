@@ -9,6 +9,7 @@
         Title="Delivery List" Height="640" Width="800"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
         Loaded="Window_Loaded" Closed="Window_Closed">
+    <!-- Window Resources: Collections for ComboBoxes -->
     <Window.Resources>
         <pl:ScheduleStatusCollection x:Key="ScheduleStatusCollection"/>
         <pl:DeliveryEndTypesCollection x:Key="DeliveryEndTypesCollection"/>
@@ -20,7 +21,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!--Internal, Upper Grid-->
+        <!-- Filter Section (Row 0): Filters for Schedule Status and End Type -->
         <Grid HorizontalAlignment="Stretch" Height="Auto" Grid.Row="0" 
               VerticalAlignment="Stretch" Width="Auto">
             <Grid.ColumnDefinitions>
@@ -30,6 +31,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             
+            <!-- Schedule Status Filter -->
             <Label Grid.Column="0" Content="Schedule Status:" VerticalAlignment="Center" Margin="10,0,0,0"/>
             <ComboBox Grid.Column="1" 
                       ItemsSource="{Binding Source={StaticResource ScheduleStatusCollection}}"
@@ -37,6 +39,7 @@
                       SelectionChanged="cbFilter_SelectionChanged"
                       Width="150" Margin="5"/>
 
+            <!-- End Type Filter -->
             <Label Grid.Column="2" Content="End Type:" VerticalAlignment="Center" Margin="10,0,0,0"/>
             <ComboBox Grid.Column="3" 
                       ItemsSource="{Binding Source={StaticResource DeliveryEndTypesCollection}}"
@@ -45,11 +48,13 @@
                       Width="150" Margin="5"/>
         </Grid>
         
+        <!-- DataGrid Section (Row 1): Displays the list of deliveries -->
         <DataGrid Grid.Row="1" ItemsSource="{Binding DeliveryList}" SelectedItem="{Binding SelectedDelivery}" 
                   MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True"
                   GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEE"
                   RowBackground="White" AlternatingRowBackground="#F9F9F9" HeadersVisibility="Column"
                   BorderThickness="0" Margin="10">
+            <!-- DataGrid Resources: Styles for cells and headers -->
             <DataGrid.Resources>
                 <Style x:Key="CenterAligned" TargetType="TextBlock">
                     <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -73,6 +78,7 @@
                     </Setter>
                 </Style>
             </DataGrid.Resources>
+            <!-- Columns Definition -->
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Courier ID" Binding="{Binding CourierId}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
@@ -81,6 +87,7 @@
                 <DataGridTextColumn Header="End Time" Binding="{Binding DeliveryEndTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Schedule" Binding="{Binding ScheduleStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="End Type" Binding="{Binding DeliveryEndType}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
+                <!-- Action Column: Cancel Button -->
                 <DataGridTemplateColumn Header="Actions" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -90,6 +97,7 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
+        <!-- Add Button (Row 2) -->
         <Button Content="Add" Grid.Row="2" HorizontalAlignment="Center" Height="50" 
             Width="100" Click="BtnAdd_Click"/>
     </Grid>

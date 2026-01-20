@@ -10,6 +10,7 @@ namespace PL.Order;
 /// </summary>
 public partial class OrderWindow : Window
 {
+    // Access to Business Layer
     private static IBl s_bl = Factory.Get();
 
     public BO.Order CurrentOrder
@@ -18,9 +19,11 @@ public partial class OrderWindow : Window
         set { SetValue(CurrentOrderProperty, value); }
     }
 
+    // Dependency Property for Order entity
     public static readonly DependencyProperty CurrentOrderProperty =
         DependencyProperty.Register("CurrentOrder", typeof(BO.Order), typeof(OrderWindow), new PropertyMetadata(null));
 
+    // Button Text ("Add" or "Update")
     public string ButtonText
     {
         get { return (string)GetValue(ButtonTextProperty); }
@@ -30,6 +33,10 @@ public partial class OrderWindow : Window
     public static readonly DependencyProperty ButtonTextProperty =
         DependencyProperty.Register("ButtonText", typeof(string), typeof(OrderWindow), new PropertyMetadata("Add"));
 
+    /// <summary>
+    /// Constructor for OrderWindow.
+    /// </summary>
+    /// <param name="id">Order ID (0 for new).</param>
     public OrderWindow(int id = 0)
     {
         ButtonText = id == 0 ? "Add" : "Update";
@@ -37,12 +44,14 @@ public partial class OrderWindow : Window
         Init(id);
     }
 
+    // Initialize window state
     private void Init(int id)
     {
         try
         {
             if (id == 0)
             {
+                // Add Mode: Default values
                 CurrentOrder = new BO.Order
                 {
                     OrderOpenTime = s_bl.Admin.GetClock(),
@@ -52,6 +61,7 @@ public partial class OrderWindow : Window
             }
             else
             {
+                // Update Mode: Load order and register observer
                 CurrentOrder = s_bl.Order.Read(id);
                 s_bl.Order.AddObserver(id, Observer);
                 Closing += (s, e) => s_bl.Order.RemoveObserver(id, Observer);
@@ -64,11 +74,13 @@ public partial class OrderWindow : Window
         }
     }
 
+    // Observer to refresh order data
     private void Observer()
     {
         Dispatcher.Invoke(() => CurrentOrder = s_bl.Order.Read(CurrentOrder.Id));
     }
 
+    // Handle Add/Update action
     private void BtnAddUpdate_Click(object sender, RoutedEventArgs e)
     {
         Tools.ExecuteSafeAction(this, () =>

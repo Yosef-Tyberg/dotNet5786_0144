@@ -10,6 +10,7 @@
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
 
     <Window.Resources>
+        <!-- Converters and Collections -->
         <pl:IdToVisibilityConverter x:Key="IdToVisibilityConverter"/>
         <pl:OrderTypesCollection x:Key="OrderTypesCollection"/>
         <pl:OrderStatusCollection x:Key="OrderStatusCollection"/>
@@ -24,6 +25,7 @@
         </Grid.RowDefinitions>
 
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+        <!-- Main Grid Layout -->
         <Grid Margin="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -46,11 +48,13 @@
             </Grid.RowDefinitions>
 
             <!-- Column 1: Basic Info -->
+            <!-- ID: Visible only in Update mode -->
             <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3" Visibility="{Binding CurrentOrder.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
             <TextBox Grid.Row="0" Grid.Column="1" Margin="3" IsReadOnly="True" Background="LightGray"
                      Text="{Binding CurrentOrder.Id, Mode=OneWay}"
                      Visibility="{Binding CurrentOrder.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
 
+            <!-- Customer Details -->
             <Label Grid.Row="1" Grid.Column="0" Content="Customer Name:" Margin="3"/>
             <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.CustomerFullName, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
@@ -72,6 +76,7 @@
             <CheckBox Grid.Row="6" Grid.Column="1" Margin="3" IsChecked="{Binding CurrentOrder.Fragile, Mode=TwoWay}" VerticalAlignment="Center"/>
 
             <!-- Column 2: Dimensions & Read-Only Stats -->
+            <!-- Package Dimensions -->
             <Label Grid.Row="0" Grid.Column="2" Content="Volume:" Margin="3"/>
             <TextBox Grid.Row="0" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Volume, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
@@ -85,6 +90,7 @@
             <TextBox Grid.Row="3" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Width, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
             <!-- Read Only Info (Visual indication: Gray background, no border) -->
+            <!-- Status and Timing Information -->
             <Label Grid.Row="5" Grid.Column="2" Content="Status:" Margin="3"/>
             <TextBox Grid.Row="5" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
                      Text="{Binding CurrentOrder.OrderStatus, Mode=OneWay}"

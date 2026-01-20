@@ -10,10 +10,12 @@
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
 
     <Window.Resources>
+        <!-- Converters and Collections for data binding -->
         <pl:IdToReadOnlyConverter x:Key="IdToReadOnlyConverter"/>
         <pl:DeliveryTypesCollection x:Key="DeliveryTypesCollection"/>
         <pl:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
 
+        <!-- Style for TextBoxes to indicate ReadOnly state visually -->
         <Style TargetType="TextBox">
             <Setter Property="Margin" Value="3"/>
             <Style.Triggers>
@@ -22,6 +24,7 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <!-- Style for DatePicker to indicate Disabled state visually -->
         <Style TargetType="DatePicker">
             <Setter Property="Margin" Value="3"/>
             <Style.Triggers>
@@ -33,11 +36,13 @@
     </Window.Resources>
 
     <Grid>
+        <!-- Row definitions: Main form area and Button area -->
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- Main Form Grid -->
         <Grid Grid.Row="0" Margin="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -57,11 +62,13 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
+            <!-- ID Field: ReadOnly in Update mode, Editable in Add mode -->
             <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3"/>
             <TextBox Grid.Row="0" Grid.Column="1" 
                      Text="{Binding CurrentCourier.Id, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"
-                     IsReadOnly="{Binding CurrentCourier.Id, Converter={StaticResource IdToReadOnlyConverter}}"/>
+                     IsReadOnly="{Binding IsIdReadOnly}"/>
 
+            <!-- Basic Information Fields -->
             <Label Grid.Row="1" Grid.Column="0" Content="Full Name:" Margin="3"/>
             <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CurrentCourier.FullName, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
@@ -74,17 +81,20 @@
             <Label Grid.Row="4" Grid.Column="0" Content="Password:" Margin="3"/>
             <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding CurrentCourier.Password, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
             
+            <!-- Delivery Type Selection -->
             <Label Grid.Row="5" Grid.Column="0" Content="Delivery Type:" Margin="3"/>
             <ComboBox Grid.Row="5" Grid.Column="1" Margin="3" 
                       ItemsSource="{Binding Source={StaticResource DeliveryTypesCollection}}"
                       SelectedValue="{Binding CurrentCourier.DeliveryType, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
             
+            <!-- Operational Parameters -->
             <Label Grid.Row="6" Grid.Column="0" Content="Max Distance (km):" Margin="3"/>
             <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding CurrentCourier.PersonalMaxDeliveryDistance, Converter={StaticResource NullableDoubleConverter}, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
             <Label Grid.Row="7" Grid.Column="0" Content="Active:" Margin="3"/>
             <CheckBox Grid.Row="7" Grid.Column="1" Margin="3" VerticalAlignment="Center" IsChecked="{Binding CurrentCourier.Active, Mode=TwoWay}"/>
 
+            <!-- Employment Data (ReadOnly/Calculated) -->
             <Label Grid.Row="8" Grid.Column="0" Content="Start Date:" Margin="3"/>
             <DatePicker Grid.Row="8" Grid.Column="1" SelectedDate="{Binding CurrentCourier.EmploymentStartTime, Mode=OneWay}" IsEnabled="False"/>
 
@@ -95,6 +105,7 @@
             <TextBox Grid.Row="10" Grid.Column="1" Text="{Binding CurrentCourier.YearsEmployed}" IsReadOnly="True"/>
         </Grid>
 
+        <!-- Action Button (Add or Update) -->
         <Button Grid.Row="1" Content="{Binding ButtonText}" Margin="10" Padding="10,5" Click="BtnAddUpdate_Click"/>
     </Grid>
 </Window>

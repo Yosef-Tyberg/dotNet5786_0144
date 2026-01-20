@@ -19,11 +19,13 @@ namespace PL.Delivery;
     /// </summary>
     public partial class DeliveryListWindow : Window
     {
+        // Access to the Business Layer
         static readonly BlApi.IBl s_bl = BlApi.Factory.Get();
 
         public object StatusFilter { get; set; } = "None";
         public object EndTypeFilter { get; set; } = "None";
 
+        // Dependency Property for the list of deliveries
         public IEnumerable<BO.DeliveryInList> DeliveryList
         {
             get { return (IEnumerable<BO.DeliveryInList>)GetValue(DeliveryListProperty); }
@@ -33,6 +35,7 @@ namespace PL.Delivery;
         public static readonly DependencyProperty DeliveryListProperty =
             DependencyProperty.Register("DeliveryList", typeof(IEnumerable<BO.DeliveryInList>), typeof(DeliveryListWindow), new PropertyMetadata(null));
 
+        // Currently selected delivery
         public BO.DeliveryInList? SelectedDelivery { get; set; }
 
         public DeliveryListWindow()
@@ -40,6 +43,7 @@ namespace PL.Delivery;
             InitializeComponent();
         }
 
+        // Refreshes the list applying both Status and EndType filters
         private void RefreshList()
         {
             var deliveries = s_bl.Delivery.ReadAll();
@@ -53,23 +57,28 @@ namespace PL.Delivery;
             DeliveryList = deliveries;
         }
 
+        // Event handler for filter changes
         private void cbFilter_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshList();
 
+        // Observer setup
         private void deliveryListObserver() => Dispatcher.Invoke(RefreshList);
         private void Window_Loaded(object sender, RoutedEventArgs e) => s_bl.Delivery.AddObserver(deliveryListObserver);
         private void Window_Closed(object sender, EventArgs e) => s_bl.Delivery.RemoveObserver(deliveryListObserver);
 
+        // Opens DeliveryWindow in Update mode
         private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (SelectedDelivery != null)
                 new DeliveryWindow(SelectedDelivery.Id).Show();
         }
 
+        // Opens DeliveryWindow in Add mode
         private void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
             new DeliveryWindow().Show();
         }
 
+        // Cancels the delivery (via Order cancellation logic)
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is BO.DeliveryInList delivery)

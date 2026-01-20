@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.Windows;
 using BlApi;
 
@@ -9,6 +9,7 @@ namespace PL.Delivery;
 /// </summary>
 public partial class DeliveryWindow : Window
 {
+    // Access to Business Layer
     private static IBl s_bl = Factory.Get();
 
     public BO.Delivery CurrentDelivery
@@ -17,9 +18,11 @@ public partial class DeliveryWindow : Window
         set { SetValue(CurrentDeliveryProperty, value); }
     }
 
+    // Dependency Property for the Delivery entity
     public static readonly DependencyProperty CurrentDeliveryProperty =
         DependencyProperty.Register("CurrentDelivery", typeof(BO.Delivery), typeof(DeliveryWindow), new PropertyMetadata(null));
 
+    // Button text ("Add" or "Update")
     public string ButtonText
     {
         get { return (string)GetValue(ButtonTextProperty); }
@@ -29,6 +32,10 @@ public partial class DeliveryWindow : Window
     public static readonly DependencyProperty ButtonTextProperty =
         DependencyProperty.Register("ButtonText", typeof(string), typeof(DeliveryWindow), new PropertyMetadata("Add"));
 
+    /// <summary>
+    /// Constructor for DeliveryWindow.
+    /// </summary>
+    /// <param name="id">ID of the delivery (0 for new).</param>
     public DeliveryWindow(int id = 0)
     {
         ButtonText = id == 0 ? "Add" : "Update";
@@ -36,14 +43,14 @@ public partial class DeliveryWindow : Window
         Init(id);
     }
 
+    // Initialize window state
     private void Init(int id)
     {
         try
         {
             if (id == 0)
             {
-                // Note: Creating a delivery manually is complex due to logic constraints, 
-                // but we provide a default object for the view.
+                // Add Mode: Initialize default delivery
                 CurrentDelivery = new BO.Delivery
                 {
                     DeliveryStartTime = s_bl.Admin.GetClock(),
@@ -52,6 +59,7 @@ public partial class DeliveryWindow : Window
             }
             else
             {
+                // Update Mode: Load delivery and register observer
                 CurrentDelivery = s_bl.Delivery.Read(id);
                 s_bl.Delivery.AddObserver(id, Observer);
                 Closing += (s, e) => s_bl.Delivery.RemoveObserver(id, Observer);
@@ -64,11 +72,13 @@ public partial class DeliveryWindow : Window
         }
     }
 
+    // Observer to refresh delivery data
     private void Observer()
     {
         Dispatcher.Invoke(() => CurrentDelivery = s_bl.Delivery.Read(CurrentDelivery.Id));
     }
 
+    // Handle Add/Update action
     private void BtnAddUpdate_Click(object sender, RoutedEventArgs e)
     {
         // Delivery updates are generally restricted by BL logic (e.g. PickUp, Deliver).

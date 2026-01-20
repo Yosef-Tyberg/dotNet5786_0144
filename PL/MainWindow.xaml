@@ -1,4 +1,4 @@
-﻿<Window x:Class="PL.MainWindow"
+﻿﻿<Window x:Class="PL.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:PL"
@@ -31,6 +31,7 @@
                    Margin="0,0,0,15"/>
 
         <!-- System Clock Area -->
+        <!-- Displays current simulated time and allows advancing it -->
         <GroupBox Grid.Row="1" Header="System Clock" Margin="0,0,0,15">
             <Grid Margin="10">
                 <Grid.ColumnDefinitions>
@@ -56,6 +57,7 @@
         </GroupBox>
 
         <!-- Configuration Variables Area -->
+        <!-- Allows viewing and editing system configuration parameters -->
         <GroupBox Grid.Row="2" Header="Configuration Variables" Margin="0,0,0,15">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <Grid Margin="10">
@@ -141,6 +143,7 @@
         </GroupBox>
 
         <!-- Action Buttons -->
+        <!-- Navigation to list windows and DB management -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
             <!-- Button to open the courier list window (Show, not ShowDialog) -->
             <Button Content="Courier List" Click="OpenCourierList_Click" Margin="5"/>

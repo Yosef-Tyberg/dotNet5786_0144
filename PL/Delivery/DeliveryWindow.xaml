@@ -10,6 +10,7 @@
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
 
     <Window.Resources>
+        <!-- Converters and Collections -->
         <pl:IdToVisibilityConverter x:Key="IdToVisibilityConverter"/>
         <pl:DeliveryTypesCollection x:Key="DeliveryTypesCollection"/>
         <pl:DeliveryEndTypesCollection x:Key="DeliveryEndTypesCollection"/>
@@ -26,6 +27,7 @@
         </Grid.RowDefinitions>
 
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+        <!-- Main Grid: 4 Columns (Label, Input, Label, Input) -->
         <Grid Margin="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -48,11 +50,13 @@
             </Grid.RowDefinitions>
 
             <!-- Column 1: Editable/Basic Info -->
+            <!-- ID Field: Visible only in Update mode -->
             <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3" Visibility="{Binding CurrentDelivery.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
             <TextBox Grid.Row="0" Grid.Column="1" Margin="3" IsReadOnly="True" Background="LightGray"
                      Text="{Binding CurrentDelivery.Id, Mode=OneWay}"
                      Visibility="{Binding CurrentDelivery.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
 
+            <!-- Delivery Details -->
             <Label Grid.Row="1" Grid.Column="0" Content="Courier ID:" Margin="3"/>
             <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentDelivery.CourierId, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
@@ -79,6 +83,7 @@
                       SelectedValue="{Binding CurrentDelivery.DeliveryEndType, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
 
             <!-- Column 2: Read-Only Stats -->
+            <!-- Calculated Statistics and Status -->
             <Label Grid.Row="0" Grid.Column="2" Content="Schedule:" Margin="3"/>
             <TextBox Grid.Row="0" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
                      Text="{Binding CurrentDelivery.ScheduleStatus, Mode=OneWay}"/>

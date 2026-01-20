@@ -1,4 +1,4 @@
-﻿﻿using System.Text;
+﻿﻿﻿﻿using System.Text;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,6 +22,7 @@ public partial class MainWindow : Window
 
     #region Dependency Properties
 
+    // Dependency Property for the simulated system time
     public DateTime CurrentTime
     {
         get => (DateTime)GetValue(CurrentTimeProperty);
@@ -34,6 +35,7 @@ public partial class MainWindow : Window
             typeof(DateTime),
             typeof(MainWindow));
 
+    // Dependency Property for the system configuration object
     public BO.Config Configuration
     {
         get => (BO.Config)GetValue(ConfigurationProperty);
@@ -59,6 +61,7 @@ public partial class MainWindow : Window
 
     #region Window Lifecycle
 
+    // Initialize BL and Observers when window loads
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         if (DesignerProperties.GetIsInDesignMode(this))
@@ -86,6 +89,7 @@ public partial class MainWindow : Window
         }
     }
 
+    // Cleanup observers when window closes
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
         if (s_bl == null)
@@ -106,12 +110,14 @@ public partial class MainWindow : Window
 
     #region Observer Methods (6g)
 
+    // Updates CurrentTime when the BL clock changes
     private void ClockObserver()
     {
         Dispatcher.Invoke(() =>
             CurrentTime = s_bl!.Admin.GetClock());
     }
 
+    // Updates Configuration when BL config changes
     private void ConfigObserver()
     {
         Dispatcher.Invoke(() =>
@@ -122,6 +128,7 @@ public partial class MainWindow : Window
 
     #region Clock Controls
 
+    // Methods to advance the system clock by various intervals
     private void AdvanceMinute_Click(object sender, RoutedEventArgs e) =>
         AdvanceClock(TimeSpan.FromMinutes(1));
 
@@ -157,6 +164,7 @@ public partial class MainWindow : Window
 
     #region Configuration
 
+    // Saves the modified configuration back to the BL
     private void SaveConfiguration_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -177,6 +185,7 @@ public partial class MainWindow : Window
 
     #region Database Management (6k)
 
+    // Re-initializes the database with seed data
     private void InitializeDb_Click(object sender, RoutedEventArgs e)
     {
         if (MessageBox.Show(
@@ -206,6 +215,7 @@ public partial class MainWindow : Window
         }
     }
 
+    // Resets the database to an empty state
     private void ResetDb_Click(object sender, RoutedEventArgs e)
     {
         if (MessageBox.Show(
@@ -235,6 +245,7 @@ public partial class MainWindow : Window
         }
     }
 
+    // Helper to close other windows during DB operations
     private static void CloseAllSecondaryWindows()
     {
         foreach (Window window in Application.Current.Windows)
@@ -248,12 +259,15 @@ public partial class MainWindow : Window
 
     #region Navigation Buttons (6j)
 
+    // Open the Courier List Window
     private void OpenCourierList_Click(object sender, RoutedEventArgs e) =>
         new Courier.CourierListWindow().Show();
 
+    // Open the Order List Window
     private void OpenOrderList_Click(object sender, RoutedEventArgs e) =>
         new Order.OrderListWindow().Show();
 
+    // Open the Delivery List Window
     private void OpenDeliveryList_Click(object sender, RoutedEventArgs e) =>
         new Delivery.DeliveryListWindow().Show();
 
