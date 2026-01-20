@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using BO;
 
 
 namespace Helpers;
@@ -112,13 +113,15 @@ internal static class CourierManager
         try
         {
             // We might want to check if the courier has active deliveries before deleting
+            if (IsCourierInDelivery(courierId))
+                throw new BlDeliveryInProgressException();
             s_dal.Courier.Delete(courierId);
             Observers.NotifyListUpdated();
             Observers.NotifyItemUpdated(courierId);
         }
-        catch (DO.DalDoesNotExistException ex)
+        catch (Exception ex)
         {
-            throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.", ex);
+            throw Tools.ConvertDalException(ex);
         }
     }
 
