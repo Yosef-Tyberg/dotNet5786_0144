@@ -36,14 +36,23 @@ namespace PL.Delivery;
             DependencyProperty.Register("DeliveryList", typeof(IEnumerable<BO.DeliveryInList>), typeof(DeliveryListWindow), new PropertyMetadata(null));
 
         // Currently selected delivery
-        public BO.DeliveryInList? SelectedDelivery { get; set; }
+        public BO.DeliveryInList? SelectedDelivery
+        {
+            get { return (BO.DeliveryInList?)GetValue(SelectedDeliveryProperty); }
+            set { SetValue(SelectedDeliveryProperty, value); }
+        }
+
+        public static readonly DependencyProperty SelectedDeliveryProperty =
+            DependencyProperty.Register("SelectedDelivery", typeof(BO.DeliveryInList), typeof(DeliveryListWindow), new PropertyMetadata(null));
 
         public DeliveryListWindow()
         {
             InitializeComponent();
         }
 
-        // Refreshes the list applying both Status and EndType filters
+        /// <summary>
+        /// Refreshes the list applying both Status and EndType filters.
+        /// </summary>
         private void RefreshList()
         {
             var deliveries = s_bl.Delivery.ReadAll();
@@ -57,28 +66,46 @@ namespace PL.Delivery;
             DeliveryList = deliveries;
         }
 
-        // Event handler for filter changes
+        /// <summary>
+        /// Event handler for filter changes.
+        /// </summary>
         private void cbFilter_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshList();
 
-        // Observer setup
+        /// <summary>
+        /// Observer setup to keep the list updated.
+        /// </summary>
         private void deliveryListObserver() => Dispatcher.Invoke(RefreshList);
+
+        /// <summary>
+        /// Registers the observer when the window is loaded.
+        /// </summary>
         private void Window_Loaded(object sender, RoutedEventArgs e) => s_bl.Delivery.AddObserver(deliveryListObserver);
+
+        /// <summary>
+        /// Unregisters the observer when the window is closed.
+        /// </summary>
         private void Window_Closed(object sender, EventArgs e) => s_bl.Delivery.RemoveObserver(deliveryListObserver);
 
-        // Opens DeliveryWindow in Update mode
+        /// <summary>
+        /// Opens DeliveryWindow in Update mode.
+        /// </summary>
         private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (SelectedDelivery != null)
-                new DeliveryWindow(SelectedDelivery.Id).Show();
+            if (sender is DataGrid grid && grid.SelectedItem is BO.DeliveryInList delivery)
+                new DeliveryWindow(delivery.Id).Show();
         }
 
-        // Opens DeliveryWindow in Add mode
+        /// <summary>
+        /// Opens DeliveryWindow in Add mode.
+        /// </summary>
         private void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
             new DeliveryAssignmentWindow().Show();
         }
 
-        // Cancels the delivery (via Order cancellation logic)
+        /// <summary>
+        /// Cancels the delivery (via Order cancellation logic).
+        /// </summary>
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is BO.DeliveryInList delivery)

@@ -37,14 +37,23 @@ public partial class OrderListWindow : Window
         DependencyProperty.Register("OrderList", typeof(IEnumerable<BO.OrderInList>), typeof(OrderListWindow), new PropertyMetadata(null));
 
     // Selected Order
-    public BO.OrderInList? SelectedOrder { get; set; }
+    public BO.OrderInList? SelectedOrder
+    {
+        get { return (BO.OrderInList?)GetValue(SelectedOrderProperty); }
+        set { SetValue(SelectedOrderProperty, value); }
+    }
+
+    public static readonly DependencyProperty SelectedOrderProperty =
+        DependencyProperty.Register("SelectedOrder", typeof(BO.OrderInList), typeof(OrderListWindow), new PropertyMetadata(null));
 
     public OrderListWindow()
     {
         InitializeComponent();
     }
 
-    // Refresh list with all 3 filters applied
+    /// <summary>
+    /// Refresh list with all 3 filters applied.
+    /// </summary>
     private void RefreshList()
     {
         var orders = s_bl.Order.ReadAll();
@@ -61,29 +70,51 @@ public partial class OrderListWindow : Window
         OrderList = orders;
     }
 
-    // Event handlers for filters
+    /// <summary>
+    /// Event handler for status filter selection change.
+    /// </summary>
     private void cbStatusSelector_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshList();
+
+    /// <summary>
+    /// Event handler for general filter selection change.
+    /// </summary>
     private void cbFilter_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshList();
 
-    // Observer setup
+    /// <summary>
+    /// Observer setup to keep the list updated.
+    /// </summary>
     private void orderListObserver() => Dispatcher.Invoke(RefreshList);
+
+    /// <summary>
+    /// Registers the observer when the window is loaded.
+    /// </summary>
     private void Window_Loaded(object sender, RoutedEventArgs e) => s_bl.Order.AddObserver(orderListObserver);
+
+    /// <summary>
+    /// Unregisters the observer when the window is closed.
+    /// </summary>
     private void Window_Closed(object sender, EventArgs e) => s_bl.Order.RemoveObserver(orderListObserver);
 
-    // Open OrderWindow in Update mode
+    /// <summary>
+    /// Open OrderWindow in Update mode.
+    /// </summary>
     private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (SelectedOrder != null)
             new OrderWindow(SelectedOrder.Id).Show();
     }
 
-    // Open OrderWindow in Add mode
+    /// <summary>
+    /// Open OrderWindow in Add mode.
+    /// </summary>
     private void BtnAdd_Click(object sender, RoutedEventArgs e)
     {
         new OrderWindow().Show();
     }
 
-    // Cancel Order logic
+    /// <summary>
+    /// Cancel Order logic.
+    /// </summary>
     private void BtnCancel_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.DataContext is BO.OrderInList order)

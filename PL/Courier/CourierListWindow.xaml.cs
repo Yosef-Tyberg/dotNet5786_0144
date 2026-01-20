@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -36,14 +36,23 @@ namespace PL.Courier;
             DependencyProperty.Register("CourierList", typeof(IEnumerable<BO.CourierInList>), typeof(CourierListWindow), new PropertyMetadata(null));
 
         // The currently selected courier in the DataGrid
-        public BO.CourierInList? SelectedCourier { get; set; }
+        public BO.CourierInList? SelectedCourier
+        {
+            get { return (BO.CourierInList?)GetValue(SelectedCourierProperty); }
+            set { SetValue(SelectedCourierProperty, value); }
+        }
+
+        public static readonly DependencyProperty SelectedCourierProperty =
+            DependencyProperty.Register("SelectedCourier", typeof(BO.CourierInList), typeof(CourierListWindow), new PropertyMetadata(null));
 
         public CourierListWindow()
         {
             InitializeComponent();
         }
 
-        // Refreshes the courier list based on the selected filter
+        /// <summary>
+        /// Refreshes the courier list based on the selected filter.
+        /// </summary>
         private void RefreshList()
         {
             CourierList = (StatusFilter is BO.DeliveryTypes type)
@@ -51,28 +60,46 @@ namespace PL.Courier;
                 : s_bl.Courier.ReadAll();
         }
 
-        // Event handler for filter selection change
+        /// <summary>
+        /// Event handler for filter selection change.
+        /// </summary>
         private void cbStatusSelector_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshList();
 
-        // Observer setup to keep the list updated with changes in the BL
+        /// <summary>
+        /// Observer setup to keep the list updated with changes in the BL.
+        /// </summary>
         private void courierListObserver() => Dispatcher.Invoke(RefreshList);
+
+        /// <summary>
+        /// Registers the observer when the window is loaded.
+        /// </summary>
         private void Window_Loaded(object sender, RoutedEventArgs e) => s_bl.Courier.AddObserver(courierListObserver);
+
+        /// <summary>
+        /// Unregisters the observer when the window is closed.
+        /// </summary>
         private void Window_Closed(object sender, EventArgs e) => s_bl.Courier.RemoveObserver(courierListObserver);
 
-        // Opens the CourierWindow in Update mode when a row is double-clicked
+        /// <summary>
+        /// Opens the CourierWindow in Update mode when a row is double-clicked.
+        /// </summary>
         private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (SelectedCourier != null)
-                new CourierWindow(SelectedCourier.Id).Show();
+            if (sender is DataGrid grid && grid.SelectedItem is BO.CourierInList courier)
+                new CourierWindow(courier.Id).Show();
         }
 
-        // Opens the CourierWindow in Add mode
+        /// <summary>
+        /// Opens the CourierWindow in Add mode.
+        /// </summary>
         private void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
             new CourierWindow().Show();
         }
 
-        // Deletes the selected courier after confirmation
+        /// <summary>
+        /// Deletes the selected courier after confirmation.
+        /// </summary>
         private void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is BO.CourierInList courier)

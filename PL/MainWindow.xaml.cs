@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System.Text;
+﻿﻿﻿﻿﻿﻿using System.Text;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,6 +12,7 @@ using System.Windows.Shapes;
 
 using System.ComponentModel;
 using BlApi;
+using BO;
 
 namespace PL;
 
@@ -153,7 +154,7 @@ public partial class MainWindow : Window
         catch (Exception)
         {
             MessageBox.Show(
-                "Failed to advance the system clock.",
+                ex.Message,
                 "Clock Error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
@@ -170,14 +171,23 @@ public partial class MainWindow : Window
         try
         {
             s_bl!.Admin.SetConfig(Configuration);
+            MessageBox.Show("Configuration saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
-        catch (Exception)
+        catch (BlInvalidInputException ex)
+        {
+            MessageBox.Show(ex.Message, "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        catch (BlInvalidAddressException ex)
+        {
+            MessageBox.Show(ex.Message, "Invalid Address", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
         {
             MessageBox.Show(
-                "Failed to save configuration changes.",
+                $"Failed to save configuration changes. {ex.Message}",
                 "Configuration Error",
                 MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+                MessageBoxImage.Error);
         }
     }
 
@@ -200,11 +210,12 @@ public partial class MainWindow : Window
             Mouse.OverrideCursor = Cursors.Wait;
             CloseAllSecondaryWindows();
             s_bl!.Admin.InitializeDB();
+            MessageBox.Show("Database initialized successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             MessageBox.Show(
-                "Database initialization failed.",
+                $"Database initialization failed. {ex.Message}",
                 "Database Error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
@@ -230,11 +241,12 @@ public partial class MainWindow : Window
             Mouse.OverrideCursor = Cursors.Wait;
             CloseAllSecondaryWindows();
             s_bl!.Admin.ResetDB();
+            MessageBox.Show("Database reset successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             MessageBox.Show(
-                "Database reset failed.",
+                $"Database reset failed. {ex.Message}",
                 "Database Error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);

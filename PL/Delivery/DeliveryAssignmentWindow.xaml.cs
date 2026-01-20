@@ -5,6 +5,9 @@ using System.Windows.Input;
 
 namespace PL.Delivery;
 
+/// <summary>
+/// Interaction logic for DeliveryAssignmentWindow.xaml
+/// </summary>
 public partial class DeliveryAssignmentWindow : Window
 {
     private static readonly BlApi.IBl s_bl = BlApi.Factory.Get();
@@ -72,6 +75,9 @@ public partial class DeliveryAssignmentWindow : Window
         LoadCouriers();
     }
 
+    /// <summary>
+    /// Loads the list of active couriers who are not currently in a delivery.
+    /// </summary>
     private void LoadCouriers()
     {
         Legend = "Choose courier to assign";
@@ -80,6 +86,9 @@ public partial class DeliveryAssignmentWindow : Window
         OrderListVisibility = Visibility.Collapsed;
     }
 
+    /// <summary>
+    /// Handles double-click on a courier to select them and show available orders.
+    /// </summary>
     private void Courier_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (SelectedCourier == null) return;
@@ -99,6 +108,9 @@ public partial class DeliveryAssignmentWindow : Window
         }
     }
 
+    /// <summary>
+    /// Handles double-click on an order to assign it to the selected courier.
+    /// </summary>
     private void Order_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (SelectedOrder == null) return;

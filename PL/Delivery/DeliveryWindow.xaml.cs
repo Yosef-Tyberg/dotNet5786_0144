@@ -32,7 +32,9 @@ public partial class DeliveryWindow : Window
         LoadDelivery(id);
     }
 
-    // Initialize window state
+    /// <summary>
+    /// Initialize window state.
+    /// </summary>
     private void LoadDelivery(int id)
     {
         try
@@ -49,7 +51,9 @@ public partial class DeliveryWindow : Window
         }
     }
 
-    // Observer to refresh delivery data
+    /// <summary>
+    /// Observer to refresh delivery data.
+    /// </summary>
     private void Observer()
     {
         Dispatcher.Invoke(() => 
@@ -58,6 +62,9 @@ public partial class DeliveryWindow : Window
         });
     }
 
+    /// <summary>
+    /// Closes the window.
+    /// </summary>
     private void BtnClose_Click(object sender, RoutedEventArgs e)
     {
         Close();

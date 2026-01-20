@@ -45,21 +45,23 @@ public partial class CourierWindow : Window
     /// <summary>
     /// Constructor for CourierWindow.
     /// </summary>
-    /// <param name="id">The ID of the courier to update, or 0 to add a new courier.</param>
-    public CourierWindow(int id = 0)
+    /// <param name="id">The ID of the courier to update, or null to add a new courier.</param>
+    public CourierWindow(int? id = null)
     {
-        ButtonText = id == 0 ? "Add" : "Update";
+        ButtonText = id == null ? "Add" : "Update";
         InitializeComponent();
         Init(id);
     }
 
-    // Initializes the window state based on the mode (Add vs Update)
-    private void Init(int id)
+    /// <summary>
+    /// Initializes the window state based on the mode (Add vs Update).
+    /// </summary>
+    private void Init(int? id)
     {
-        IsIdReadOnly = id != 0;
+        IsIdReadOnly = id != null;
         try
         {
-            if (id == 0)
+            if (id == null)
             {
                 // Add Mode: Initialize with default values
                 CurrentCourier = new BO.Courier
@@ -72,9 +74,9 @@ public partial class CourierWindow : Window
             else
             {
                 // Update Mode: Load existing courier and register observer
-                CurrentCourier = s_bl.Courier.Read(id);
-                s_bl.Courier.AddObserver(id, Observer);
-                Closing += (s, e) => s_bl.Courier.RemoveObserver(id, Observer);
+                CurrentCourier = s_bl.Courier.Read(id.Value);
+                s_bl.Courier.AddObserver(id.Value, Observer);
+                Closing += (s, e) => s_bl.Courier.RemoveObserver(id.Value, Observer);
             }
         }
         catch (Exception ex)
@@ -84,7 +86,9 @@ public partial class CourierWindow : Window
         }
     }
 
-    // Observer method to refresh the displayed courier data if it changes externally
+    /// <summary>
+    /// Observer method to refresh the displayed courier data if it changes externally.
+    /// </summary>
     private void Observer()
     {
         Dispatcher.Invoke(() =>
@@ -94,7 +98,9 @@ public partial class CourierWindow : Window
         });
     }
 
-    // Handles the Add/Update button click
+    /// <summary>
+    /// Handles the Add/Update button click.
+    /// </summary>
     private void BtnAddUpdate_Click(object sender, RoutedEventArgs e)
     {
         Tools.ExecuteSafeAction(this, () =>
