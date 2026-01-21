@@ -290,8 +290,7 @@ internal static class CourierManager
                 PersonalMaxDeliveryDistance = doCourier.PersonalMaxDeliveryDistance
             };
 
-            boCourier.EmploymentDuration = AdminManager.Now - boCourier.EmploymentStartTime;
-            boCourier.YearsEmployed = Math.Round(boCourier.EmploymentDuration.TotalDays / 365.25, 2);
+            boCourier.YearsEmployed = Math.Round((AdminManager.Now - boCourier.EmploymentStartTime).TotalDays / 365.25, 2);
             
             return boCourier;
         }

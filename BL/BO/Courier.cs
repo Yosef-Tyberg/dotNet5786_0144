@@ -52,10 +52,6 @@ public class Courier
     /// </summary>
     public double? PersonalMaxDeliveryDistance { get; set; }
 
-    /// <summary>
-    /// Duration the courier has been employed. Set by the BL.
-    /// </summary>
-    public TimeSpan EmploymentDuration { get; set; }
 
     /// <summary>
     /// Years the courier has been employed. Set by the BL.

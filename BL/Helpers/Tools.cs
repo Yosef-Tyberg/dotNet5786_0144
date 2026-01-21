@@ -36,6 +36,9 @@ internal static class Tools
         s_coordinateCache.Clear();
         s_routeDistanceCache.Clear();
     }
+    /// <summary>
+    /// Populates the coordinate cache for testing purposes.
+    /// </summary>
     //populate cache for testing purposes
     public static void SeedCoordinateCache()
     {
@@ -52,6 +55,11 @@ internal static class Tools
         s_coordinateCache.TryAdd("King George Street 1, Jerusalem", (31.782000, 35.218200));
         s_coordinateCache.TryAdd("Test Far Address", (32.500000, 35.000000)); // Approx Haifa/North
     }
+    /// <summary>
+    /// Validates a full name, ensuring it is not empty, not too long, contains only valid characters, and consists of at least two words.
+    /// </summary>
+    /// <param name="name">The full name to validate.</param>
+    /// <param name="label">The label for the name field (e.g., "Customer Name").</param>
     #region Validation Methods
 
     public static void ValidateFullName(string name, string label)
@@ -78,6 +86,11 @@ internal static class Tools
             throw new BO.BlInvalidInputException($"{label} must contain at least two words separated by spaces.");
     }
 
+    /// <summary>
+    /// Validates a phone number, ensuring it is not empty and consists of exactly 10 digits starting with 0.
+    /// </summary>
+    /// <param name="phone">The phone number to validate.</param>
+    /// <param name="label">The label for the phone number field (e.g., "Phone Number").</param>
     public static void ValidatePhoneNumber(string phone, string label)
     {
         if (string.IsNullOrWhiteSpace(phone))
@@ -87,6 +100,11 @@ internal static class Tools
             throw new BO.BlInvalidInputException($"{label} must be exactly 10 digits and start with 0.");
     }
 
+    /// <summary>
+    /// Validates an email address, ensuring it is not empty and matches a valid email format.
+    /// </summary>
+    /// <param name="email">The email address to validate.</param>
+    /// <param name="label">The label for the email field (e.g., "Email Address").</param>
     public static void ValidateEmail(string email, string label)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -239,6 +257,11 @@ internal static class Tools
         return $"[{string.Join(", ", items)}]";
     }
 
+    /// <summary>
+    /// Formats a TimeSpan value into a human-readable string.
+    /// </summary>
+    /// <param name="ts">The TimeSpan to format.</param>
+    /// <returns>A formatted string representation of the TimeSpan.</returns>
     private static string FormatTimeSpan(TimeSpan ts)
     {
         bool isNegative = ts < TimeSpan.Zero;
@@ -295,6 +318,11 @@ internal static class Tools
         return R * c;
     }
 
+    /// <summary>
+    /// Converts an angle from degrees to radians.
+    /// </summary>
+    /// <param name="angle">The angle in degrees.</param>
+    /// <returns>The angle in radians.</returns>
     private static double ToRadians(double angle)
     {
         return Math.PI * angle / 180.0;
@@ -408,6 +436,14 @@ internal static class Tools
         throw new BlInvalidInputException("could not find a route");
     }
     #endregion
+    /// <summary>
+    /// Calculates the expected delivery time for an order.
+    /// </summary>
+    /// <param name="deliveryType">The type of delivery.</param>
+    /// <param name="order">The order to calculate the delivery time for.</param>
+    /// <param name="config">The configuration containing delivery settings.</param>
+    /// <param name="activeDelivery">Optional: The active delivery associated with the order.</param>
+    /// <returns>The calculated expected delivery time.</returns>
 
     #region Schedule Methods
 
@@ -486,6 +522,13 @@ internal static class Tools
 
         return BO.ScheduleStatus.OnTime;
     }
+
+    /// <summary>
+    /// Determines the fastest delivery type based on the provided configuration.
+    /// </summary>
+    /// <param name="config">The configuration containing delivery speeds.</param>
+    /// <returns>The fastest delivery type.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when no delivery types are configured.</exception>
 
     internal static DO.DeliveryTypes GetFastestType(DalApi.IConfig config)
     {
