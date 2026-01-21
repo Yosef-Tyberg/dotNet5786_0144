@@ -65,13 +65,19 @@
                 <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Type" Binding="{Binding DeliveryType}" Width="Auto" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridCheckBoxColumn Header="Active" Binding="{Binding Active}" Width="Auto"/>
+                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Delete" Padding="5,0" Command="{Binding DataContext.DeleteSingleCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Id}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
         
         <!-- Action Buttons (Row 2) -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button Content="Add Courier" Height="50" Width="120" Click="BtnAdd_Click" Margin="10"/>
-            <Button Content="Delete Selected" Height="50" Width="120" Click="BtnDelete_Click" Margin="10"/>
         </StackPanel>
     </Grid>
 </Window>

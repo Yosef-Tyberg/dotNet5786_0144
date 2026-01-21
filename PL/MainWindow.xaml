@@ -13,6 +13,7 @@
         <local:DateTimeToStringConverter x:Key="DateTimeToStringConverter"/>
         <local:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
         <local:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
+        <local:StringToIntConverter x:Key="StringToIntConverter"/>
     </Window.Resources>
 
     <Grid Margin="10">
@@ -85,57 +86,57 @@
                     <!-- AdminId -->
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Admin ID" Margin="0,4,0,4"/>
                     <TextBox Grid.Row="0" Grid.Column="1"
-                         Text="{Binding Configuration.AdminId, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Margin="0,4,0,4"/>
+                         Text="{Binding Configuration.AdminId, Converter={StaticResource StringToIntConverter}, UpdateSourceTrigger=LostFocus}" Margin="0,4,0,4"/>
 
                     <!-- AdminPassword -->
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Admin Password" Margin="0,4,0,4"/>
                     <TextBox Grid.Row="1" Grid.Column="1"
-                         Text="{Binding Configuration.AdminPassword, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Margin="0,4,0,4"/>
+                         Text="{Binding Configuration.AdminPassword, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,4"/>
 
                     <!-- AvgCarSpeedKmh -->
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Avg Car Speed (Km/h)" Margin="0,4,0,4"/>
                     <TextBox Grid.Row="2" Grid.Column="1"
-                         Text="{Binding Configuration.AvgCarSpeedKmh, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Margin="0,4,0,4"/>
+                         Text="{Binding Configuration.AvgCarSpeedKmh, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}" Margin="0,4,0,4"/>
 
                     <!-- AvgMotorcycleSpeedKmh -->
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Avg Motorcycle Speed (Km/h)" Margin="0,4,0,4"/>
                     <TextBox Grid.Row="3" Grid.Column="1"
-                         Text="{Binding Configuration.AvgMotorcycleSpeedKmh, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Margin="0,4,0,4"/>
+                         Text="{Binding Configuration.AvgMotorcycleSpeedKmh, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}" Margin="0,4,0,4"/>
 
                     <!-- AvgBicycleSpeedKmh -->
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Avg Bicycle Speed (Km/h)" Margin="0,4,0,4"/>
                     <TextBox Grid.Row="4" Grid.Column="1"
-                         Text="{Binding Configuration.AvgBicycleSpeedKmh, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Margin="0,4,0,4"/>
+                         Text="{Binding Configuration.AvgBicycleSpeedKmh, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}" Margin="0,4,0,4"/>
 
                     <!-- AvgWalkingSpeedKmh -->
                     <TextBlock Grid.Row="5" Grid.Column="0" Text="Avg Walking Speed (Km/h)" Margin="0,4,0,4"/>
                     <TextBox Grid.Row="5" Grid.Column="1"
-                         Text="{Binding Configuration.AvgWalkingSpeedKmh, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Margin="0,4,0,4"/>
+                         Text="{Binding Configuration.AvgWalkingSpeedKmh, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}" Margin="0,4,0,4"/>
 
                     <!-- MaxGeneralDeliveryDistanceKm (nullable) -->
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Max General Delivery Distance (Km)" Margin="0,4,0,4"/>
                     <TextBox Grid.Row="6" Grid.Column="1"
-                         Text="{Binding Configuration.MaxGeneralDeliveryDistanceKm, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Margin="0,4,0,4"/>
+                         Text="{Binding Configuration.MaxGeneralDeliveryDistanceKm, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,4"/>
 
                     <!-- MaxDeliveryTimeSpan -->
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="Max Delivery Time Span" Margin="0,4,0,4"/>
                     <TextBox Grid.Row="7" Grid.Column="1"
-                         Text="{Binding Configuration.MaxDeliveryTimeSpan, Converter={StaticResource TimeSpanToStringConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Margin="0,4,0,4"/>
+                         Text="{Binding Configuration.MaxDeliveryTimeSpan, Converter={StaticResource TimeSpanToStringConverter}, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,4"/>
 
                     <!-- RiskRange -->
                     <TextBlock Grid.Row="8" Grid.Column="0" Text="Risk Range" Margin="0,4,0,4"/>
                     <TextBox Grid.Row="8" Grid.Column="1"
-                         Text="{Binding Configuration.RiskRange, Converter={StaticResource TimeSpanToStringConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Margin="0,4,0,4"/>
+                         Text="{Binding Configuration.RiskRange, Converter={StaticResource TimeSpanToStringConverter}, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,4"/>
 
                     <!-- InactivityRange -->
                     <TextBlock Grid.Row="9" Grid.Column="0" Text="Inactivity Range" Margin="0,4,0,4"/>
                     <TextBox Grid.Row="9" Grid.Column="1"
-                         Text="{Binding Configuration.InactivityRange, Converter={StaticResource TimeSpanToStringConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Margin="0,4,0,4"/>
+                         Text="{Binding Configuration.InactivityRange, Converter={StaticResource TimeSpanToStringConverter}, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,4"/>
 
                     <!-- CompanyFullAddress -->
                     <TextBlock Grid.Row="10" Grid.Column="0" Text="Company Full Address" Margin="0,4,0,4"/>
                     <TextBox Grid.Row="10" Grid.Column="1"
-                         Text="{Binding Configuration.CompanyFullAddress, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Margin="0,4,0,4"/>
+                         Text="{Binding Configuration.CompanyFullAddress, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,4"/>
 
                     <!-- Save Configuration Button -->
                     <Button Grid.Row="11" Grid.ColumnSpan="2" Content="Save Configuration" Width="160" Margin="0,10,0,0" HorizontalAlignment="Left" Click="SaveConfiguration_Click"/>

@@ -62,28 +62,30 @@ internal static class Tools
     /// <param name="label">The label for the name field (e.g., "Customer Name").</param>
     #region Validation Methods
 
-    public static void ValidateFullName(string name, string label)
+    public static string? ValidateFullName(string name, string label)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new BO.BlInvalidInputException($"{label} cannot be empty.");
+            return $"{label} cannot be empty.";
 
         if (name.Length > 60)
-            throw new BO.BlInvalidInputException($"{label} is too long.");
+            return $"{label} is too long.";
 
         if (!Regex.IsMatch(name, @"^[A-Za-zא-ת ]+$"))
-            throw new BO.BlInvalidInputException($"{label} may contain only English or Hebrew letters and spaces.");
+            return $"{label} may contain only English or Hebrew letters and spaces.";
 
         bool hasEnglish = Regex.IsMatch(name, @"[A-Za-z]");
         bool hasHebrew = Regex.IsMatch(name, @"[א-ת]");
 
         if (hasEnglish && hasHebrew)
-            throw new BO.BlInvalidInputException($"{label} cannot contain both English and Hebrew characters.");
+            return $"{label} cannot contain both English and Hebrew characters.";
 
         if (name.Contains("    "))
-            throw new BO.BlInvalidInputException($"{label} cannot contain more than three consecutive spaces.");
+            return $"{label} cannot contain more than three consecutive spaces.";
 
         if (!Regex.IsMatch(name, @"^ {0,3}[A-Za-zא-ת]+( {1,3}[A-Za-zא-ת]+)+ {0,3}$"))
-            throw new BO.BlInvalidInputException($"{label} must contain at least two words separated by spaces.");
+            return $"{label} must contain at least two words separated by spaces.";
+
+        return null;
     }
 
     /// <summary>
@@ -91,13 +93,15 @@ internal static class Tools
     /// </summary>
     /// <param name="phone">The phone number to validate.</param>
     /// <param name="label">The label for the phone number field (e.g., "Phone Number").</param>
-    public static void ValidatePhoneNumber(string phone, string label)
+    public static string? ValidatePhoneNumber(string phone, string label)
     {
         if (string.IsNullOrWhiteSpace(phone))
-            throw new BO.BlInvalidInputException($"{label} cannot be empty.");
+            return $"{label} cannot be empty.";
 
         if (!Regex.IsMatch(phone, @"^0\d{9}$"))
-            throw new BO.BlInvalidInputException($"{label} must be exactly 10 digits and start with 0.");
+            return $"{label} must be exactly 10 digits and start with 0.";
+
+        return null;
     }
 
     /// <summary>
@@ -105,13 +109,15 @@ internal static class Tools
     /// </summary>
     /// <param name="email">The email address to validate.</param>
     /// <param name="label">The label for the email field (e.g., "Email Address").</param>
-    public static void ValidateEmail(string email, string label)
+    public static string? ValidateEmail(string email, string label)
     {
         if (string.IsNullOrWhiteSpace(email))
-            throw new BO.BlInvalidInputException($"{label} cannot be empty.");
+            return $"{label} cannot be empty.";
 
         if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-            throw new BO.BlInvalidEmailException($"{label} '{email}' is not a valid format.");
+            return $"{label} '{email}' is not a valid format.";
+
+        return null;
     }
 
     #endregion

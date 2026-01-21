@@ -29,27 +29,35 @@ internal static class CourierManager
     /// <exception cref="BO.BlInvalidEmailException">Thrown if the email format is invalid.</exception>
     public static void CourierValidation(BO.Courier boCourier)
     {
+        var errors = new Dictionary<string, string>();
         if (boCourier == null)
             throw new BO.BlInvalidNullInputException("Courier object cannot be null.");
             
         if ((boCourier.Id < 100000000 || boCourier.Id > 999999999))
-            throw new BO.BlInvalidIdException($"Courier ID '{boCourier.Id}' is not valid. It must be a 9-digit number.");
+            errors[nameof(BO.Courier.Id)] = $"Courier ID '{boCourier.Id}' is not valid. It must be a 9-digit number.";
 
-        Tools.ValidateFullName(boCourier.FullName, "Courier full name");
-        Tools.ValidatePhoneNumber(boCourier.MobilePhone, "Courier mobile phone");
-        Tools.ValidateEmail(boCourier.Email, "Courier email");
+        var nameError = Tools.ValidateFullName(boCourier.FullName, "Courier full name");
+        if (nameError != null) errors[nameof(BO.Courier.FullName)] = nameError;
+
+        var phoneError = Tools.ValidatePhoneNumber(boCourier.MobilePhone, "Courier mobile phone");
+        if (phoneError != null) errors[nameof(BO.Courier.MobilePhone)] = phoneError;
+
+        var emailError = Tools.ValidateEmail(boCourier.Email, "Courier email");
+        if (emailError != null) errors[nameof(BO.Courier.Email)] = emailError;
 
         if (string.IsNullOrWhiteSpace(boCourier.Password))
-            throw new BO.BlInvalidInputException("Courier password cannot be empty.");
-
-        if (boCourier.Password.Length > 100)
-            throw new BO.BlInvalidInputException("Courier password is too long.");
+            errors[nameof(BO.Courier.Password)] = "Courier password cannot be empty.";
+        else if (boCourier.Password.Length > 100)
+            errors[nameof(BO.Courier.Password)] = "Courier password is too long.";
 
         if (boCourier.PersonalMaxDeliveryDistance.HasValue && boCourier.PersonalMaxDeliveryDistance <= 0)
-            throw new BO.BlInvalidInputException("Personal max delivery distance must be positive.");
+            errors[nameof(BO.Courier.PersonalMaxDeliveryDistance)] = "Personal max delivery distance must be positive.";
 
         if (!Enum.IsDefined(typeof(BO.DeliveryTypes), boCourier.DeliveryType))
-            throw new BO.BlInvalidInputException("Invalid delivery type.");
+            errors[nameof(BO.Courier.DeliveryType)] = "Invalid delivery type.";
+
+        if (errors.Any())
+            throw new BO.BlInvalidInputException(string.Join(Environment.NewLine, errors.Values)) { ValidationErrors = errors };
     }
 
     /// <summary>

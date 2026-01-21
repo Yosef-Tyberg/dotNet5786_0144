@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:PL.Delivery"
         xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
-        Title="Delivery List" Height="640" Width="800"
+        Title="Delivery List" Height="640" Width="900"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
         Loaded="Window_Loaded" Closed="Window_Closed">
     <!-- Window Resources: Collections for ComboBoxes -->
@@ -88,12 +88,18 @@
                 <DataGridTextColumn Header="End Time" Binding="{Binding DeliveryEndTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Schedule" Binding="{Binding ScheduleStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="End Type" Binding="{Binding DeliveryEndType}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Cancel" Padding="5,0" Command="{Binding DataContext.CancelSingleCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
         <!-- Action Buttons (Row 2) -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button Content="Assign Delivery" Height="50" Width="120" Click="BtnAdd_Click" Margin="10"/>
-            <Button Content="Cancel Selected" Height="50" Width="120" Click="BtnCancel_Click" Margin="10"/>
         </StackPanel>
     </Grid>
 </Window>

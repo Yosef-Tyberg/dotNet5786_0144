@@ -23,44 +23,52 @@ internal static class OrderManager
     /// <param name="boOrder">The BO Order to validate.</param>
     /// <param name="lat">The latitude of the order's address.</param>
     /// <param name="lon">The longitude of the order's address.</param>
-    public static void OrderValidation(BO.Order boOrder, double lat, double lon)
+    public static void OrderValidation(BO.Order boOrder, double? lat, double? lon)
     {
+        var errors = new Dictionary<string, string>();
         try
         {
             if (boOrder == null)
                 throw new BO.BlInvalidNullInputException("Order object cannot be null.");
 
             if (!Enum.IsDefined(typeof(BO.OrderTypes), boOrder.OrderType))
-                throw new BO.BlInvalidInputException("Invalid order type.");
+                errors[nameof(BO.Order.OrderType)] = "Invalid order type.";
 
             if (string.IsNullOrWhiteSpace(boOrder.VerbalDescription))
-                throw new BO.BlInvalidInputException("Order verbal description cannot be empty.");
+                errors[nameof(BO.Order.VerbalDescription)] = "Order verbal description cannot be empty.";
 
-            Tools.ValidateFullName(boOrder.CustomerFullName, "Customer full name");
-            Tools.ValidatePhoneNumber(boOrder.CustomerMobile, "Customer mobile");
+            var nameError = Tools.ValidateFullName(boOrder.CustomerFullName, "Customer full name");
+            if (nameError != null) errors[nameof(BO.Order.CustomerFullName)] = nameError;
+
+            var phoneError = Tools.ValidatePhoneNumber(boOrder.CustomerMobile, "Customer mobile");
+            if (phoneError != null) errors[nameof(BO.Order.CustomerMobile)] = phoneError;
 
             if (boOrder.Volume <= 0)
-                throw new BO.BlInvalidInputException($"Volume {boOrder.Volume} must be positive.");
+                errors[nameof(BO.Order.Volume)] = $"Volume {boOrder.Volume} must be positive.";
 
             if (boOrder.Weight <= 0)
-                throw new BO.BlInvalidInputException($"Weight {boOrder.Weight} must be positive.");
+                errors[nameof(BO.Order.Weight)] = $"Weight {boOrder.Weight} must be positive.";
 
             if (boOrder.Height <= 0)
-                throw new BO.BlInvalidInputException($"Height {boOrder.Height} must be positive.");
+                errors[nameof(BO.Order.Height)] = $"Height {boOrder.Height} must be positive.";
 
             if (boOrder.Width <= 0)
-                throw new BO.BlInvalidInputException($"Width {boOrder.Width} must be positive.");
+                errors[nameof(BO.Order.Width)] = $"Width {boOrder.Width} must be positive.";
 
             if (string.IsNullOrWhiteSpace(boOrder.FullOrderAddress))
-                throw new BO.BlInvalidAddressException("Order address cannot be empty.");
+                errors[nameof(BO.Order.FullOrderAddress)] = "Order address cannot be empty.";
+            else if (lat == null || lon == null)
+                errors[nameof(BO.Order.FullOrderAddress)] = "Order address is invalid or not found.";
+            else
+            {
+                var config = s_dal.Config;
+                var distance = Tools.GetAerialDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), lat.Value, lon.Value);
+                if (distance > config.MaxGeneralDeliveryDistanceKm)
+                    errors[nameof(BO.Order.FullOrderAddress)] = $"Order location is too far from the company's location. a maximum of {config.MaxGeneralDeliveryDistanceKm}km is allowed";
+            }
 
-            // Validate address validity
-            Tools.GetCoordinates(boOrder.FullOrderAddress);
-
-            var config = s_dal.Config;
-            var distance = Tools.GetAerialDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), lat, lon);
-            if (distance > config.MaxGeneralDeliveryDistanceKm)
-                throw new BO.BlInvalidInputException($"Order location is too far from the company's location. a maximum of {config.MaxGeneralDeliveryDistanceKm}km is allowed");
+            if (errors.Any())
+                throw new BO.BlInvalidInputException(string.Join(Environment.NewLine, errors.Values)) { ValidationErrors = errors };
         }
         catch (Exception ex)
         {
@@ -76,7 +84,15 @@ internal static class OrderManager
     /// <exception cref="BO.BlInvalidInputException">Thrown when conversion fails.</exception>
     public static DO.Order ConvertBoToDo(BO.Order boOrder)
     {
-        var (lat, lon) = Tools.GetCoordinates(boOrder.FullOrderAddress!);
+        double? lat = null, lon = null;
+        try
+        {
+            (lat, lon) = Tools.GetCoordinates(boOrder.FullOrderAddress!);
+        }
+        catch
+        {
+            // Ignore here, OrderValidation will catch and report it
+        }
         OrderValidation(boOrder, lat, lon);
         try
         {
@@ -84,8 +100,8 @@ internal static class OrderManager
                 Id: boOrder.Id,
                 OrderType: (DO.OrderTypes)boOrder.OrderType,
                 VerbalDescription: boOrder.VerbalDescription,
-                Latitude: lat,
-                Longitude: lon,
+                Latitude: lat ?? 0,
+                Longitude: lon ?? 0,
                 CustomerFullName: boOrder.CustomerFullName,
                 CustomerMobile: boOrder.CustomerMobile,
                 Volume: boOrder.Volume,
@@ -309,11 +325,20 @@ internal static class OrderManager
             if (originalOrder == null)
                 throw new BO.BlDoesNotExistException($"Order with ID {updatedOrder.Id} not found.");
 
-            var (lat, lon) = (originalOrder.Latitude, originalOrder.Longitude);
+            double? lat = originalOrder.Latitude;
+            double? lon = originalOrder.Longitude;
+
             // If address changed, get new coordinates
             if (originalOrder.FullOrderAddress != updatedOrder.FullOrderAddress)
             {
-                (lat, lon) = Tools.GetCoordinates(updatedOrder.FullOrderAddress!);
+                try
+                {
+                    (lat, lon) = Tools.GetCoordinates(updatedOrder.FullOrderAddress!);
+                }
+                catch
+                {
+                    lat = null; lon = null;
+                }
             }
             
             OrderValidation(updatedOrder, lat, lon);
@@ -323,8 +348,8 @@ internal static class OrderManager
                 Id: originalOrder.Id, // Preserve original ID
                 OrderType: (DO.OrderTypes)updatedOrder.OrderType,
                 VerbalDescription: updatedOrder.VerbalDescription,
-                Latitude: lat,
-                Longitude: lon,
+                Latitude: lat ?? 0,
+                Longitude: lon ?? 0,
                 CustomerFullName: updatedOrder.CustomerFullName,
                 CustomerMobile: updatedOrder.CustomerMobile,
                 Volume: updatedOrder.Volume,

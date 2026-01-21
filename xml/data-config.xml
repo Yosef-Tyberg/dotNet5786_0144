@@ -1,19 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <config>
-  <NextOrderId>50</NextOrderId>
-  <NextDeliveryId>31</NextDeliveryId>
-  <AdminId>0</AdminId>
-  <AdminPassword>Admin</AdminPassword>
+  <NextOrderId>51</NextOrderId>
+  <NextDeliveryId>32</NextDeliveryId>
+  <AdminId>123456789</AdminId>
+  <AdminPassword>admin</AdminPassword>
   <AvgCarSpeedKmh>40</AvgCarSpeedKmh>
   <AvgMotorcycleSpeedKmh>35</AvgMotorcycleSpeedKmh>
   <AvgBicycleSpeedKmh>15</AvgBicycleSpeedKmh>
   <AvgWalkingSpeedKmh>5</AvgWalkingSpeedKmh>
-  <MaxDeliveryTimeSpan>7200</MaxDeliveryTimeSpan>
-  <RiskRange>600</RiskRange>
-  <InactivityRange>1800</InactivityRange>
-  <Clock>12/4/2025 4:51:12 PM</Clock>
-  <CompanyFullAddress>Downtown (test) - company HQ</CompanyFullAddress>
-  <Latitude>31.771959</Latitude>
-  <Longitude>35.217018</Longitude>
-  <MaxGeneralDeliveryDistanceKm>10</MaxGeneralDeliveryDistanceKm>
+  <MaxDeliveryTimeSpan>864000</MaxDeliveryTimeSpan>
+  <RiskRange>3600</RiskRange>
+  <InactivityRange>60480000</InactivityRange>
+  <Clock>1/21/2037 8:48:39 PM</Clock>
+  <CompanyFullAddress>Hebron Road (central), Jerusalem</CompanyFullAddress>
+  <Latitude>31.766509</Latitude>
+  <Longitude>35.225938</Longitude>
+  <MaxGeneralDeliveryDistanceKm>100</MaxGeneralDeliveryDistanceKm>
 </config>

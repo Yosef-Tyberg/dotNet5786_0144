@@ -57,21 +57,21 @@
 
             <!-- Customer Details -->
             <Label Grid.Row="1" Grid.Column="0" Content="Customer Name:" Margin="3"/>
-            <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.CustomerFullName, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.CustomerFullName, Mode=TwoWay}"/>
 
             <Label Grid.Row="2" Grid.Column="0" Content="Customer Phone:" Margin="3"/>
-            <TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.CustomerMobile, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.CustomerMobile, Mode=TwoWay}"/>
 
             <Label Grid.Row="3" Grid.Column="0" Content="Address:" Margin="3"/>
-            <TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.FullOrderAddress, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}" TextWrapping="Wrap" Height="40"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.FullOrderAddress, Mode=TwoWay}" TextWrapping="Wrap" Height="40"/>
 
             <Label Grid.Row="4" Grid.Column="0" Content="Order Type:" Margin="3"/>
             <ComboBox Grid.Row="4" Grid.Column="1" Margin="3" 
                       ItemsSource="{Binding Source={StaticResource OrderTypesCollection}}"
-                      SelectedValue="{Binding CurrentOrder.OrderType, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+                      SelectedValue="{Binding CurrentOrder.OrderType, Mode=TwoWay}"/>
 
             <Label Grid.Row="5" Grid.Column="0" Content="Description:" Margin="3"/>
-            <TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.VerbalDescription, Mode=TwoWay, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.VerbalDescription, Mode=TwoWay}"/>
 
             <Label Grid.Row="6" Grid.Column="0" Content="Fragile:" Margin="3"/>
             <CheckBox Grid.Row="6" Grid.Column="1" Margin="3" IsChecked="{Binding CurrentOrder.Fragile, Mode=TwoWay}" VerticalAlignment="Center"/>
@@ -79,16 +79,16 @@
             <!-- Column 2: Dimensions & Read-Only Stats -->
             <!-- Package Dimensions -->
             <Label Grid.Row="0" Grid.Column="2" Content="Volume:" Margin="3"/>
-            <TextBox Grid.Row="0" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Volume, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <TextBox Grid.Row="0" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Volume, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
 
             <Label Grid.Row="1" Grid.Column="2" Content="Weight:" Margin="3"/>
-            <TextBox Grid.Row="1" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Weight, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <TextBox Grid.Row="1" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Weight, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
 
             <Label Grid.Row="2" Grid.Column="2" Content="Height:" Margin="3"/>
-            <TextBox Grid.Row="2" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Height, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <TextBox Grid.Row="2" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Height, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
 
             <Label Grid.Row="3" Grid.Column="2" Content="Width:" Margin="3"/>
-            <TextBox Grid.Row="3" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Width, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}, NotifyOnValidationError=true, ValidatesOnExceptions=true}"/>
+            <TextBox Grid.Row="3" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Width, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
 
             <!-- Read Only Info (Visual indication: Gray background, no border) -->
             <!-- Status and Timing Information -->

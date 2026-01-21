@@ -161,6 +161,7 @@ The `BO.OrderStatus` is derived from the history of deliveries associated with t
 ### 10.3. MVVM, Data Binding, and Code-Behind Best Practices
 To maintain the MVVM principle (Model-View-ViewModel), which separates logic from design:
 - **No x:Name for Logic:** It is forbidden to name controls via XAML to use them in the Code-behind. Instead, you must use the Data Binding mechanism.
+    - **Exception:** In cases where attributes of two controls need to be bound (Element Binding), it is permissible to name the control with the target attribute.
 - **Minimize Code-Behind:** The Code-behind must be minimized to the necessary minimum for handling user input and other WPF events. Project logic will not be performed in this layer, except for basic input validation.
 - **Data Binding Mandatory:**
     - For data displayed on the screen (single entity or list), it is mandatory to define corresponding properties in the Code-behind.

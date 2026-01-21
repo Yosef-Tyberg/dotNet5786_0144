@@ -90,12 +90,41 @@ public partial class OrderWindow : Window
     /// </summary>
     private void BtnAddUpdate_Click(object sender, RoutedEventArgs e)
     {
-        Tools.ExecuteSafeAction(this, () =>
+        try
         {
             if (ButtonText == "Add")
                 s_bl.Order.Create(CurrentOrder);
             else
                 s_bl.Order.Update(CurrentOrder);
-        }, $"Order {ButtonText}ed successfully!");
+            
+            MessageBox.Show($"Order {ButtonText}ed successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            Close();
+        }
+        catch (BO.BlInvalidInputException ex)
+        {
+            MessageBox.Show(ex.Message, "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+            
+            // Revert invalid fields to original values if in Update mode
+            if (ButtonText == "Update" && ex.ValidationErrors.Count > 0)
+            {
+                var original = s_bl.Order.Read(CurrentOrder.Id);
+                foreach (var error in ex.ValidationErrors)
+                {
+                    var prop = typeof(BO.Order).GetProperty(error.Key);
+                    if (prop != null && prop.CanWrite)
+                    {
+                        prop.SetValue(CurrentOrder, prop.GetValue(original));
+                    }
+                }
+                // Force UI refresh by re-assigning the property
+                var temp = CurrentOrder;
+                CurrentOrder = null;
+                CurrentOrder = temp;
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 }
