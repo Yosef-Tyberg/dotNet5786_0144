@@ -63,7 +63,7 @@ internal static class OrderManager
             {
                 var config = s_dal.Config;
                 var distance = Tools.GetAerialDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), lat.Value, lon.Value);
-                if (distance > config.MaxGeneralDeliveryDistanceKm)
+                if (config.MaxGeneralDeliveryDistanceKm.HasValue && distance > config.MaxGeneralDeliveryDistanceKm)
                     errors[nameof(BO.Order.FullOrderAddress)] = $"Order location is too far from the company's location. a maximum of {config.MaxGeneralDeliveryDistanceKm}km is allowed";
             }
 
@@ -82,16 +82,21 @@ internal static class OrderManager
     /// <param name="boOrder">The BO Order to convert.</param>
     /// <returns>An equivalent DO Order entity.</returns>
     /// <exception cref="BO.BlInvalidInputException">Thrown when conversion fails.</exception>
-    public static DO.Order ConvertBoToDo(BO.Order boOrder)
+    public static DO.Order ConvertBoToDo(BO.Order boOrder, double? lat = null, double? lon = null)
     {
-        double? lat = null, lon = null;
-        try
+        // Round doubles to two decimal points
+        boOrder.Volume = Math.Round(boOrder.Volume, 2);
+        boOrder.Weight = Math.Round(boOrder.Weight, 2);
+        boOrder.Height = Math.Round(boOrder.Height, 2);
+        boOrder.Width = Math.Round(boOrder.Width, 2);
+
+        if (lat == null || lon == null)
         {
-            (lat, lon) = Tools.GetCoordinates(boOrder.FullOrderAddress!);
-        }
-        catch
-        {
-            // Ignore here, OrderValidation will catch and report it
+            try
+            {
+                (lat, lon) = Tools.GetCoordinates(boOrder.FullOrderAddress!);
+            }
+            catch { /* Ignore, OrderValidation will catch */ }
         }
         OrderValidation(boOrder, lat, lon);
         try
@@ -156,7 +161,6 @@ internal static class OrderManager
                 OrderOpenTime = doOrder.OrderOpenTime,
                 FullOrderAddress = doOrder.FullOrderAddress,
                 TimeOpenedDuration = AdminManager.Now - doOrder.OrderOpenTime,
-                PackageDensity = doOrder.Volume > 0 ? Math.Round(doOrder.Weight / doOrder.Volume, 2) : 0
             };
             
             boOrder.OrderStatus = DetermineOrderStatus(deliveries);
@@ -164,9 +168,14 @@ internal static class OrderManager
             var lastDelivery = deliveries.OrderByDescending(d => d.DeliveryStartTime).FirstOrDefault();
             var config = s_dal.Config;
             //if not closed, calculate
-            if (boOrder.OrderStatus == BO.OrderStatus.InProgress || boOrder.OrderStatus == BO.OrderStatus.Open)
+            if (boOrder.OrderStatus == BO.OrderStatus.InProgress)
             {
                 boOrder.ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, lastDelivery);
+            }
+            else if (boOrder.OrderStatus == BO.OrderStatus.Open)
+            {
+                boOrder.ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config);
+
             }
             //if closed, compare to max allowed time
             else
@@ -325,43 +334,17 @@ internal static class OrderManager
             if (originalOrder == null)
                 throw new BO.BlDoesNotExistException($"Order with ID {updatedOrder.Id} not found.");
 
-            double? lat = originalOrder.Latitude;
-            double? lon = originalOrder.Longitude;
+            if (originalOrder.OrderOpenTime != updatedOrder.OrderOpenTime)
+                throw new BO.BlInvalidInputException("OrderOpenTime cannot be modified");
 
-            // If address changed, get new coordinates
-            if (originalOrder.FullOrderAddress != updatedOrder.FullOrderAddress)
+            double? lat = null, lon = null;
+            if (originalOrder.FullOrderAddress == updatedOrder.FullOrderAddress)
             {
-                try
-                {
-                    (lat, lon) = Tools.GetCoordinates(updatedOrder.FullOrderAddress!);
-                }
-                catch
-                {
-                    lat = null; lon = null;
-                }
+                lat = originalOrder.Latitude;
+                lon = originalOrder.Longitude;
             }
             
-            OrderValidation(updatedOrder, lat, lon);
-
-            // Construct the updated DO.Order, preserving immutable fields from original
-            DO.Order doOrderToUpdate = new DO.Order(
-                Id: originalOrder.Id, // Preserve original ID
-                OrderType: (DO.OrderTypes)updatedOrder.OrderType,
-                VerbalDescription: updatedOrder.VerbalDescription,
-                Latitude: lat ?? 0,
-                Longitude: lon ?? 0,
-                CustomerFullName: updatedOrder.CustomerFullName,
-                CustomerMobile: updatedOrder.CustomerMobile,
-                Volume: updatedOrder.Volume,
-                Weight: updatedOrder.Weight,
-                Fragile: updatedOrder.Fragile,
-                Height: updatedOrder.Height,
-                Width: updatedOrder.Width,
-                OrderOpenTime: originalOrder.OrderOpenTime, // Preserve original open time
-                FullOrderAddress: updatedOrder.FullOrderAddress
-            );
-
-            s_dal.Order.Update(doOrderToUpdate);
+            s_dal.Order.Update(ConvertBoToDo(updatedOrder, lat, lon));
             Observers.NotifyItemUpdated(updatedOrder.Id);
             Observers.NotifyListUpdated();
         }
@@ -490,27 +473,30 @@ internal static class OrderManager
                 catch (DO.DalDoesNotExistException) { /* Courier might have been deleted, ignore */ }
             }
 
-            // Map Delivery History - OPTIMIZED & FIXED
-            IEnumerable<BO.DeliveryInList> history = deliveries
-                .OrderBy(d => d.DeliveryStartTime)
-                .Select(d => new BO.DeliveryInList
-                {
-                    Id = d.Id,
-                    OrderId = d.OrderId,
-                    CourierId = d.CourierId,
-                    DeliveryStartTime = d.DeliveryStartTime,
-                    ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, d), // Pass config
-                    DeliveryEndType = d.DeliveryEndType.HasValue ? (BO.DeliveryEndTypes?)d.DeliveryEndType.Value : null,
-                    DeliveryEndTime = d.DeliveryEndTime
-                });
+            IEnumerable<BO.DeliveryInList> history = Enumerable.Empty<BO.DeliveryInList>();
 
-            // Calculate Timing Properties - FIXED
+            // Map Delivery History if exists
+            if (deliveries.Any())
+            {
+                history = deliveries
+                    .OrderByDescending(d => d.DeliveryStartTime)
+                    .Select(d => new BO.DeliveryInList
+                    {
+                        Id = d.Id,
+                        OrderId = d.OrderId,
+                        CourierId = d.CourierId,
+                        DeliveryStartTime = d.DeliveryStartTime,
+                        ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, d), // Pass config
+                        DeliveryEndType = d.DeliveryEndType.HasValue ? (BO.DeliveryEndTypes?)d.DeliveryEndType.Value : null,
+                        DeliveryEndTime = d.DeliveryEndTime
+                    });
+            }
+
+                // Calculate Timing Properties - FIXED
             DateTime? maxDeliveryTime = doOrder.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
             DateTime? expectedDeliveryTime = null;
-            if (activeDelivery != null)
-            {
-                expectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(activeDelivery.DeliveryType, doOrder, config, activeDelivery); // Pass config
-            }
+
+            expectedDeliveryTime = Tools.CalculateExpectedDeliveryTime(activeDelivery.DeliveryType, doOrder, config, activeDelivery); // Pass config
 
             return new BO.OrderTracking
             {

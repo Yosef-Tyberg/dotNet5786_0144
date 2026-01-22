@@ -114,6 +114,10 @@ internal static class Config
         CompanyFullAddress = null;
         Latitude = null;
         Longitude = null;
+        AvgCarSpeedKmh = 0;
+        AvgMotorcycleSpeedKmh = 0;
+        AvgBicycleSpeedKmh = 0;
+        AvgWalkingSpeedKmh = 0;                
         MaxGeneralDeliveryDistanceKm = null;
         MaxDeliveryTimeSpan = TimeSpan.Zero;
         RiskRange = TimeSpan.Zero;

@@ -445,6 +445,7 @@ internal static class DeliveryManager
     {
         try
         {
+            //deliver deliveries which are open past their expected arrival + risk/2
             var config = s_dal.Config;
             var riskThreshold = config.RiskRange / 2;
             var rnd = new Random();
@@ -459,7 +460,7 @@ internal static class DeliveryManager
                                       where order != null
                                       let expectedTime = Tools.CalculateExpectedDeliveryTime(d.DeliveryType, order!, config, d)
                                       where newClock >= expectedTime + riskThreshold
-                                      select d).ToList();
+                                      select d).ToList(); //required to act on the collection without it being open 
 
             if (deliveriesToUpdate.Any())
             {

@@ -3,6 +3,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:PL"
+        xmlns:controls="clr-namespace:PL.Controls"
         Title="Management Console"
         Height="700"
         Width="1000"
@@ -120,18 +121,15 @@
 
                     <!-- MaxDeliveryTimeSpan -->
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="Max Delivery Time Span" Margin="0,4,0,4"/>
-                    <TextBox Grid.Row="7" Grid.Column="1"
-                         Text="{Binding Configuration.MaxDeliveryTimeSpan, Converter={StaticResource TimeSpanToStringConverter}, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,4"/>
+                    <controls:TimeSpanEditor Grid.Row="7" Grid.Column="1" Value="{Binding Configuration.MaxDeliveryTimeSpan}" Margin="0,4,0,4"/>
 
                     <!-- RiskRange -->
                     <TextBlock Grid.Row="8" Grid.Column="0" Text="Risk Range" Margin="0,4,0,4"/>
-                    <TextBox Grid.Row="8" Grid.Column="1"
-                         Text="{Binding Configuration.RiskRange, Converter={StaticResource TimeSpanToStringConverter}, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,4"/>
+                    <controls:TimeSpanEditor Grid.Row="8" Grid.Column="1" Value="{Binding Configuration.RiskRange}" Margin="0,4,0,4"/>
 
                     <!-- InactivityRange -->
                     <TextBlock Grid.Row="9" Grid.Column="0" Text="Inactivity Range" Margin="0,4,0,4"/>
-                    <TextBox Grid.Row="9" Grid.Column="1"
-                         Text="{Binding Configuration.InactivityRange, Converter={StaticResource TimeSpanToStringConverter}, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,4"/>
+                    <controls:TimeSpanEditor Grid.Row="9" Grid.Column="1" Value="{Binding Configuration.InactivityRange}" Margin="0,4,0,4"/>
 
                     <!-- CompanyFullAddress -->
                     <TextBlock Grid.Row="10" Grid.Column="0" Text="Company Full Address" Margin="0,4,0,4"/>

@@ -526,3 +526,15 @@ public class BlOrderCannotBeCancelledException : Exception
     public BlOrderCannotBeCancelledException(string? message, Exception? innerException) : base(message, innerException) { }
     protected BlOrderCannotBeCancelledException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 }
+
+/// <summary>
+/// Thrown when an external service request times out.
+/// </summary>
+[Serializable]
+public class BlTimeoutException : Exception
+{
+    public BlTimeoutException() : base("Request timed out.") { }
+    public BlTimeoutException(string? message) : base(message) { }
+    public BlTimeoutException(string? message, Exception? innerException) : base(message, innerException) { }
+    protected BlTimeoutException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+}

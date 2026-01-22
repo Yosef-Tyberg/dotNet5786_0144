@@ -5,15 +5,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PL.Order"
+        xmlns:controls="clr-namespace:PL.Controls"
         xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
-        Title="Order Window" Height="600" Width="500"
+        Title="Order Window" Height="600" Width="800"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
 
     <Window.Resources>
         <!-- Converters and Collections -->
         <pl:IdToVisibilityConverter x:Key="IdToVisibilityConverter"/>
-        <pl:OrderTypesCollection x:Key="OrderTypesCollection"/>
+        <pl:OrderTypesList x:Key="OrderTypesList"/>
         <pl:OrderStatusCollection x:Key="OrderStatusCollection"/>
         <pl:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
         <pl:DateTimeToStringConverter x:Key="DateTimeToStringConverter"/>
@@ -27,95 +28,118 @@
 
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
         <!-- Main Grid Layout -->
-        <Grid Margin="10">
+        <Grid Margin="15">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="20"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
 
-            <!-- Column 1: Basic Info -->
-            <!-- ID: Visible only in Update mode -->
-            <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3" Visibility="{Binding CurrentOrder.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
-            <TextBox Grid.Row="0" Grid.Column="1" Margin="3" IsReadOnly="True" Background="LightGray"
-                     Text="{Binding CurrentOrder.Id, Mode=OneWay}"
-                     Visibility="{Binding CurrentOrder.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+            <!-- Left Column: Order Details -->
+            <GroupBox Grid.Column="0" Header="Order Details">
+                <Grid Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-            <!-- Customer Details -->
-            <Label Grid.Row="1" Grid.Column="0" Content="Customer Name:" Margin="3"/>
-            <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.CustomerFullName, Mode=TwoWay}"/>
+                    <!-- ID: Visible only in Update mode -->
+                    <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3" Visibility="{Binding CurrentOrder.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
+                             Text="{Binding CurrentOrder.Id, Mode=OneWay}"
+                             Visibility="{Binding CurrentOrder.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
 
-            <Label Grid.Row="2" Grid.Column="0" Content="Customer Phone:" Margin="3"/>
-            <TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.CustomerMobile, Mode=TwoWay}"/>
+                    <Label Grid.Row="1" Grid.Column="0" Content="Customer Name:" Margin="3"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.CustomerFullName, Mode=TwoWay}"/>
 
-            <Label Grid.Row="3" Grid.Column="0" Content="Address:" Margin="3"/>
-            <TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.FullOrderAddress, Mode=TwoWay}" TextWrapping="Wrap" Height="40"/>
+                    <Label Grid.Row="2" Grid.Column="0" Content="Customer Phone:" Margin="3"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.CustomerMobile, Mode=TwoWay}"/>
 
-            <Label Grid.Row="4" Grid.Column="0" Content="Order Type:" Margin="3"/>
-            <ComboBox Grid.Row="4" Grid.Column="1" Margin="3" 
-                      ItemsSource="{Binding Source={StaticResource OrderTypesCollection}}"
-                      SelectedValue="{Binding CurrentOrder.OrderType, Mode=TwoWay}"/>
+                    <Label Grid.Row="3" Grid.Column="0" Content="Address:" Margin="3"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.FullOrderAddress, Mode=TwoWay}" TextWrapping="Wrap" Height="40"/>
 
-            <Label Grid.Row="5" Grid.Column="0" Content="Description:" Margin="3"/>
-            <TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.VerbalDescription, Mode=TwoWay}"/>
+                    <Label Grid.Row="4" Grid.Column="0" Content="Order Type:" Margin="3"/>
+                    <ComboBox Grid.Row="4" Grid.Column="1" Margin="3" 
+                              ItemsSource="{Binding Source={StaticResource OrderTypesList}}"
+                              SelectedValue="{Binding CurrentOrder.OrderType, Mode=TwoWay}"/>
 
-            <Label Grid.Row="6" Grid.Column="0" Content="Fragile:" Margin="3"/>
-            <CheckBox Grid.Row="6" Grid.Column="1" Margin="3" IsChecked="{Binding CurrentOrder.Fragile, Mode=TwoWay}" VerticalAlignment="Center"/>
+                    <Label Grid.Row="5" Grid.Column="0" Content="Description:" Margin="3"/>
+                    <TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.VerbalDescription, Mode=TwoWay}"/>
 
-            <!-- Column 2: Dimensions & Read-Only Stats -->
-            <!-- Package Dimensions -->
-            <Label Grid.Row="0" Grid.Column="2" Content="Volume:" Margin="3"/>
-            <TextBox Grid.Row="0" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Volume, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
+                    <Label Grid.Row="6" Grid.Column="0" Content="Fragile:" Margin="3"/>
+                    <CheckBox Grid.Row="6" Grid.Column="1" Margin="3" IsChecked="{Binding CurrentOrder.Fragile, Mode=TwoWay}" VerticalAlignment="Center"/>
+                </Grid>
+            </GroupBox>
 
-            <Label Grid.Row="1" Grid.Column="2" Content="Weight:" Margin="3"/>
-            <TextBox Grid.Row="1" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Weight, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
+            <!-- Right Column: Specs & Status -->
+            <StackPanel Grid.Column="2">
+                <GroupBox Header="Package Specifications">
+                    <Grid Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-            <Label Grid.Row="2" Grid.Column="2" Content="Height:" Margin="3"/>
-            <TextBox Grid.Row="2" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Height, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
+                        <Label Grid.Row="0" Grid.Column="0" Content="Volume:" Margin="3"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.Volume, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
 
-            <Label Grid.Row="3" Grid.Column="2" Content="Width:" Margin="3"/>
-            <TextBox Grid.Row="3" Grid.Column="3" Margin="3" Text="{Binding CurrentOrder.Width, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
+                        <Label Grid.Row="1" Grid.Column="0" Content="Weight:" Margin="3"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.Weight, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
 
-            <!-- Read Only Info (Visual indication: Gray background, no border) -->
-            <!-- Status and Timing Information -->
-            <Label Grid.Row="5" Grid.Column="2" Content="Status:" Margin="3"/>
-            <TextBox Grid.Row="5" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
-                     Text="{Binding CurrentOrder.OrderStatus, Mode=OneWay}"
-                     />
+                        <Label Grid.Row="2" Grid.Column="0" Content="Height:" Margin="3"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.Height, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
 
-            <Label Grid.Row="6" Grid.Column="2" Content="Schedule:" Margin="3"/>
-            <TextBox Grid.Row="6" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
-                     Text="{Binding CurrentOrder.ScheduleStatus, Mode=OneWay}"
-                     />
+                        <Label Grid.Row="3" Grid.Column="0" Content="Width:" Margin="3"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.Width, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}"/>
+                    </Grid>
+                </GroupBox>
 
-            <Label Grid.Row="7" Grid.Column="2" Content="Open Time:" Margin="3"/>
-            <TextBox Grid.Row="7" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
-                     Text="{Binding CurrentOrder.OrderOpenTime, Mode=OneWay, Converter={StaticResource DateTimeToStringConverter}}"
-                     />
+                <GroupBox Header="Status &amp; Tracking" Margin="0,10,0,0" Visibility="{Binding CurrentOrder.Id, Converter={StaticResource IdToVisibilityConverter}}">
+                    <Grid Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-            <Label Grid.Row="8" Grid.Column="2" Content="Duration:" Margin="3"/>
-            <TextBox Grid.Row="8" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
-                     Text="{Binding CurrentOrder.TimeOpenedDuration, Mode=OneWay}"
-                     />
+                        <Label Grid.Row="0" Grid.Column="0" Content="Status:" Margin="3"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
+                                 Text="{Binding CurrentOrder.OrderStatus, Mode=OneWay}"/>
 
-            <Label Grid.Row="9" Grid.Column="2" Content="Density:" Margin="3"/>
-            <TextBox Grid.Row="9" Grid.Column="3" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
-                     Text="{Binding CurrentOrder.PackageDensity, Mode=OneWay}"
-                     />
+                        <Label Grid.Row="1" Grid.Column="0" Content="Schedule:" Margin="3"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
+                                 Text="{Binding CurrentOrder.ScheduleStatus, Mode=OneWay}"/>
+
+                        <Label Grid.Row="2" Grid.Column="0" Content="Open Time:" Margin="3"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Margin="3" IsReadOnly="True" Background="#EEE" BorderThickness="0"
+                                 Text="{Binding CurrentOrder.OrderOpenTime, Mode=OneWay, Converter={StaticResource DateTimeToStringConverter}}"/>
+
+                        <Label Grid.Row="3" Grid.Column="0" Content="Duration:" Margin="3"/>
+                        <controls:TimeSpanEditor Grid.Row="3" Grid.Column="1" Margin="3" IsReadOnly="True"
+                                 Value="{Binding CurrentOrder.TimeOpenedDuration}"/>
+                    </Grid>
+                </GroupBox>
+            </StackPanel>
         </Grid>
         </ScrollViewer>
 

@@ -5,8 +5,43 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
+        xmlns:pl="clr-namespace:PL"
         Title="Assign Delivery" Height="450" Width="800"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
+    <Window.Resources>
+        <pl:MaxDeliveryTimeConverter x:Key="MaxDeliveryTimeConverter"/>
+        <DataTemplate x:Key="SortableHeaderTemplate">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding}"/>
+                <TextBlock Text="⇅" Margin="5,0,0,0" Foreground="#888" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+        <Style x:Key="CenterAligned" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="ToolTip" Value="Click to Sort"/>
+            <Setter Property="ContentTemplate" Value="{StaticResource SortableHeaderTemplate}"/>
+        </Style>
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                            <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -21,9 +56,9 @@
                   MouseDoubleClick="Courier_MouseDoubleClick"
                   Visibility="{Binding CourierListVisibility}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
-                <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*"/>
-                <DataGridTextColumn Header="Type" Binding="{Binding DeliveryType}" Width="Auto"/>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding DeliveryType}" Width="Auto" ElementStyle="{StaticResource CenterAligned}"/>
             </DataGrid.Columns>
         </DataGrid>
 
@@ -31,12 +66,17 @@
         <DataGrid Grid.Row="1" ItemsSource="{Binding OrderList}" SelectedItem="{Binding SelectedOrder}"
                   AutoGenerateColumns="False" IsReadOnly="True"
                   MouseDoubleClick="Order_MouseDoubleClick"
-                  Visibility="{Binding OrderListVisibility}">
+                  Visibility="{Binding OrderListVisibility}"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEE"
+                  RowBackground="White" AlternatingRowBackground="#F9F9F9" HeadersVisibility="Column"
+                  BorderThickness="0" Margin="10">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
-                <DataGridTextColumn Header="Customer" Binding="{Binding CustomerFullName}" Width="*"/>
-                <DataGridTextColumn Header="Type" Binding="{Binding OrderType}" Width="Auto"/>
-                <DataGridTextColumn Header="Time" Binding="{Binding OrderOpenTime}" Width="Auto"/>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding OrderType}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Customer Name" Binding="{Binding CustomerFullName}" Width="*"/>
+                <DataGridTextColumn Header="Max Time" Binding="{Binding OrderOpenTime, Converter={StaticResource MaxDeliveryTimeConverter}}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding OrderStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Schedule" Binding="{Binding ScheduleStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

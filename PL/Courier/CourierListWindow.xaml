@@ -10,9 +10,18 @@
         Title="Courier List" Height="640" Width="500"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
         Loaded="Window_Loaded" Closed="Window_Closed">
+    <!-- DataContext=Self means this XAML file looks for properties in its own code-behind file (.xaml.cs) -->
+
+    <!-- Resources: Definitions available to the entire window (Styles, Templates, Converters) -->
     <Window.Resources>
-        <!-- Collection for Filter ComboBox -->
+        <!-- Collection for Filter ComboBox, defined in PL/Enums.cs or similar -->
         <pl:DeliveryTypesCollection x:Key="DeliveryTypesCollection"/>
+        <DataTemplate x:Key="SortableHeaderTemplate">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding}"/>
+                <TextBlock Text="⇅" Margin="5,0,0,0" Foreground="#888" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
         <!-- Style for centering content inside columns -->
         <Style x:Key="CenterAligned" TargetType="TextBlock">
             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -23,7 +32,15 @@
         </Style>
         <!-- Style for centering DataGrid column headers -->
         <Style TargetType="DataGridColumnHeader">
+            <!-- Setters apply properties to all elements of TargetType in scope -->
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="ToolTip" Value="Click to Sort"/>
+            <Setter Property="ContentTemplate" Value="{StaticResource SortableHeaderTemplate}"/>
         </Style>
     </Window.Resources>
     <!-- Main Layout Grid -->
@@ -36,7 +53,7 @@
         
         <!-- Filter Section (Row 0): Allows filtering couriers by Delivery Type -->
         <Grid HorizontalAlignment="Stretch" Height="Auto" Grid.Row="0" 
-              VerticalAlignment="Stretch" Width="Auto">
+              VerticalAlignment="Stretch" Width="Auto"> <!-- Grid layout allows precise positioning in rows and columns -->
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -46,6 +63,7 @@
                    VerticalAlignment="Center" 
                    HorizontalAlignment="Left" 
                    Margin="10,0,0,0"/>
+            <!-- Binding Source to StaticResource loads the enum values -->
             <ComboBox Grid.Column="1" 
                       ItemsSource="{Binding Source={StaticResource DeliveryTypesCollection}}"
                       SelectedValue="{Binding StatusFilter, Mode=TwoWay}"
@@ -55,6 +73,7 @@
         </Grid>
         
         <!-- DataGrid Section (Row 1): Displays the list of couriers -->
+        <!-- ItemsSource binds to the 'CourierList' property in code-behind -->
         <DataGrid Grid.Row="1" ItemsSource="{Binding CourierList}" SelectedItem="{Binding SelectedCourier}" 
                   MouseDoubleClick="DataGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True"
                   GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEE"
@@ -65,6 +84,7 @@
                 <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Type" Binding="{Binding DeliveryType}" Width="Auto" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridCheckBoxColumn Header="Active" Binding="{Binding Active}" Width="Auto"/>
+                <!-- TemplateColumn allows custom content like Buttons inside a cell -->
                 <DataGridTemplateColumn Header="Actions" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

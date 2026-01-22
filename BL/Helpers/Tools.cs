@@ -5,10 +5,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using BO;
-using DO;
 using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Text.Json;
@@ -25,17 +24,8 @@ namespace Helpers;
 internal static class Tools
 {
     private static readonly HttpClient s_httpClient = new();
-    private static readonly ConcurrentDictionary<string, (double, double)> s_coordinateCache = new();
-    private static readonly ConcurrentDictionary<string, double> s_routeDistanceCache = new();
-
     private static DalApi.IDal s_dal = DalApi.Factory.Get;
 
-    //to be called in reset to clear the static caches
-    public static void ClearCaches()
-    {
-        s_coordinateCache.Clear();
-        s_routeDistanceCache.Clear();
-    }
     /// <summary>
     /// Populates the coordinate cache for testing purposes.
     /// </summary>
@@ -134,9 +124,9 @@ internal static class Tools
     {
         return exception switch
         {
-            DalDoesNotExistException ex => new BlDoesNotExistException($"{ex.Message}", ex),
-            DalAlreadyExistsException ex => new BlAlreadyExistsException($"{ex.Message}", ex),
-            DalInvalidInputException ex => new BlInvalidInputException($"{ex.Message}", ex),
+            DO.DalDoesNotExistException ex => new BO.BlDoesNotExistException($"{ex.Message}", ex),
+            DO.DalAlreadyExistsException ex => new BO.BlAlreadyExistsException($"{ex.Message}", ex),
+            DO.DalInvalidInputException ex => new BO.BlInvalidInputException($"{ex.Message}", ex),
             _ => exception
         };
     }
@@ -344,7 +334,7 @@ internal static class Tools
     {
         if (string.IsNullOrWhiteSpace(address))
         {
-            throw new BlInvalidAddressException("address cannot be null or empty");
+            throw new BO.BlInvalidAddressException("address cannot be null or empty");
         }
             
         if (s_coordinateCache.TryGetValue(address, out var coordinates))
@@ -375,9 +365,9 @@ internal static class Tools
         }
         catch (Exception ex)
         {
-            throw new BlInvalidAddressException("Error getting coordinates", ex);
+            throw new BO.BlInvalidAddressException("Error getting coordinates", ex);
         }
-        throw new BlInvalidAddressException("address not found");
+        throw new BO.BlInvalidAddressException("address not found");
     }
 
     /// <summary>
@@ -420,7 +410,13 @@ internal static class Tools
         {
             string url = $"http://router.project-osrm.org/route/v1/{profile}/{lon1},{lat1};{lon2},{lat2}?overview=false";
             s_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("My-C#-App");
-            string json = s_httpClient.GetStringAsync(url).Result;
+            
+            // Use a timeout to prevent hanging the UI indefinitely
+            var task = s_httpClient.GetStringAsync(url);
+            if (!task.Wait(15000)) // 15 second timeout
+                throw new BO.BlTimeoutException("OSRM request timed out");
+
+            string json = task.Result;
 
             var options = new JsonSerializerOptions
             {
@@ -432,14 +428,64 @@ internal static class Tools
             {
                 double newDistance = result.Routes[0].Distance / 1000; // Convert meters to kilometers
                 s_routeDistanceCache.TryAdd(cacheKey, newDistance);
+                SaveCache();
                 return newDistance;
             }
         }
         catch (Exception ex)
         {
-            throw new BlInvalidInputException("Error getting distance", ex);
+            throw new BO.BlInvalidInputException("Error getting distance from external service", ex);
         }
-        throw new BlInvalidInputException("could not find a route");
+        throw new BO.BlInvalidInputException("could not find a route");
+    }
+    #endregion
+
+    #region Cache Management
+    private static readonly ConcurrentDictionary<string, (double, double)> s_coordinateCache = new();
+    private static readonly ConcurrentDictionary<string, double> s_routeDistanceCache = new();
+    private static readonly string s_cacheFilePath = "distance_cache.json";
+
+    static Tools()
+    {
+        LoadCache();
+    }
+
+    //to be called in reset to clear the static caches
+    public static void ClearCaches()
+    {
+        s_coordinateCache.Clear();
+        s_routeDistanceCache.Clear();
+        try { File.Delete(s_cacheFilePath); } catch { }
+    }
+
+    private static void LoadCache()
+    {
+        try
+        {
+            if (File.Exists(s_cacheFilePath))
+            {
+                string json = File.ReadAllText(s_cacheFilePath);
+                var loaded = JsonSerializer.Deserialize<Dictionary<string, double>>(json);
+                if (loaded != null)
+                {
+                    foreach (var kvp in loaded)
+                    {
+                        s_routeDistanceCache.TryAdd(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+        }
+        catch { }
+    }
+
+    private static void SaveCache()
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(s_routeDistanceCache);
+            File.WriteAllText(s_cacheFilePath, json);
+        }
+        catch { }
     }
     #endregion
     /// <summary>

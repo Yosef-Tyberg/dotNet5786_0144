@@ -5,6 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PL.Delivery"
+        xmlns:controls="clr-namespace:PL.Controls"
         xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
         Title="Delivery Details" Width="450" SizeToContent="Height"
@@ -41,6 +42,7 @@
 
         <StackPanel Grid.Row="1">
             <!-- General Info -->
+            <!-- GroupBox creates a bordered area with a header -->
             <GroupBox Header="General Information" Margin="0,0,0,10" Padding="10">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -77,6 +79,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <TextBlock Text="Schedule:" Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="0"/>
@@ -88,11 +91,14 @@
                     <TextBlock Text="Expected:" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="0"/>
                     <TextBlock Text="{Binding CurrentDelivery.ExpectedDeliveryTime, Converter={StaticResource DateTimeToStringConverter}}" Style="{StaticResource ValueStyle}" Grid.Row="2" Grid.Column="1"/>
 
-                    <TextBlock Text="End Time:" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="0"/>
-                    <TextBlock Text="{Binding CurrentDelivery.DeliveryEndTime, Converter={StaticResource DateTimeToStringConverter}, TargetNullValue='In Progress'}" Style="{StaticResource ValueStyle}" Grid.Row="3" Grid.Column="1"/>
+                    <TextBlock Text="Max Time:" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.MaximumDeliveryTime, Converter={StaticResource DateTimeToStringConverter}}" Style="{StaticResource ValueStyle}" Grid.Row="3" Grid.Column="1"/>
 
-                    <TextBlock Text="Outcome:" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="0"/>
-                    <TextBlock Text="{Binding CurrentDelivery.DeliveryEndType, TargetNullValue='--'}" Style="{StaticResource ValueStyle}" Grid.Row="4" Grid.Column="1"/>
+                    <TextBlock Text="End Time:" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.DeliveryEndTime, Converter={StaticResource DateTimeToStringConverter}, TargetNullValue='In Progress'}" Style="{StaticResource ValueStyle}" Grid.Row="4" Grid.Column="1"/>
+
+                    <TextBlock Text="Outcome:" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="0"/>
+                    <TextBlock Text="{Binding CurrentDelivery.DeliveryEndType, TargetNullValue='--'}" Style="{StaticResource ValueStyle}" Grid.Row="5" Grid.Column="1"/>
                 </Grid>
             </GroupBox>
 
@@ -110,10 +116,11 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock Text="Distance:" Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="0"/>
+                    <!-- StringFormat allows formatting the bound value (e.g., adding " km" suffix) -->
                     <TextBlock Text="{Binding CurrentDelivery.ActualDistance, StringFormat='{}{0} km', TargetNullValue='--'}" Style="{StaticResource ValueStyle}" Grid.Row="0" Grid.Column="1"/>
 
                     <TextBlock Text="Duration:" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="0"/>
-                    <TextBlock Text="{Binding CurrentDelivery.DeliveryDuration, Converter={StaticResource TimeSpanToStringConverter}}" Style="{StaticResource ValueStyle}" Grid.Row="1" Grid.Column="1"/>
+                    <controls:TimeSpanEditor Value="{Binding CurrentDelivery.DeliveryDuration}" IsReadOnly="True" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" Margin="0,0,0,5" VerticalAlignment="Center"/>
 
                     <TextBlock Text="Avg Speed:" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="0"/>
                     <TextBlock Text="{Binding CurrentDelivery.AverageSpeed, StringFormat='{}{0} km/h'}" Style="{StaticResource ValueStyle}" Grid.Row="2" Grid.Column="1"/>

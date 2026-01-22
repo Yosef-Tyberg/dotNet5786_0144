@@ -15,11 +15,29 @@ public class DeliveryTypesCollection : IEnumerable
     public IEnumerator GetEnumerator() => s_enums.GetEnumerator();
 }
 
+public class DeliveryTypesList : IEnumerable
+{
+    static readonly IEnumerable<object> s_enums =
+        Enum.GetValues(typeof(BO.DeliveryTypes)).Cast<object>()
+        .Where(t => t.ToString() != "None");
+
+    public IEnumerator GetEnumerator() => s_enums.GetEnumerator();
+}
+
 public class OrderTypesCollection : IEnumerable
 {
     static readonly IEnumerable<object> s_enums =
         (new object[] { "None" })
         .Concat(Enum.GetValues(typeof(BO.OrderTypes)).Cast<object>());
+
+    public IEnumerator GetEnumerator() => s_enums.GetEnumerator();
+}
+
+public class OrderTypesList : IEnumerable
+{
+    static readonly IEnumerable<object> s_enums =
+        Enum.GetValues(typeof(BO.OrderTypes)).Cast<object>()
+        .Where(t => t.ToString() != "None");
 
     public IEnumerator GetEnumerator() => s_enums.GetEnumerator();
 }

@@ -72,7 +72,7 @@ public partial class OrderListWindow : Window
     public OrderListWindow()
     {
         InitializeComponent();
-        CancelSingleCommand = new RelayCommand(CancelSingleOrder);
+        CancelSingleCommand = new RelayCommand(CancelSingleOrder, CanCancelOrder);
     }
 
     /// <summary>
@@ -112,12 +112,21 @@ public partial class OrderListWindow : Window
     /// <summary>
     /// Registers the observer when the window is loaded.
     /// </summary>
-    private void Window_Loaded(object sender, RoutedEventArgs e) => s_bl.Order.AddObserver(orderListObserver);
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        s_bl.Order.AddObserver(orderListObserver);
+        s_bl.Admin.AddClockObserver(orderListObserver);
+        Activate();
+    }
 
     /// <summary>
     /// Unregisters the observer when the window is closed.
     /// </summary>
-    private void Window_Closed(object sender, EventArgs e) => s_bl.Order.RemoveObserver(orderListObserver);
+    private void Window_Closed(object sender, EventArgs e)
+    {
+        s_bl.Order.RemoveObserver(orderListObserver);
+        s_bl.Admin.RemoveClockObserver(orderListObserver);
+    }
 
     /// <summary>
     /// Open OrderWindow in Update mode.
@@ -125,7 +134,7 @@ public partial class OrderListWindow : Window
     private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (SelectedOrder != null)
-            new OrderWindow(SelectedOrder.Id).Show();
+            Tools.OpenWindow(() => new OrderWindow(SelectedOrder.Id), predicate: w => w.ButtonText == "Update", replace: true);
     }
 
     /// <summary>
@@ -133,7 +142,7 @@ public partial class OrderListWindow : Window
     /// </summary>
     private void BtnAdd_Click(object sender, RoutedEventArgs e)
     {
-        new OrderWindow().Show();
+        Tools.OpenWindow(() => new OrderWindow(), predicate: w => w.ButtonText == "Add", replace: false);
     }
 
     /// <summary>
@@ -142,20 +151,26 @@ public partial class OrderListWindow : Window
     /// <param name="parameter">The ID of the order to cancel.</param>
     private void CancelSingleOrder(object parameter)
     {
-        if (parameter is int id)
+        if (parameter is BO.OrderInList order)
         {
-            if (MessageBox.Show($"Are you sure you want to cancel order {id}?", "Cancel Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            if (MessageBox.Show(this, $"Are you sure you want to cancel order {order.Id}?", "Cancel Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
                 try
                 {
-                    s_bl.Order.Cancel(id);
+                    s_bl.Order.Cancel(order.Id);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Cancellation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(this, ex.Message, "Cancellation Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
+    }
+
+    private bool CanCancelOrder(object parameter)
+    {
+        return parameter is BO.OrderInList order &&
+               (order.OrderStatus == BO.OrderStatus.Open || order.OrderStatus == BO.OrderStatus.InProgress);
     }
 }
 

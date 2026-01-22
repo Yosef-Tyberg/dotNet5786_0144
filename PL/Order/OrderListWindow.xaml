@@ -67,14 +67,24 @@
                   BorderThickness="0" Margin="10">
             <!-- DataGrid Styles -->
             <DataGrid.Resources>
+                <DataTemplate x:Key="SortableHeaderTemplate">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding}"/>
+                        <TextBlock Text="⇅" Margin="5,0,0,0" Foreground="#888" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </DataTemplate>
                 <Style x:Key="CenterAligned" TargetType="TextBlock">
                     <Setter Property="HorizontalAlignment" Value="Center"/>
                 </Style>
                 <Style TargetType="DataGridColumnHeader">
                     <Setter Property="HorizontalContentAlignment" Value="Center"/>
                     <Setter Property="FontWeight" Value="Bold"/>
-                    <Setter Property="Padding" Value="5"/>
-                    <Setter Property="Background" Value="#F0F0F0"/>
+                    <Setter Property="Padding" Value="10,8"/>
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                    <Setter Property="BorderBrush" Value="#CCCCCC"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                    <Setter Property="ToolTip" Value="Click to Sort"/>
+                    <Setter Property="ContentTemplate" Value="{StaticResource SortableHeaderTemplate}"/>
                 </Style>
                 <Style TargetType="DataGridCell">
                     <Setter Property="Padding" Value="5"/>
@@ -94,13 +104,13 @@
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Type" Binding="{Binding OrderType}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Customer Name" Binding="{Binding CustomerFullName}" Width="*"/>
-                <DataGridTextColumn Header="Order Time" Binding="{Binding OrderOpenTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="Opening Time" Binding="{Binding OrderOpenTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Status" Binding="{Binding OrderStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Schedule" Binding="{Binding ScheduleStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTemplateColumn Header="Actions" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="Cancel" Padding="5,0" Command="{Binding DataContext.CancelSingleCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Id}"/>
+                            <Button Content="Cancel" Padding="5,0" Command="{Binding DataContext.CancelSingleCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

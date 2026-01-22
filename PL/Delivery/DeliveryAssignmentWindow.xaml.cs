@@ -14,6 +14,7 @@ public partial class DeliveryAssignmentWindow : Window
     private static readonly BlApi.IBl s_bl = BlApi.Factory.Get();
     private int _selectedCourierId;
 
+    // Text displayed at the top of the window, changes based on step
     public string Legend
     {
         get { return (string)GetValue(LegendProperty); }
@@ -38,6 +39,7 @@ public partial class DeliveryAssignmentWindow : Window
     public static readonly DependencyProperty OrderListProperty =
         DependencyProperty.Register("OrderList", typeof(IEnumerable<BO.OrderInList>), typeof(DeliveryAssignmentWindow), new PropertyMetadata(null));
 
+    // Controls which DataGrid is visible. Toggled in logic.
     public Visibility CourierListVisibility
     {
         get { return (Visibility)GetValue(CourierListVisibilityProperty); }
@@ -74,6 +76,18 @@ public partial class DeliveryAssignmentWindow : Window
     {
         InitializeComponent();
         LoadCouriers();
+        Loaded += (s, e) => 
+        {
+            s_bl.Admin.AddClockObserver(Observer);
+            s_bl.Courier.AddObserver(Observer);
+            s_bl.Order.AddObserver(Observer);
+        };
+        Closing += (s, e) => 
+        {
+            s_bl.Admin.RemoveClockObserver(Observer);
+            s_bl.Courier.RemoveObserver(Observer);
+            s_bl.Order.RemoveObserver(Observer);
+        };
     }
 
     /// <summary>
@@ -95,6 +109,7 @@ public partial class DeliveryAssignmentWindow : Window
         if (SelectedCourier == null) return;
 
         _selectedCourierId = SelectedCourier.Id;
+        // Switch view: Hide couriers, show orders available for this courier
         Legend = "Choose order to assign";
         
         try 
@@ -105,7 +120,7 @@ public partial class DeliveryAssignmentWindow : Window
         }
         catch (System.Exception ex)
         {
-             MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+             MessageBox.Show(this, ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -118,13 +133,35 @@ public partial class DeliveryAssignmentWindow : Window
 
         try
         {
+            // Perform the assignment in BL
             s_bl.Delivery.PickUp(_selectedCourierId, SelectedOrder.Id);
-            MessageBox.Show("Delivery Assigned", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, "Delivery Assigned", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             Close();
         }
         catch (System.Exception ex)
         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(this, ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    /// <summary>
+    /// Observer to refresh lists when the clock updates.
+    /// </summary>
+    private void Observer()
+    {
+        Dispatcher.Invoke(() =>
+        {
+            if (CourierListVisibility == Visibility.Visible)
+                // If viewing couriers, refresh courier list
+                LoadCouriers();
+            else if (OrderListVisibility == Visibility.Visible)
+            {
+                try
+                {
+                    OrderList = s_bl.Courier.GetOpenOrders(_selectedCourierId);
+                }
+                catch { LoadCouriers(); }
+            }
+        });
     }
 }

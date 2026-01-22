@@ -1,0 +1,54 @@
+ <!-- generated with Gemini by the prompt: make all timespan values easier to read - 
+ display them with explicit numbers for days, hours, minutes -->
+<UserControl x:Class="PL.Controls.TimeSpanEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:pl="clr-namespace:PL"
+             mc:Ignorable="d" 
+             d:DesignHeight="30" d:DesignWidth="200">
+    <UserControl.Resources>
+        <pl:StringToIntConverter x:Key="StringToIntConverter"/>
+        <Style TargetType="TextBox">
+            <Style.Triggers>
+                <Trigger Property="IsReadOnly" Value="True">
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+    <!-- Layout for the TimeSpan editor parts: Years, Months, Days, Hours, Minutes -->
+    <StackPanel Orientation="Horizontal">
+        <!-- Years Section: Visible if Years > 0 or in Edit Mode -->
+        <StackPanel Orientation="Horizontal" Visibility="{Binding YearsVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
+            <TextBox Text="{Binding Years, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource StringToIntConverter}}" MinWidth="30" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <TextBlock Text="Y" VerticalAlignment="Center" Margin="2,0,5,0" FontWeight="Bold" Foreground="#555"/>
+        </StackPanel>
+
+        <!-- Months Section -->
+        <StackPanel Orientation="Horizontal" Visibility="{Binding MonthsVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
+            <TextBox Text="{Binding Months, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource StringToIntConverter}}" MinWidth="30" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <TextBlock Text="M" VerticalAlignment="Center" Margin="2,0,5,0" FontWeight="Bold" Foreground="#555"/>
+        </StackPanel>
+
+        <!-- Days Section -->
+        <StackPanel Orientation="Horizontal" Visibility="{Binding DaysVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
+            <TextBox Text="{Binding Days, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource StringToIntConverter}}" MinWidth="30" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <TextBlock Text="d" VerticalAlignment="Center" Margin="2,0,5,0" FontWeight="Bold" Foreground="#555"/>
+        </StackPanel>
+        
+        <!-- Hours Section -->
+        <StackPanel Orientation="Horizontal" Visibility="{Binding HoursVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
+            <TextBox Text="{Binding Hours, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource StringToIntConverter}}" MinWidth="20" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <TextBlock Text="h" VerticalAlignment="Center" Margin="2,0,5,0" FontWeight="Bold" Foreground="#555"/>
+        </StackPanel>
+        
+        <!-- Minutes Section: Always visible (unless collapsed by parent) -->
+        <StackPanel Orientation="Horizontal" Visibility="{Binding MinutesVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
+            <TextBox Text="{Binding Minutes, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource StringToIntConverter}}" MinWidth="20" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <TextBlock Text="m" VerticalAlignment="Center" Margin="2,0,0,0" FontWeight="Bold" Foreground="#555"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

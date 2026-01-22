@@ -111,7 +111,7 @@ public static class Initialization
     {
         // Example company coordinates - change as appropriate for your tests
         s_dal.Config.AdminId = 123456789;
-        s_dal.Config.AdminPassword = "admin";
+        s_dal.Config.AdminPassword = "Admin";
         s_dal.Config.CompanyFullAddress = "Hebron Road (central), Jerusalem";
         s_dal.Config.Latitude = 31.766509;
         s_dal.Config.Longitude = 35.225938;
@@ -291,8 +291,8 @@ public static class Initialization
                 Longitude: addr.Lon,
                 CustomerFullName: customerNames[i % customerNames.Length],
                 CustomerMobile: RandomPhone(),
-                Volume: Math.Round(0.1 + s_rnd.NextDouble() * 3.0, 3),
-                Weight: Math.Round(0.1 + s_rnd.NextDouble() * 10.0, 3),
+                Volume: Math.Round(0.1 + s_rnd.NextDouble() * 3.0, 2),
+                Weight: Math.Round(0.1 + s_rnd.NextDouble() * 10.0, 2),
                 Fragile: s_rnd.NextDouble() < 0.15,
                 Height: Math.Round(5 + s_rnd.NextDouble() * 50, 2),
                 Width: Math.Round(5 + s_rnd.NextDouble() * 50, 2),

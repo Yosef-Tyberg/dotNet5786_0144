@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:PL.Delivery"
         xmlns:pl="clr-namespace:PL"
         mc:Ignorable="d"
-        Title="Delivery List" Height="640" Width="900"
+        Title="Delivery List" Height="640" Width="1000"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
         Loaded="Window_Loaded" Closed="Window_Closed">
     <!-- Window Resources: Collections for ComboBoxes -->
@@ -57,14 +57,24 @@
                   BorderThickness="0" Margin="10">
             <!-- DataGrid Resources: Styles for cells and headers -->
             <DataGrid.Resources>
+                <DataTemplate x:Key="SortableHeaderTemplate">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding}"/>
+                        <TextBlock Text="⇅" Margin="5,0,0,0" Foreground="#888" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </DataTemplate>
                 <Style x:Key="CenterAligned" TargetType="TextBlock">
                     <Setter Property="HorizontalAlignment" Value="Center"/>
                 </Style>
                 <Style TargetType="DataGridColumnHeader">
                     <Setter Property="HorizontalContentAlignment" Value="Center"/>
                     <Setter Property="FontWeight" Value="Bold"/>
-                    <Setter Property="Padding" Value="5"/>
-                    <Setter Property="Background" Value="#F0F0F0"/>
+                    <Setter Property="Padding" Value="10,8"/>
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                    <Setter Property="BorderBrush" Value="#CCCCCC"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                    <Setter Property="ToolTip" Value="Click to Sort"/>
+                    <Setter Property="ContentTemplate" Value="{StaticResource SortableHeaderTemplate}"/>
                 </Style>
                 <Style TargetType="DataGridCell">
                     <Setter Property="Padding" Value="5"/>
@@ -87,7 +97,7 @@
                 <DataGridTextColumn Header="Start Time" Binding="{Binding DeliveryStartTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="End Time" Binding="{Binding DeliveryEndTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Schedule" Binding="{Binding ScheduleStatus}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
-                <DataGridTextColumn Header="End Type" Binding="{Binding DeliveryEndType}" Width="100" ElementStyle="{StaticResource CenterAligned}"/>
+                <DataGridTextColumn Header="End Type" Binding="{Binding DeliveryEndType}" Width="120" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTemplateColumn Header="Actions" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

@@ -9,18 +9,21 @@
         mc:Ignorable="d"
         Title="Courier Window" Height="550" Width="450"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
+    <!-- DataContext set to Self allows binding to DependencyProperties in code-behind -->
 
     <Window.Resources>
         <!-- Converters and Collections for data binding -->
         <pl:IdToReadOnlyConverter x:Key="IdToReadOnlyConverter"/>
         <pl:IdToVisibilityConverter x:Key="IdToVisibilityConverter"/>
-        <pl:DeliveryTypesCollection x:Key="DeliveryTypesCollection"/>
+        <pl:DeliveryTypesList x:Key="DeliveryTypesList"/>
         <pl:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
         <pl:StringToIntConverter x:Key="StringToIntConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
         <!-- Style for TextBoxes to indicate ReadOnly state visually -->
         <Style TargetType="TextBox">
             <Setter Property="Margin" Value="3"/>
+            <!-- Triggers allow changing properties based on conditions (e.g., if IsReadOnly is True) -->
             <Style.Triggers>
                 <Trigger Property="IsReadOnly" Value="True">
                     <Setter Property="Background" Value="#EEE"/>
@@ -67,6 +70,7 @@
 
             <!-- ID Field: ReadOnly in Update mode, Editable in Add mode -->
             <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3"/>
+            <!-- Binding Mode=TwoWay allows changes in UI to update Code, and vice-versa -->
             <TextBox Grid.Row="0" Grid.Column="1" 
                      Text="{Binding CurrentCourier.Id, Mode=TwoWay, Converter={StaticResource StringToIntConverter}}"
                      IsReadOnly="{Binding IsIdReadOnly}"/>
@@ -87,7 +91,7 @@
             <!-- Delivery Type Selection -->
             <Label Grid.Row="5" Grid.Column="0" Content="Delivery Type:" Margin="3"/>
             <ComboBox Grid.Row="5" Grid.Column="1" Margin="3" 
-                      ItemsSource="{Binding Source={StaticResource DeliveryTypesCollection}}"
+                      ItemsSource="{Binding Source={StaticResource DeliveryTypesList}}"
                       SelectedValue="{Binding CurrentCourier.DeliveryType, Mode=TwoWay}"/>
             
             <!-- Operational Parameters -->
@@ -98,14 +102,16 @@
             <CheckBox Grid.Row="7" Grid.Column="1" Margin="3" VerticalAlignment="Center" IsChecked="{Binding CurrentCourier.Active, Mode=TwoWay}"/>
 
             <!-- Employment Data (ReadOnly/Calculated) -->
-            <Label Grid.Row="8" Grid.Column="0" Content="Start Date:" Margin="3" Visibility="{Binding CurrentCourier.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
-            <DatePicker Grid.Row="8" Grid.Column="1" SelectedDate="{Binding CurrentCourier.EmploymentStartTime, Mode=OneWay}" IsEnabled="False" Visibility="{Binding CurrentCourier.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+            <!-- Visibility Binding: Uses BooleanToVisibilityConverter to hide fields if IsIdReadOnly is false (Add Mode) -->
+            <Label Grid.Row="8" Grid.Column="0" Content="Start Date:" Margin="3" Visibility="{Binding IsIdReadOnly, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <DatePicker Grid.Row="8" Grid.Column="1" SelectedDate="{Binding CurrentCourier.EmploymentStartTime, Mode=OneWay}" IsEnabled="False" Visibility="{Binding IsIdReadOnly, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-            <Label Grid.Row="9" Grid.Column="0" Content="Years Employed:" Margin="3" Visibility="{Binding CurrentCourier.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
-            <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding CurrentCourier.YearsEmployed}" IsReadOnly="True" Visibility="{Binding CurrentCourier.Id, Converter={StaticResource IdToVisibilityConverter}}"/>
+            <Label Grid.Row="9" Grid.Column="0" Content="Years Employed:" Margin="3" Visibility="{Binding IsIdReadOnly, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding CurrentCourier.YearsEmployed}" IsReadOnly="True" Visibility="{Binding IsIdReadOnly, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </Grid>
 
         <!-- Action Button (Add or Update) -->
+        <!-- Button text binds to 'ButtonText' property to dynamically show "Add" or "Update" -->
         <Button Grid.Row="1" Content="{Binding ButtonText}" Margin="10" Padding="10,5" Click="BtnAddUpdate_Click"/>
     </Grid>
 </Window>

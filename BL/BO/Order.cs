@@ -69,11 +69,6 @@ public class Order
     public TimeSpan TimeOpenedDuration { get; set; }
 
     /// <summary>
-    /// Package density (weight/volume ratio). Set by the BL.
-    /// </summary>
-    public double PackageDensity { get; set; }
-
-    /// <summary>
     /// The current status of the order.
     /// </summary>
     public OrderStatus OrderStatus { get; set; }
