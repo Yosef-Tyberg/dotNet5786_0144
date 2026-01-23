@@ -171,6 +171,8 @@ internal static class OrderManager
             var config = s_dal.Config;
 
             boOrder.ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, lastDelivery);
+
+            return boOrder;
         }
         catch (Exception ex)
         {
