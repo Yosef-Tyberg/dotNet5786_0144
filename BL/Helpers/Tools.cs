@@ -29,7 +29,6 @@ internal static class Tools
     /// <summary>
     /// Populates the coordinate cache for testing purposes.
     /// </summary>
-    //populate cache for testing purposes
     public static void SeedCoordinateCache()
     {
         // These matches the strings used in Initialization.cs and your Unit Tests
@@ -103,6 +102,8 @@ internal static class Tools
     {
         if (string.IsNullOrWhiteSpace(email))
             return $"{label} cannot be empty.";
+        if (email.Length > 60)
+            return $"{label} is too long.";
 
         if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             return $"{label} '{email}' is not a valid format.";
@@ -154,9 +155,10 @@ internal static class Tools
         sb.AppendLine($"{objType.Name}:");
         sb.AppendLine("{");
 
-        // Retrieve all public properties and filter out indexers and write-only properties
+        // Retrieve all public properties of the object using reflection
         PropertyInfo[] properties = objType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
+        // Filter out indexers (properties that require parameters) and write-only properties
         var validProperties = from prop in properties
                               where prop.GetGetMethod() != null && prop.GetIndexParameters().Length == 0
                               select prop;
@@ -304,6 +306,7 @@ internal static class Tools
     /// <returns>The distance in kilometers.</returns>
     public static double GetAerialDistance(double lat1, double lon1, double lat2, double lon2)
     {
+        // Implementation of the Haversine formula to calculate the great-circle distance between two points on a sphere
         const double R = 6371; // Earth's radius in kilometers
         var dLat = ToRadians(lat2 - lat1);
         var dLon = ToRadians(lon2 - lon1);
@@ -398,6 +401,15 @@ internal static class Tools
         return GetRouteDistance(lat1, lon1, lat2, lon2, "foot");
     }
 
+    /// <summary>
+    /// Helper method to get route distance from an external OSRM service.
+    /// </summary>
+    /// <param name="lat1">Start latitude.</param>
+    /// <param name="lon1">Start longitude.</param>
+    /// <param name="lat2">End latitude.</param>
+    /// <param name="lon2">End longitude.</param>
+    /// <param name="profile">Routing profile (e.g., "driving", "foot").</param>
+    /// <returns>Distance in kilometers.</returns>
     private static double GetRouteDistance(double lat1, double lon1, double lat2, double lon2, string profile)
     {
         string cacheKey = $"{lat1},{lon1};{lat2},{lon2};{profile}";
@@ -408,6 +420,7 @@ internal static class Tools
 
         try
         {
+            // Construct the OSRM API URL
             string url = $"http://router.project-osrm.org/route/v1/{profile}/{lon1},{lat1};{lon2},{lat2}?overview=false";
             s_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("My-C#-App");
             
@@ -450,7 +463,10 @@ internal static class Tools
         LoadCache();
     }
 
-    //to be called in reset to clear the static caches
+    /// <summary>
+    /// Clears the static caches and deletes the cache file.
+    /// To be called during database reset.
+    /// </summary>
     public static void ClearCaches()
     {
         s_coordinateCache.Clear();
@@ -458,6 +474,10 @@ internal static class Tools
         try { File.Delete(s_cacheFilePath); } catch { }
     }
 
+    /// <summary>
+    /// Loads the route distance cache from a JSON file on disk.
+    /// This prevents re-fetching distances from the external API on application restart.
+    /// </summary>
     private static void LoadCache()
     {
         try
@@ -478,6 +498,9 @@ internal static class Tools
         catch { }
     }
 
+    /// <summary>
+    /// Saves the current route distance cache to a JSON file on disk.
+    /// </summary>
     private static void SaveCache()
     {
         try
@@ -488,15 +511,6 @@ internal static class Tools
         catch { }
     }
     #endregion
-    /// <summary>
-    /// Calculates the expected delivery time for an order.
-    /// </summary>
-    /// <param name="deliveryType">The type of delivery.</param>
-    /// <param name="order">The order to calculate the delivery time for.</param>
-    /// <param name="config">The configuration containing delivery settings.</param>
-    /// <param name="activeDelivery">Optional: The active delivery associated with the order.</param>
-    /// <returns>The calculated expected delivery time.</returns>
-
     #region Schedule Methods
 
     /// <summary>
@@ -512,18 +526,20 @@ internal static class Tools
         // Determine the start time: if an active delivery exists for the order, use its DeliveryStartTime; otherwise, use AdminManager.Now 
         DateTime startTime = activeDelivery != null ? activeDelivery.DeliveryStartTime : AdminManager.Now;
 
+        // Calculate distance and speed based on delivery type
         var (distance, speed) = GetDistanceAndSpeed(deliveryType, order, config);
 
         if (speed < 1)
             throw new BO.BlMissingPropertyException("Average speed must be >= 1 km/h");
 
-        
+        // Calculate estimated duration in hours
         var estimatedHours = distance / speed;
         var estimate = startTime.AddHours(estimatedHours);
 
         if (allowPast) return estimate;
 
-        //if its already later than expected time and delivery is open
+        // If the estimated time is in the past and the delivery is still open (not completed),
+        // return the current time as the new estimate (we can't estimate a past completion for an ongoing task).
         if (estimate < AdminManager.Now && activeDelivery?.DeliveryEndTime == null)
             return AdminManager.Now;
         return estimate;
@@ -532,6 +548,13 @@ internal static class Tools
         
     }
 
+    /// <summary>
+    /// Helper method to determine the distance and speed for a specific delivery scenario.
+    /// </summary>
+    /// <param name="deliveryType">The method of delivery.</param>
+    /// <param name="order">The order being delivered.</param>
+    /// <param name="config">System configuration.</param>
+    /// <returns>A tuple containing distance (km) and speed (km/h).</returns>
     private static (double distance, double speed) GetDistanceAndSpeed(DO.DeliveryTypes deliveryType, DO.Order order, DalApi.IConfig config)
     {
         double distance;
@@ -560,6 +583,13 @@ internal static class Tools
         return (distance, speed);
     }
 
+    /// <summary>
+    /// Determines the schedule status (OnTime, Late, AtRisk) of an order based on deadlines and estimates.
+    /// </summary>
+    /// <param name="order">The order to check.</param>
+    /// <param name="config">System configuration.</param>
+    /// <param name="activeDelivery">Optional: The active delivery associated with the order.</param>
+    /// <returns>The calculated ScheduleStatus.</returns>
     internal static BO.ScheduleStatus DetermineScheduleStatus(DO.Order order, DalApi.IConfig config, DO.Delivery? activeDelivery = null)
     {
         var deadline = order.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);

@@ -36,8 +36,13 @@ internal static class CourierManager
         if ((boCourier.Id < 100000000 || boCourier.Id > 999999999))
             errors[nameof(BO.Courier.Id)] = $"Courier ID '{boCourier.Id}' is not valid. It must be a 9-digit number.";
 
-        var nameError = Tools.ValidateFullName(boCourier.FullName, "Courier full name");
-        if (nameError != null) errors[nameof(BO.Courier.FullName)] = nameError;
+        if (boCourier.FullName != null && boCourier.FullName.Length > 60)
+            errors[nameof(BO.Courier.FullName)] = "Courier full name is too long.";
+        else
+        {
+            var nameError = Tools.ValidateFullName(boCourier.FullName, "Courier full name");
+            if (nameError != null) errors[nameof(BO.Courier.FullName)] = nameError;
+        }
 
         var phoneError = Tools.ValidatePhoneNumber(boCourier.MobilePhone, "Courier mobile phone");
         if (phoneError != null) errors[nameof(BO.Courier.MobilePhone)] = phoneError;
@@ -52,6 +57,8 @@ internal static class CourierManager
 
         if (boCourier.PersonalMaxDeliveryDistance.HasValue && boCourier.PersonalMaxDeliveryDistance <= 0)
             errors[nameof(BO.Courier.PersonalMaxDeliveryDistance)] = "Personal max delivery distance must be positive.";
+        else if (boCourier.PersonalMaxDeliveryDistance.HasValue && boCourier.PersonalMaxDeliveryDistance > 20000)
+            errors[nameof(BO.Courier.PersonalMaxDeliveryDistance)] = "Personal max delivery distance is too large.";
 
         if (!Enum.IsDefined(typeof(BO.DeliveryTypes), boCourier.DeliveryType))
             errors[nameof(BO.Courier.DeliveryType)] = "Invalid delivery type.";

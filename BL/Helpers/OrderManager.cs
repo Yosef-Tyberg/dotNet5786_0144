@@ -36,7 +36,9 @@ internal static class OrderManager
 
             if (string.IsNullOrWhiteSpace(boOrder.VerbalDescription))
                 errors[nameof(BO.Order.VerbalDescription)] = "Order verbal description cannot be empty.";
-
+            else if (boOrder.VerbalDescription.Length > 255)
+                errors[nameof(BO.Order.VerbalDescription)] = "Order verbal description is too long.";
+            
             var nameError = Tools.ValidateFullName(boOrder.CustomerFullName, "Customer full name");
             if (nameError != null) errors[nameof(BO.Order.CustomerFullName)] = nameError;
 
@@ -45,17 +47,27 @@ internal static class OrderManager
 
             if (boOrder.Volume <= 0)
                 errors[nameof(BO.Order.Volume)] = $"Volume {boOrder.Volume} must be positive.";
+            else if (boOrder.Volume > 100000)
+                errors[nameof(BO.Order.Volume)] = $"Volume {boOrder.Volume} is too large.";
 
             if (boOrder.Weight <= 0)
                 errors[nameof(BO.Order.Weight)] = $"Weight {boOrder.Weight} must be positive.";
+            else if (boOrder.Weight > 10000)
+                errors[nameof(BO.Order.Weight)] = $"Weight {boOrder.Weight} is too large.";
 
             if (boOrder.Height <= 0)
                 errors[nameof(BO.Order.Height)] = $"Height {boOrder.Height} must be positive.";
+            else if (boOrder.Height > 5000)
+                errors[nameof(BO.Order.Height)] = $"Height {boOrder.Height} is too large.";
 
             if (boOrder.Width <= 0)
                 errors[nameof(BO.Order.Width)] = $"Width {boOrder.Width} must be positive.";
+            else if (boOrder.Width > 5000)
+                errors[nameof(BO.Order.Width)] = $"Width {boOrder.Width} is too large.";
 
-            if (string.IsNullOrWhiteSpace(boOrder.FullOrderAddress))
+            if (boOrder.FullOrderAddress != null && boOrder.FullOrderAddress.Length > 255)
+                errors[nameof(BO.Order.FullOrderAddress)] = "Order address is too long.";
+            else if (string.IsNullOrWhiteSpace(boOrder.FullOrderAddress))
                 errors[nameof(BO.Order.FullOrderAddress)] = "Order address cannot be empty.";
             else if (lat == null || lon == null)
                 errors[nameof(BO.Order.FullOrderAddress)] = "Order address is invalid or not found.";
