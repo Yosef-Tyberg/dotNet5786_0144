@@ -78,16 +78,16 @@
 
             <!-- Basic Information Fields -->
             <Label Grid.Row="1" Grid.Column="0" Content="Full Name:" Margin="3"/>
-            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CurrentCourier.FullName, Mode=TwoWay}" MaxLength="60"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CurrentCourier.FullName, Mode=TwoWay}" MaxLength="30"/>
 
             <Label Grid.Row="2" Grid.Column="0" Content="Phone:" Margin="3"/>
             <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CurrentCourier.MobilePhone, Mode=TwoWay}" MaxLength="20"/>
 
             <Label Grid.Row="3" Grid.Column="0" Content="Email:" Margin="3"/>
-            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding CurrentCourier.Email, Mode=TwoWay}" MaxLength="100"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding CurrentCourier.Email, Mode=TwoWay}" MaxLength="60"/>
 
             <Label Grid.Row="4" Grid.Column="0" Content="Password:" Margin="3"/>
-            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding CurrentCourier.Password, Mode=TwoWay}" MaxLength="100"/>
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding CurrentCourier.Password, Mode=TwoWay}" MaxLength="60"/>
             
             <!-- Delivery Type Selection -->
             <Label Grid.Row="5" Grid.Column="0" Content="Delivery Type:" Margin="3"/>

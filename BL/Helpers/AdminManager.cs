@@ -85,12 +85,14 @@ internal static class AdminManager //stage 4
             errors[nameof(BO.Config.AdminPassword)] = "Admin password is too long.";
         else if (string.IsNullOrWhiteSpace(configuration.AdminPassword))
             errors[nameof(BO.Config.AdminPassword)] = "Admin password cannot be empty.";
-        if (configuration.AvgCarSpeedKmh < 1 || configuration.AvgMotorcycleSpeedKmh < 1 || 
-            configuration.AvgBicycleSpeedKmh < 1 || configuration.AvgWalkingSpeedKmh < 1)
-            errors["AverageSpeeds"] = "Average speeds must be at least 1 km/h."; // General error or map to specific fields if desired
-        else if (configuration.AvgCarSpeedKmh > 300 || configuration.AvgMotorcycleSpeedKmh > 300 || 
-            configuration.AvgBicycleSpeedKmh > 100 || configuration.AvgWalkingSpeedKmh > 50)
-            errors["AverageSpeeds"] = "Average speeds are unrealistically high.";
+        if (configuration.AvgCarSpeedKmh < 1 || configuration.AvgCarSpeedKmh > 300)
+            errors[nameof(BO.Config.AvgCarSpeedKmh)] = "Car speed must be between 1 and 300 km/h.";
+        if (configuration.AvgMotorcycleSpeedKmh < 1 || configuration.AvgMotorcycleSpeedKmh > 300)
+            errors[nameof(BO.Config.AvgMotorcycleSpeedKmh)] = "Motorcycle speed must be between 1 and 300 km/h.";
+        if (configuration.AvgBicycleSpeedKmh < 1 || configuration.AvgBicycleSpeedKmh > 100)
+            errors[nameof(BO.Config.AvgBicycleSpeedKmh)] = "Bicycle speed must be between 1 and 100 km/h.";
+        if (configuration.AvgWalkingSpeedKmh < 1 || configuration.AvgWalkingSpeedKmh > 50)
+            errors[nameof(BO.Config.AvgWalkingSpeedKmh)] = "Walking speed must be between 1 and 50 km/h.";
         if (configuration.MaxGeneralDeliveryDistanceKm.HasValue && configuration.MaxGeneralDeliveryDistanceKm <= 0)
             errors[nameof(BO.Config.MaxGeneralDeliveryDistanceKm)] = "Max general delivery distance must be positive.";
         else if (configuration.MaxGeneralDeliveryDistanceKm.HasValue && configuration.MaxGeneralDeliveryDistanceKm > 40000)
