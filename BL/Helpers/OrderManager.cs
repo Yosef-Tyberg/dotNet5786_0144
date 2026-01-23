@@ -165,27 +165,12 @@ internal static class OrderManager
             
             boOrder.OrderStatus = DetermineOrderStatus(deliveries);
 
-            var lastDelivery = deliveries.OrderByDescending(d => d.DeliveryStartTime).FirstOrDefault();
+            DO.Delivery? lastDelivery = null;
+            if (deliveries.Any())
+                lastDelivery = deliveries.OrderByDescending(d => d.DeliveryStartTime).FirstOrDefault();
             var config = s_dal.Config;
-            //if not closed, calculate
-            if (boOrder.OrderStatus == BO.OrderStatus.InProgress)
-            {
-                boOrder.ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, lastDelivery);
-            }
-            else if (boOrder.OrderStatus == BO.OrderStatus.Open)
-            {
-                boOrder.ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config);
 
-            }
-            //if closed, compare to max allowed time
-            else
-            {
-                if (lastDelivery.DeliveryEndTime > (doOrder.OrderOpenTime + config.MaxDeliveryTimeSpan))
-                    boOrder.ScheduleStatus = BO.ScheduleStatus.Late;
-                else
-                    boOrder.ScheduleStatus = BO.ScheduleStatus.OnTime;
-            }
-            return boOrder;
+            boOrder.ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, lastDelivery);
         }
         catch (Exception ex)
         {

@@ -556,15 +556,22 @@ internal static class Tools
 
     internal static BO.ScheduleStatus DetermineScheduleStatus(DO.Order order, DalApi.IConfig config, DO.Delivery? activeDelivery = null)
     {
-        var deliveryType = GetFastestType(config);
-        
-        if (activeDelivery != null)
-        {
-            deliveryType = activeDelivery.DeliveryType;
-        }
-        
-        var arrival = CalculateExpectedDeliveryTime(deliveryType, order, config, activeDelivery);  
         var deadline = order.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
+
+        //if delivery is closed, status is based on endtime
+        if (activeDelivery?.DeliveryEndTime != null && activeDelivery.DeliveryEndType != DO.DeliveryEndTypes.Failed &&
+            activeDelivery.DeliveryEndType != DO.DeliveryEndTypes.RecipientNotFound)
+        {
+            return activeDelivery.DeliveryEndTime > deadline
+                ? BO.ScheduleStatus.Late
+                : BO.ScheduleStatus.OnTime;
+        }
+        //if delivery inprogress, use delivery's type. otherwise fastest type - optimistic calculation
+        DO.DeliveryTypes deliveryType = activeDelivery?.DeliveryEndTime != null ? 
+            activeDelivery.DeliveryType : GetFastestType(config);
+
+        var arrival = CalculateExpectedDeliveryTime(deliveryType, order, config, activeDelivery);  
+
         //late only if current time is after deadline
         if (AdminManager.Now > deadline)
             return BO.ScheduleStatus.Late;
