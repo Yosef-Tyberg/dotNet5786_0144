@@ -50,17 +50,6 @@ public interface IOrder : IObservable
 
     #endregion
 
-    #region Courier Methods
-
-    /// <summary>
-    /// Retrieves a list of orders available for pickup, tailored to the courier's capabilities.
-    /// </summary>
-    /// <param name="courierId">The ID of the courier looking for orders.</param>
-    /// <returns>An IEnumerable of BO.OrderInList that the courier can deliver.</returns>
-    IEnumerable<BO.OrderInList> GetAvailableOrders(int courierId);
-
-    #endregion
-    
     #region General Methods
     
     /// <summary>

@@ -31,15 +31,13 @@ internal static class AdminManager //stage 4
         var oldClock = s_dal.Config.Clock; //stage 4
         s_dal.Config.Clock = newClock; //stage 4
 
-        //Add calls here to any logic method that should be called periodically,
-        //after each clock update
-        //for example, Periodic students' updates:
-        // - Go through all students to update properties that are affected by the clock update
-        // - (couriers become not active after a certain time of inactivity etc.)
 
-        DeliveryManager.PeriodicDeliveriesUpdate(oldClock, newClock);
+        // - couriers become not active after a certain time of inactivity
+        // - open deliveries are closed after a certain amount of time inprogess
+
+        //DeliveryManager.PeriodicDeliveriesUpdate(oldClock, newClock);
         CourierManager.PeriodicCouriersUpdate(oldClock, newClock);
-        OrderManager.PeriodicOrdersUpdate(oldClock, newClock);
+        //OrderManager.PeriodicOrdersUpdate(oldClock, newClock);
         
         //TO_DO: //stage 7
         //if (_periodicTask is null || _periodicTask.IsCompleted) //stage 7

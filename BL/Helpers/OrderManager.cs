@@ -142,7 +142,7 @@ internal static class OrderManager
     /// <param name="doOrder">The DO Order to convert.</param>
     /// <param name="deliveries">The pre-fetched deliveries for the order.</param>
     /// <returns>An equivalent BO Order entity.</returns>
-    private static BO.Order ConvertDoToBo(DO.Order doOrder, IEnumerable<DO.Delivery> deliveries)
+    internal static BO.Order ConvertDoToBo(DO.Order doOrder, IEnumerable<DO.Delivery> deliveries)
     {
         try
         {
@@ -169,8 +169,16 @@ internal static class OrderManager
             if (deliveries.Any())
                 lastDelivery = deliveries.OrderByDescending(d => d.DeliveryStartTime).FirstOrDefault();
             var config = s_dal.Config;
-
-            boOrder.ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, lastDelivery);
+            //if open, calculate based on open time
+            if (boOrder.OrderStatus == BO.OrderStatus.Open)
+            {
+                boOrder.ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config);                
+            }
+            // if closed/inprogress calculate based on last/current delivery
+            else
+            {
+                boOrder.ScheduleStatus = Tools.DetermineScheduleStatus(doOrder, config, lastDelivery);
+            }
 
             return boOrder;
         }
@@ -363,63 +371,6 @@ internal static class OrderManager
         }
     }
     
-    /// <summary>
-    /// Retrieves a list of orders available for pickup, tailored to the courier's capabilities.
-    /// </summary>
-    /// <param name="courierId">The ID of the courier looking for orders.</param>
-    /// <returns>An IEnumerable of BO.Order that the courier can deliver.</returns>
-    public static IEnumerable<BO.Order> GetAvailableOrders(int courierId)
-    {
-        try
-        {
-            // The courier must exist to get available orders.
-            DO.Courier doCourier = s_dal.Courier.Read(courierId)
-                                   ?? throw new BO.BlDoesNotExistException($"Courier with ID {courierId} not found.");
-
-            var allOrders = s_dal.Order.ReadAll();
-            var allDeliveries = s_dal.Delivery.ReadAll();
-
-            // Use Query Syntax (Demonstrates: Join Into, Let, Where, OrderBy)
-            var openOrders = 
-                from order in allOrders
-                join delivery in allDeliveries on order.Id equals delivery.OrderId into deliveries
-                
-                // Filter 1: Must not be currently in progress
-                let inProgress = deliveries.Any(d => d.DeliveryEndTime == null)
-                where !inProgress
-
-                // Filter 2: If history exists, last status must be 're-openable'
-                let lastEnded = deliveries.OrderByDescending(d => d.DeliveryEndTime).FirstOrDefault()
-                where lastEnded == null ||
-                      lastEnded.DeliveryEndType == DO.DeliveryEndTypes.RecipientNotFound ||
-                      lastEnded.DeliveryEndType == DO.DeliveryEndTypes.Failed
-                
-                orderby order.OrderOpenTime // Sort by oldest first
-                select new { order, deliveries };
-
-            // Filter by the courier's personal delivery distance, if specified.
-            var availableForCourier = openOrders; // Type is inferred
-            if (doCourier.PersonalMaxDeliveryDistance != null)
-            {
-                var config = s_dal.Config;
-                availableForCourier = openOrders.Where(x =>
-                    Tools.GetAerialDistance(
-                        (double)(config.Latitude ?? 0),
-                        (double)(config.Longitude ?? 0),
-                        x.order.Latitude,
-                        x.order.Longitude) <= doCourier.PersonalMaxDeliveryDistance);
-            }
-
-            // Convert the final list of DOs to BOs, passing the already-fetched deliveries.
-            return availableForCourier.Select(x => ConvertDoToBo(x.order, x.deliveries));
-        }
-        catch (Exception ex)
-        {
-            throw Tools.ConvertDalException(ex);
-        }
-    }
-    
-
     /// <summary>
     /// gets the tracking information for an order
     /// </summary>

@@ -504,26 +504,32 @@ internal static class Tools
     /// </summary>
     /// <param name="deliveryType">The delivery type.</param>
     /// <param name="order">The associated order.</param>
+    /// <param name="allowPast">If true, returns the calculated time even if it is in the past. If false, clamps to Now.</param>
     /// <returns>The calculated expected delivery time.</returns>
     /// <exception cref="BO.BlMissingPropertyException">Thrown when calculation fails.</exception>
-    internal static DateTime CalculateExpectedDeliveryTime(DO.DeliveryTypes deliveryType, DO.Order order, DalApi.IConfig config, DO.Delivery? activeDelivery = null)
+    internal static DateTime CalculateExpectedDeliveryTime(DO.DeliveryTypes deliveryType, DO.Order order, DalApi.IConfig config, DO.Delivery? activeDelivery = null, bool allowPast = false)
     {
         // Determine the start time: if an active delivery exists for the order, use its DeliveryStartTime; otherwise, use AdminManager.Now 
-        DateTime startTime = activeDelivery?.DeliveryStartTime ?? AdminManager.Now;
+        DateTime startTime = activeDelivery != null ? activeDelivery.DeliveryStartTime : AdminManager.Now;
 
         var (distance, speed) = GetDistanceAndSpeed(deliveryType, order, config);
 
-        if (speed >= 1)
-        {
-            var estimatedHours = distance / speed;
-            var estimate = startTime.AddHours(estimatedHours);
-            //if its already later than expected time (affects open deliveries)
-            if (estimate < AdminManager.Now) 
-                return AdminManager.Now;
-            return estimate;
-        }
+        if (speed < 1)
+            throw new BO.BlMissingPropertyException("Average speed must be >= 1 km/h");
 
-        throw new BO.BlMissingPropertyException("Average speed must be >= 1 km/h");
+        
+        var estimatedHours = distance / speed;
+        var estimate = startTime.AddHours(estimatedHours);
+
+        if (allowPast) return estimate;
+
+        //if its already later than expected time and delivery is open
+        if (estimate < AdminManager.Now && activeDelivery?.DeliveryEndTime == null)
+            return AdminManager.Now;
+        return estimate;
+        
+
+        
     }
 
     private static (double distance, double speed) GetDistanceAndSpeed(DO.DeliveryTypes deliveryType, DO.Order order, DalApi.IConfig config)
@@ -559,8 +565,7 @@ internal static class Tools
         var deadline = order.OrderOpenTime.Add(config.MaxDeliveryTimeSpan);
 
         //if delivery is closed, status is based on endtime
-        if (activeDelivery?.DeliveryEndTime != null && activeDelivery.DeliveryEndType != DO.DeliveryEndTypes.Failed &&
-            activeDelivery.DeliveryEndType != DO.DeliveryEndTypes.RecipientNotFound)
+        if (activeDelivery?.DeliveryEndTime != null)
         {
             return activeDelivery.DeliveryEndTime > deadline
                 ? BO.ScheduleStatus.Late

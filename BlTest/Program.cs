@@ -463,19 +463,19 @@ internal static class Program
         int id = ID;
 
         Console.Write("Enter Courier Full Name: ");
-        string? fullName = Console.ReadLine();
+        string? fullName = Console.ReadLine() ?? "";
         
         Console.Write("Enter Courier Email: ");
-        string? email = Console.ReadLine();
+        string? email = Console.ReadLine() ?? "";
         
         Console.Write("Enter Courier Mobile Phone: ");
-        string? mobilePhone = Console.ReadLine();
+        string? mobilePhone = Console.ReadLine() ?? "";
         
         Console.Write("Enter Courier Password: ");
-        string? password = Console.ReadLine();
+        string? password = Console.ReadLine() ?? "";
         
         Console.Write("Enter Max Delivery Distance: ");
-        string? maxDistStr = Console.ReadLine();
+        string? maxDistStr = Console.ReadLine() ?? "";
         if (!double.TryParse(maxDistStr, out double maxDistance)) throw new BlInvalidInputException("Invalid distance.");
         
         Console.Write($"Enter Delivery Type ({string.Join("/", Enum.GetNames(typeof(DeliveryTypes)))}): ");
@@ -641,7 +641,7 @@ internal static class Program
     {
         Console.Write("Enter your Courier ID: ");
         if (!int.TryParse(Console.ReadLine(), out int id)) throw new BlInvalidInputException("Invalid Courier ID.");
-        var orders = s_bl.Order.GetAvailableOrders(id);
+        var orders = s_bl.Courier.GetOpenOrders(id);
         if (!orders.Any()) { Console.WriteLine("No available orders matching your profile."); return; }
         foreach (var order in orders) Console.WriteLine(order);
     }
@@ -696,7 +696,7 @@ internal static class Program
         if (!int.TryParse(Console.ReadLine(), out int adminId)) throw new BlInvalidInputException("Invalid Admin ID.");
 
         Console.Write("Admin Password: ");
-        string? adminPassword = Console.ReadLine();
+        string? adminPassword = Console.ReadLine() ?? "";
 
         Console.Write("Average Car Speed (km/h): ");
         if (!double.TryParse(Console.ReadLine(), out double carSpeed)) throw new BlInvalidInputException("Invalid speed.");

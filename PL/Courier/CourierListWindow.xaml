@@ -84,6 +84,7 @@
                 <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridTextColumn Header="Type" Binding="{Binding DeliveryType}" Width="Auto" ElementStyle="{StaticResource CenterAligned}"/>
                 <DataGridCheckBoxColumn Header="Active" Binding="{Binding Active}" Width="Auto"/>
+                <DataGridCheckBoxColumn Header="In Delivery" Binding="{Binding IsInDelivery}" Width="Auto"/>
                 <!-- TemplateColumn allows custom content like Buttons inside a cell -->
                 <DataGridTemplateColumn Header="Actions" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>

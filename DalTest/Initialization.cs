@@ -125,7 +125,7 @@ public static class Initialization
         // Delivery limits & thresholds
         s_dal.Config.MaxGeneralDeliveryDistanceKm = 100.0; // global max radius
         s_dal.Config.MaxDeliveryTimeSpan = TimeSpan.FromDays(10);
-        s_dal.Config.RiskRange = TimeSpan.FromMinutes(60);
+        s_dal.Config.RiskRange = TimeSpan.FromDays(2);
         s_dal.Config.InactivityRange = TimeSpan.FromDays(700);
 
         // set test clock to now (or any fixed time)

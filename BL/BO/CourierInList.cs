@@ -27,6 +27,11 @@ public class CourierInList
     public bool Active { get; set; }
 
     /// <summary>
+    /// Indicates if the courier is currently in the middle of a delivery.
+    /// </summary>
+    public bool IsInDelivery { get; set; }
+
+    /// <summary>
     /// Returns a string representation of the CourierInList entity.
     /// </summary>
     public override string ToString() => Helpers.Tools.ToStringProperty(this);

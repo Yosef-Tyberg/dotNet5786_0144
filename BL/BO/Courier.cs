@@ -59,8 +59,12 @@ public class Courier
     public double YearsEmployed { get; set; }
 
     /// <summary>
+    /// Indicates if the courier is currently in the middle of a delivery.
+    /// </summary>
+    public bool IsInDelivery { get; set; }
+
+    /// <summary>
     /// Returns a string representation of the Courier entity.
     /// </summary>
     public override string ToString() => Helpers.Tools.ToStringProperty(this);
 }
-

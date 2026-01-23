@@ -19,6 +19,7 @@
         <pl:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
         <pl:StringToIntConverter x:Key="StringToIntConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <pl:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
 
         <!-- Style for TextBoxes to indicate ReadOnly state visually -->
         <Style TargetType="TextBox">
@@ -92,7 +93,8 @@
             <Label Grid.Row="5" Grid.Column="0" Content="Delivery Type:" Margin="3"/>
             <ComboBox Grid.Row="5" Grid.Column="1" Margin="3" 
                       ItemsSource="{Binding Source={StaticResource DeliveryTypesList}}"
-                      SelectedValue="{Binding CurrentCourier.DeliveryType, Mode=TwoWay}"/>
+                      SelectedValue="{Binding CurrentCourier.DeliveryType, Mode=TwoWay}"
+                      IsEnabled="{Binding CurrentCourier.IsInDelivery, Converter={StaticResource InverseBooleanConverter}}"/>
             
             <!-- Operational Parameters -->
             <Label Grid.Row="6" Grid.Column="0" Content="Max Distance (km):" Margin="3"/>
@@ -108,6 +110,10 @@
 
             <Label Grid.Row="9" Grid.Column="0" Content="Years Employed:" Margin="3" Visibility="{Binding IsIdReadOnly, Converter={StaticResource BooleanToVisibilityConverter}}"/>
             <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding CurrentCourier.YearsEmployed}" IsReadOnly="True" Visibility="{Binding IsIdReadOnly, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+            <!-- In Delivery Status (ReadOnly) -->
+            <Label Grid.Row="10" Grid.Column="0" Content="In Delivery:" Margin="3" Visibility="{Binding IsIdReadOnly, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <CheckBox Grid.Row="10" Grid.Column="1" Margin="3" VerticalAlignment="Center" IsChecked="{Binding CurrentCourier.IsInDelivery, Mode=OneWay}" IsEnabled="False" Visibility="{Binding IsIdReadOnly, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </Grid>
 
         <!-- Action Button (Add or Update) -->
