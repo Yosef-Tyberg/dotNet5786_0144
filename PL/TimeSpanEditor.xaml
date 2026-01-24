@@ -23,31 +23,72 @@
     <StackPanel Orientation="Horizontal">
         <!-- Years Section: Visible if Years > 0 or in Edit Mode -->
         <StackPanel Orientation="Horizontal" Visibility="{Binding YearsVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
-            <TextBox Text="{Binding Years, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource StringToIntConverter}}" MinWidth="30" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" MaxLength="4"/>
+            <TextBox MinWidth="30" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" MaxLength="4">
+                <TextBox.Text>
+                    <Binding Path="Years" RelativeSource="{RelativeSource AncestorType=UserControl}" UpdateSourceTrigger="PropertyChanged" Converter="{StaticResource StringToIntConverter}">
+                        <!-- Validates integer input for time components -->
+                        <Binding.ValidationRules>
+                            <pl:IntegerValidationRule IsNullable="True" FieldName="Years"/>
+                        </Binding.ValidationRules>
+                    </Binding>
+                </TextBox.Text>
+            </TextBox>
             <TextBlock Text="Y" VerticalAlignment="Center" Margin="2,0,5,0" FontWeight="Bold" Foreground="#555"/>
         </StackPanel>
 
         <!-- Months Section -->
         <StackPanel Orientation="Horizontal" Visibility="{Binding MonthsVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
-            <TextBox Text="{Binding Months, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource StringToIntConverter}}" MinWidth="30" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" MaxLength="2"/>
+            <TextBox MinWidth="30" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" MaxLength="2">
+                <TextBox.Text>
+                    <Binding Path="Months" RelativeSource="{RelativeSource AncestorType=UserControl}" UpdateSourceTrigger="PropertyChanged" Converter="{StaticResource StringToIntConverter}">
+                        <Binding.ValidationRules>
+                            <pl:IntegerValidationRule IsNullable="True" FieldName="Months"/>
+                        </Binding.ValidationRules>
+                    </Binding>
+                </TextBox.Text>
+            </TextBox>
             <TextBlock Text="M" VerticalAlignment="Center" Margin="2,0,5,0" FontWeight="Bold" Foreground="#555"/>
         </StackPanel>
 
         <!-- Days Section -->
         <StackPanel Orientation="Horizontal" Visibility="{Binding DaysVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
-            <TextBox Text="{Binding Days, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource StringToIntConverter}}" MinWidth="30" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" MaxLength="2"/>
+            <TextBox MinWidth="30" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" MaxLength="2">
+                <TextBox.Text>
+                    <Binding Path="Days" RelativeSource="{RelativeSource AncestorType=UserControl}" UpdateSourceTrigger="PropertyChanged" Converter="{StaticResource StringToIntConverter}">
+                        <Binding.ValidationRules>
+                            <pl:IntegerValidationRule IsNullable="True" FieldName="Days"/>
+                        </Binding.ValidationRules>
+                    </Binding>
+                </TextBox.Text>
+            </TextBox>
             <TextBlock Text="d" VerticalAlignment="Center" Margin="2,0,5,0" FontWeight="Bold" Foreground="#555"/>
         </StackPanel>
         
         <!-- Hours Section -->
         <StackPanel Orientation="Horizontal" Visibility="{Binding HoursVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
-            <TextBox Text="{Binding Hours, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource StringToIntConverter}}" MinWidth="20" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" MaxLength="2"/>
+            <TextBox MinWidth="20" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" MaxLength="2">
+                <TextBox.Text>
+                    <Binding Path="Hours" RelativeSource="{RelativeSource AncestorType=UserControl}" UpdateSourceTrigger="PropertyChanged" Converter="{StaticResource StringToIntConverter}">
+                        <Binding.ValidationRules>
+                            <pl:IntegerValidationRule IsNullable="True" FieldName="Hours"/>
+                        </Binding.ValidationRules>
+                    </Binding>
+                </TextBox.Text>
+            </TextBox>
             <TextBlock Text="h" VerticalAlignment="Center" Margin="2,0,5,0" FontWeight="Bold" Foreground="#555"/>
         </StackPanel>
         
         <!-- Minutes Section: Always visible (unless collapsed by parent) -->
         <StackPanel Orientation="Horizontal" Visibility="{Binding MinutesVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
-            <TextBox Text="{Binding Minutes, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource StringToIntConverter}}" MinWidth="20" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" MaxLength="2"/>
+            <TextBox MinWidth="20" IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" MaxLength="2">
+                <TextBox.Text>
+                    <Binding Path="Minutes" RelativeSource="{RelativeSource AncestorType=UserControl}" UpdateSourceTrigger="PropertyChanged" Converter="{StaticResource StringToIntConverter}">
+                        <Binding.ValidationRules>
+                            <pl:IntegerValidationRule IsNullable="True" FieldName="Minutes"/>
+                        </Binding.ValidationRules>
+                    </Binding>
+                </TextBox.Text>
+            </TextBox>
             <TextBlock Text="m" VerticalAlignment="Center" Margin="2,0,0,0" FontWeight="Bold" Foreground="#555"/>
         </StackPanel>
     </StackPanel>

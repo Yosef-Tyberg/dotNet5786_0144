@@ -268,7 +268,13 @@ internal static class OrderManager
     {
         try
         {
-            return s_dal.Order.ReadAll(filter).Where(o => o != null).Select(o => ConvertDoToBo(o!));
+            // Optimization: Fetch all deliveries once and group them by OrderId using LINQ's ToLookup.
+            // This prevents making a separate DB call for every single order (N+1 problem).
+            var deliveries = s_dal.Delivery.ReadAll();
+            var deliveryLookup = deliveries.ToLookup(d => d.OrderId);
+
+            return s_dal.Order.ReadAll(filter).Where(o => o != null)
+                .Select(o => ConvertDoToBo(o!, deliveryLookup[o!.Id]));
         }
         catch (Exception ex)
         {

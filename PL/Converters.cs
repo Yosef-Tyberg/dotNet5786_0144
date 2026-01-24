@@ -71,8 +71,9 @@ public class NullableDoubleConverter : IValueConverter
 
         if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var d)) return d;
         
-        // For invalid input (e.g. "abc"), return UnsetValue to ignore
-        return DependencyProperty.UnsetValue; 
+        // Return UnsetValue to indicate conversion failure.
+        // This prevents the source property from being updated with invalid data.
+        return DependencyProperty.UnsetValue;
     }
 }
 
@@ -120,6 +121,9 @@ public class StringToIntConverter : IValueConverter
     {
         var s = value?.ToString();
         if (string.IsNullOrWhiteSpace(s)) return 0;
+        
+        // If parsing succeeds, return the int.
+        // If it fails, return UnsetValue so the binding ignores the bad input (ValidationRule handles the error UI).
         return int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result) ? result : DependencyProperty.UnsetValue;
     }
 }

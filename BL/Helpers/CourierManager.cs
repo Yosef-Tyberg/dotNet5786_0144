@@ -95,7 +95,15 @@ internal static class CourierManager
     /// <returns>An IEnumerable of BO.Courier.</returns>
     public static IEnumerable<BO.Courier> ReadAll(Func<BO.Courier, bool>? filter = null)
     {
-        var boCouriers = s_dal.Courier.ReadAll().Where(c => c != null).Select(c => ConvertDoToBo(c!));
+        // Optimization: Fetch all active deliveries once to identify busy couriers. (checking if active is resource intensive - requires deliveries readall)
+        // Using ToHashSet allows for O(1) lookup complexity inside the projection.
+        var activeCourierIds = s_dal.Delivery.ReadAll(d => d.DeliveryEndTime == null)
+                                             .Select(d => d.CourierId)
+                                             .ToHashSet();
+
+        var boCouriers = s_dal.Courier.ReadAll().Where(c => c != null)
+                                      .Select(c => ConvertDoToBo(c!, activeCourierIds.Contains(c!.Id)));
+                                      
         return filter == null ? boCouriers : boCouriers.Where(filter);
     }
 
@@ -290,6 +298,18 @@ internal static class CourierManager
     /// <exception cref="BO.BlInvalidInputException">Thrown when conversion fails.</exception>
     public static BO.Courier ConvertDoToBo(DO.Courier doCourier)
     {
+        // Default behavior: Check DB for active delivery (slower for lists)
+        return ConvertDoToBo(doCourier, IsCourierInDelivery(doCourier.Id));
+    }
+
+    /// <summary>
+    /// Private helper to convert DO to BO when IsInDelivery status is already known.
+    /// </summary>
+    /// <param name="doCourier">The DO Courier.</param>
+    /// <param name="isInDelivery">Pre-calculated delivery status.</param>
+    /// <returns>BO Courier.</returns>
+    private static BO.Courier ConvertDoToBo(DO.Courier doCourier, bool isInDelivery)
+    {
         try
         {
             var boCourier = new BO.Courier
@@ -306,7 +326,7 @@ internal static class CourierManager
             };
 
             boCourier.YearsEmployed = Math.Round((AdminManager.Now - boCourier.EmploymentStartTime).TotalDays / 365.25, 2);
-            boCourier.IsInDelivery = IsCourierInDelivery(boCourier.Id);
+            boCourier.IsInDelivery = isInDelivery;
             
             return boCourier;
         }

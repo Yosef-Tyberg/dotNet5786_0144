@@ -76,7 +76,7 @@
                     <TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.VerbalDescription, Mode=TwoWay}" TextWrapping="Wrap" Height="40" MaxLength="150"/>
 
                     <Label Grid.Row="6" Grid.Column="0" Content="Fragile:" Margin="3"/>
-                    <CheckBox Grid.Row="6" Grid.Column="1" Margin="3" IsChecked="{Binding CurrentOrder.Fragile, Mode=TwoWay}" VerticalAlignment="Center"/>
+                    <CheckBox Grid.Row="6" Grid.Column="1" Margin="3" IsChecked="{Binding CurrentOrder.Fragile, Mode=TwoWay, ValidatesOnExceptions=True}" VerticalAlignment="Center"/>
                 </Grid>
             </GroupBox>
 
@@ -96,16 +96,49 @@
                         </Grid.RowDefinitions>
 
                         <Label Grid.Row="0" Grid.Column="0" Content="Volume:" Margin="3"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.Volume, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}" MaxLength="10"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Margin="3" MaxLength="10">
+                            <TextBox.Text>
+                                <Binding Path="CurrentOrder.Volume" Mode="TwoWay" Converter="{StaticResource NullableDoubleConverter}">
+                                    <!-- Ensures Volume is a valid number -->
+                                    <Binding.ValidationRules>
+                                        <pl:DoubleValidationRule IsNullable="False" FieldName="Volume"/>
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
 
                         <Label Grid.Row="1" Grid.Column="0" Content="Weight:" Margin="3"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.Weight, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}" MaxLength="10"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Margin="3" MaxLength="10">
+                            <TextBox.Text>
+                                <Binding Path="CurrentOrder.Weight" Mode="TwoWay" Converter="{StaticResource NullableDoubleConverter}">
+                                    <Binding.ValidationRules>
+                                        <pl:DoubleValidationRule IsNullable="False" FieldName="Weight"/>
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
 
                         <Label Grid.Row="2" Grid.Column="0" Content="Height:" Margin="3"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.Height, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}" MaxLength="10"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Margin="3" MaxLength="10">
+                            <TextBox.Text>
+                                <Binding Path="CurrentOrder.Height" Mode="TwoWay" Converter="{StaticResource NullableDoubleConverter}">
+                                    <Binding.ValidationRules>
+                                        <pl:DoubleValidationRule IsNullable="False" FieldName="Height"/>
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
 
                         <Label Grid.Row="3" Grid.Column="0" Content="Width:" Margin="3"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding CurrentOrder.Width, Mode=TwoWay, Converter={StaticResource NullableDoubleConverter}}" MaxLength="10"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Margin="3" MaxLength="10">
+                            <TextBox.Text>
+                                <Binding Path="CurrentOrder.Width" Mode="TwoWay" Converter="{StaticResource NullableDoubleConverter}">
+                                    <Binding.ValidationRules>
+                                        <pl:DoubleValidationRule IsNullable="False" FieldName="Width"/>
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
                     </Grid>
                 </GroupBox>
 

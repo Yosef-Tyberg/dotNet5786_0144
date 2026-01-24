@@ -13,6 +13,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 
 namespace Helpers;
@@ -32,17 +33,37 @@ internal static class Tools
     public static void SeedCoordinateCache()
     {
         // These matches the strings used in Initialization.cs and your Unit Tests
-        s_coordinateCache.TryAdd("Ben Yehuda Street, Jerusalem", (31.781500, 35.217600));
-        s_coordinateCache.TryAdd("Jaffa Road, Jerusalem", (31.784637, 35.215046));
+        // Adjusted coordinates to ensure they snap to drivable roads (avoiding pedestrian-only zones)
+        s_coordinateCache.TryAdd("Hillel Street, Jerusalem", (31.780600, 35.218500)); // Hillel St (nearby drivable)
+        s_coordinateCache.TryAdd("Agrippas Street, Jerusalem", (31.785000, 35.212000)); // Agrippas St (nearby drivable)
         s_coordinateCache.TryAdd("Mahane Yehuda, Jerusalem", (31.784700, 35.207300));
         s_coordinateCache.TryAdd("Emek Refaim - German Colony, Jerusalem", (31.757919, 35.218139));
         s_coordinateCache.TryAdd("Givat Shaul, Jerusalem", (31.787128, 35.190108));
         s_coordinateCache.TryAdd("Hebron Road (central), Jerusalem", (31.766509, 35.225938));
         s_coordinateCache.TryAdd("Ein Kerem (outer), Jerusalem", (31.759164, 35.143000));
         s_coordinateCache.TryAdd("Knesset area, Jerusalem", (31.776670, 35.205280));
-        s_coordinateCache.TryAdd("Jaffa Road 2, Jerusalem", (31.784637, 35.215046));
+        s_coordinateCache.TryAdd("Agrippas Street 2, Jerusalem", (31.785000, 35.212000)); // Agrippas St
         s_coordinateCache.TryAdd("King George Street 1, Jerusalem", (31.782000, 35.218200));
-        s_coordinateCache.TryAdd("Test Far Address", (32.500000, 35.000000)); // Approx Haifa/North
+        s_coordinateCache.TryAdd("Test Far Address", (32.794044, 34.989571)); // Haifa (Drivable)
+
+        // Pre-seed route distances from the default Company location (Hebron Road) to these addresses.
+        // This prevents OSRM API calls (and UI lag) when opening lists immediately after DB initialization.
+        // Coordinates match DalTest.Initialization.InitializeConfig
+        double compLat = 31.766509;
+        double compLon = 35.225938;
+
+        // Iterate over all cached coordinates and fetch actual routes to seed the distance cache
+        // Using sequential loop (via All) to avoid OSRM public API rate limits (HTTP 429)
+        _ = s_coordinateCache.All(kvp =>
+        {
+            try
+            {
+                GetDrivingDistance(compLat, compLon, kvp.Value.Item1, kvp.Value.Item2);
+                GetWalkingDistance(compLat, compLon, kvp.Value.Item1, kvp.Value.Item2);
+            }
+            catch { } // Best effort seeding
+            return true;
+        });
     }
     /// <summary>
     /// Validates a full name, ensuring it is not empty, not too long, contains only valid characters, and consists of at least two words.
@@ -60,7 +81,7 @@ internal static class Tools
             return $"{label} is too long.";
 
         if (!Regex.IsMatch(name, @"^[A-Za-zא-ת ]+$"))
-            return $"{label} may contain only English or Hebrew letters and spaces.";
+            return $"{label} may contain only English or Hebrew letters separated by spaces.";
 
         bool hasEnglish = Regex.IsMatch(name, @"[A-Za-z]");
         bool hasHebrew = Regex.IsMatch(name, @"[א-ת]");
@@ -68,8 +89,8 @@ internal static class Tools
         if (hasEnglish && hasHebrew)
             return $"{label} cannot contain both English and Hebrew characters.";
 
-        if (name.Contains("    "))
-            return $"{label} cannot contain more than three consecutive spaces.";
+        if (name.Contains("  "))
+            return $"{label} cannot contain consecutive spaces.";
 
         if (!Regex.IsMatch(name, @"^ {0,3}[A-Za-zא-ת]+( {1,3}[A-Za-zא-ת]+)+ {0,3}$"))
             return $"{label} must contain at least two words separated by spaces.";
@@ -247,11 +268,7 @@ internal static class Tools
     /// <returns>A formatted string representation of the collection.</returns>
     private static string FormatCollection(IEnumerable enumerable)
     {
-        var items = new List<string>();
-        foreach (var item in enumerable)
-        {
-            items.Add(FormatPropertyValue(item));
-        }
+        var items = enumerable.Cast<object>().Select(item => FormatPropertyValue(item));
         return $"[{string.Join(", ", items)}]";
     }
 
@@ -349,7 +366,6 @@ internal static class Tools
         {
             // The Nominatim API endpoint for searching a structured query
             string url = $"https://nominatim.openstreetmap.org/search?q={Uri.EscapeDataString(address)}&format=json&limit=1";
-            s_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("My-C#-App");
             string json = s_httpClient.GetStringAsync(url).Result;
 
             var options = new JsonSerializerOptions
@@ -361,7 +377,7 @@ internal static class Tools
             if (results?.Count > 0)
             {
                 var bestResult = results[0];
-                var newCoordinates = (double.Parse(bestResult.Lat), double.Parse(bestResult.Lon));
+                var newCoordinates = (double.Parse(bestResult.Lat, CultureInfo.InvariantCulture), double.Parse(bestResult.Lon, CultureInfo.InvariantCulture));
                 s_coordinateCache.TryAdd(address, newCoordinates);
                 return newCoordinates;
             }
@@ -412,7 +428,7 @@ internal static class Tools
     /// <returns>Distance in kilometers.</returns>
     private static double GetRouteDistance(double lat1, double lon1, double lat2, double lon2, string profile)
     {
-        string cacheKey = $"{lat1},{lon1};{lat2},{lon2};{profile}";
+        string cacheKey = $"{lat1.ToString(CultureInfo.InvariantCulture)},{lon1.ToString(CultureInfo.InvariantCulture)};{lat2.ToString(CultureInfo.InvariantCulture)},{lon2.ToString(CultureInfo.InvariantCulture)};{profile}";
         if (s_routeDistanceCache.TryGetValue(cacheKey, out double distance))
         {
             return distance;
@@ -421,8 +437,7 @@ internal static class Tools
         try
         {
             // Construct the OSRM API URL
-            string url = $"http://router.project-osrm.org/route/v1/{profile}/{lon1},{lat1};{lon2},{lat2}?overview=false";
-            s_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("My-C#-App");
+            string url = $"http://router.project-osrm.org/route/v1/{profile}/{lon1.ToString(CultureInfo.InvariantCulture)},{lat1.ToString(CultureInfo.InvariantCulture)};{lon2.ToString(CultureInfo.InvariantCulture)},{lat2.ToString(CultureInfo.InvariantCulture)}?overview=false";
             
             // Use a timeout to prevent hanging the UI indefinitely
             var task = s_httpClient.GetStringAsync(url);
@@ -460,6 +475,7 @@ internal static class Tools
 
     static Tools()
     {
+        s_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("My-C#-App");
         LoadCache();
     }
 
@@ -488,10 +504,7 @@ internal static class Tools
                 var loaded = JsonSerializer.Deserialize<Dictionary<string, double>>(json);
                 if (loaded != null)
                 {
-                    foreach (var kvp in loaded)
-                    {
-                        s_routeDistanceCache.TryAdd(kvp.Key, kvp.Value);
-                    }
+                    _ = loaded.All(kvp => { s_routeDistanceCache.TryAdd(kvp.Key, kvp.Value); return true; });
                 }
             }
         }
@@ -526,8 +539,19 @@ internal static class Tools
         // Determine the start time: if an active delivery exists for the order, use its DeliveryStartTime; otherwise, use AdminManager.Now 
         DateTime startTime = activeDelivery != null ? activeDelivery.DeliveryStartTime : AdminManager.Now;
 
-        // Calculate distance and speed based on delivery type
-        var (distance, speed) = GetDistanceAndSpeed(deliveryType, order, config);
+        double distance;
+        double speed;
+
+        // Optimization: Use stored ActualDistance if available to avoid external API calls
+        if (activeDelivery?.ActualDistance != null)
+        {
+            distance = activeDelivery.ActualDistance.Value;
+            speed = GetSpeed(deliveryType, config);
+        }
+        else
+        {
+            (distance, speed) = GetDistanceAndSpeed(deliveryType, order, config);
+        }
 
         if (speed < 1)
             throw new BO.BlMissingPropertyException("Average speed must be >= 1 km/h");
@@ -558,29 +582,36 @@ internal static class Tools
     private static (double distance, double speed) GetDistanceAndSpeed(DO.DeliveryTypes deliveryType, DO.Order order, DalApi.IConfig config)
     {
         double distance;
-        double speed;
+        double speed = GetSpeed(deliveryType, config);
         switch (deliveryType)
         {
             case DO.DeliveryTypes.Car:
-                distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
-                speed = config.AvgCarSpeedKmh;
-                break;
             case DO.DeliveryTypes.Motorcycle:
                 distance = Tools.GetDrivingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
-                speed = config.AvgMotorcycleSpeedKmh;
                 break;
             case DO.DeliveryTypes.Bicycle:
-                distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
-                speed = config.AvgBicycleSpeedKmh;
-                break;
             case DO.DeliveryTypes.OnFoot:
                 distance = Tools.GetWalkingDistance((double)(config.Latitude ?? 0), (double)(config.Longitude ?? 0), order.Latitude, order.Longitude);
-                speed = config.AvgWalkingSpeedKmh;
                 break;
             default:
                 throw new BO.BlMissingPropertyException($"Could not calculate properties for unrecognized delivery type: {deliveryType}");
         }
         return (distance, speed);
+    }
+
+    /// <summary>
+    /// Helper to get the average speed for a delivery type from config.
+    /// </summary>
+    private static double GetSpeed(DO.DeliveryTypes deliveryType, DalApi.IConfig config)
+    {
+        return deliveryType switch
+        {
+            DO.DeliveryTypes.Car => config.AvgCarSpeedKmh,
+            DO.DeliveryTypes.Motorcycle => config.AvgMotorcycleSpeedKmh,
+            DO.DeliveryTypes.Bicycle => config.AvgBicycleSpeedKmh,
+            DO.DeliveryTypes.OnFoot => config.AvgWalkingSpeedKmh,
+            _ => throw new BO.BlMissingPropertyException($"Unrecognized delivery type: {deliveryType}")
+        };
     }
 
     /// <summary>

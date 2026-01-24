@@ -139,8 +139,8 @@ public static class Initialization
     {
         return new List<TestAddress>
             {
-                new TestAddress("Ben Yehuda Street, Jerusalem", 31.781500, 35.217600),
-                new TestAddress("Jaffa Road, Jerusalem", 31.784637, 35.215046),
+                new TestAddress("Hillel Street, Jerusalem", 31.780600, 35.218500),
+                new TestAddress("Agrippas Street, Jerusalem", 31.785000, 35.212000),
                 new TestAddress("Mahane Yehuda, Jerusalem", 31.784700, 35.207300),
                 new TestAddress("Emek Refaim - German Colony, Jerusalem", 31.757919, 35.218139),
                 new TestAddress("Givat Shaul, Jerusalem", 31.787128, 35.190108),

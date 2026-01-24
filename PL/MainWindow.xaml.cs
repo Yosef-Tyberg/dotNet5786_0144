@@ -217,29 +217,114 @@ public partial class MainWindow : Window
     {
         try
         {
+            // 1. Capture the original state from BL to compare against.
+            var originalConfig = s_bl!.Admin.GetConfig();
+            
+            // 2. Check for UI-level validation errors (e.g., format errors like "abc" in an int field).
+            string uiErrors = Tools.GetUiValidationErrors(this);
+            bool hasUiErrors = !string.IsNullOrEmpty(uiErrors);
+            
+            // 3. Check if the underlying object has actually changed compared to the original.
+            bool hasValidChanges = Tools.IsInstanceChanged(originalConfig, Configuration);
+
+            // Case A: UI has errors, but NO valid changes were made to other fields.
+            // Action: Just show the error and revert the invalid UI input to match the source.
+            if (hasUiErrors && !hasValidChanges)
+            {
+                MessageBox.Show(this, $"Invalid input:\n{uiErrors}", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var temp = Configuration;
+                // Force a binding refresh by setting a distinct dummy value.
+                Configuration = new BO.Config { MaxDeliveryTimeSpan = TimeSpan.MinValue };
+                Configuration = temp;
+                return;
+            }
+
+            // Case B: No UI errors and No valid changes.
+            // Action: Inform user nothing happened.
+            if (!hasUiErrors && !hasValidChanges)
+            {
+                MessageBox.Show(this, "No changes were made.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Case C: Valid changes exist (possibly mixed with UI errors).
+            // Action: Attempt to save the valid changes to the BL.
             s_bl!.Admin.SetConfig(Configuration);
-            MessageBox.Show(this, "Configuration saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            // If save was successful:
+            if (hasUiErrors)
+            {
+                // Case C1: Partial Success (Valid saved, UI errors reverted).
+                MessageBox.Show(this, $"Partial Success: Valid changes were saved.\n\nInvalid format inputs were reverted:\n{uiErrors}", "Partial Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                var temp = Configuration;
+                Configuration = new BO.Config 
+                { 
+                    MaxDeliveryTimeSpan = TimeSpan.MinValue,
+                    RiskRange = TimeSpan.MinValue,
+                    InactivityRange = TimeSpan.MinValue
+                };
+                Configuration = temp;
+            }
+            else
+            {
+                // Case C2: Full Success.
+                MessageBox.Show(this, "Configuration saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
         catch (BlInvalidInputException ex)
         {
-            MessageBox.Show(this, ex.Message, "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+            // Case D: BL Validation Failed.
+            // Even if UI validation passed, the BL might reject values (e.g., negative numbers).
+
+            // Capture UI errors if any existed before the save attempt
+            string uiErrors = Tools.GetUiValidationErrors(this);
+            bool hasUiErrors = !string.IsNullOrEmpty(uiErrors);
+            StringBuilder msg = new StringBuilder();
             
-            // Revert invalid fields to original values
+            if (hasUiErrors)
+                msg.AppendLine("Invalid format inputs:").AppendLine(uiErrors);
+            
+            // Revert invalid fields to original values based on BL exception details
             if (ex.ValidationErrors.Count > 0)
             {
                 var original = s_bl!.Admin.GetConfig();
-                foreach (var error in ex.ValidationErrors)
-                {
-                    var prop = typeof(BO.Config).GetProperty(error.Key);
-                    if (prop != null && prop.CanWrite)
-                    {
-                        prop.SetValue(Configuration, prop.GetValue(original));
-                    }
-                }
+                Tools.RevertInvalidProperties(Configuration, original, ex.ValidationErrors);
+
                 // Force UI refresh
                 var temp = Configuration;
-                Configuration = null;
+                Configuration = new BO.Config 
+                { 
+                    MaxDeliveryTimeSpan = TimeSpan.MinValue,
+                    RiskRange = TimeSpan.MinValue,
+                    InactivityRange = TimeSpan.MinValue
+                };
                 Configuration = temp;
+
+                // Check if there are still valid changes remaining after reverting the invalid ones
+                if (!Tools.IsInstanceChanged(original, Configuration))
+                {
+                    // Case D1: All changes were invalid.
+                    MessageBox.Show(this, msg.Append(ex.Message).ToString(), "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                {
+                    // Case D2: Partial Success (BL errors reverted, Valid changes remain).
+                    // Retry saving the valid values
+                    try
+                    {
+                        s_bl!.Admin.SetConfig(Configuration);
+                        MessageBox.Show(this, $"Partial Success: Invalid values were reverted. Valid changes were saved.\n\nDetails:\n{msg}{ex.Message}", "Partial Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    catch (Exception retryEx)
+                    {
+                        MessageBox.Show(this, $"Error saving configuration: {retryEx.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+            else
+            {
+                // General BL error not tied to specific fields
+                MessageBox.Show(this, msg.Append(ex.Message).ToString(), "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         catch (BlInvalidAddressException ex)
@@ -285,6 +370,12 @@ public partial class MainWindow : Window
 
             // Force refresh of bound properties to reflect changes immediately
             CurrentTime = s_bl.Admin.GetClock();
+            Configuration = new BO.Config 
+            { 
+                MaxDeliveryTimeSpan = TimeSpan.MinValue,
+                RiskRange = TimeSpan.MinValue,
+                InactivityRange = TimeSpan.MinValue
+            };
             Configuration = s_bl.Admin.GetConfig();
 
             Mouse.OverrideCursor = null;
@@ -332,7 +423,12 @@ public partial class MainWindow : Window
 
             // Force refresh of bound properties to reflect changes immediately
             CurrentTime = s_bl.Admin.GetClock();
-            Configuration = null; // Force binding refresh by resetting the property
+            Configuration = new BO.Config 
+            { 
+                MaxDeliveryTimeSpan = TimeSpan.MinValue,
+                RiskRange = TimeSpan.MinValue,
+                InactivityRange = TimeSpan.MinValue
+            };
             Configuration = s_bl.Admin.GetConfig();
 
             Mouse.OverrideCursor = null;
@@ -363,12 +459,10 @@ public partial class MainWindow : Window
     // Helper to close other windows during DB operations
     private static void CloseAllSecondaryWindows()
     {
-        var windows = Application.Current.Windows.Cast<Window>().ToList();
-        foreach (Window window in windows)
-        {
-            if (window is not MainWindow)
-                window.Close();
-        }
+        Application.Current.Windows.Cast<Window>()
+            .Where(window => window is not MainWindow)
+            .ToList()
+            .ForEach(window => window.Close());
     }
 
     #endregion

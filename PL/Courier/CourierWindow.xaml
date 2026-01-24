@@ -72,9 +72,16 @@
             <!-- ID Field: ReadOnly in Update mode, Editable in Add mode -->
             <Label Grid.Row="0" Grid.Column="0" Content="ID:" Margin="3"/>
             <!-- Binding Mode=TwoWay allows changes in UI to update Code, and vice-versa -->
-            <TextBox Grid.Row="0" Grid.Column="1" 
-                     Text="{Binding CurrentCourier.Id, Mode=TwoWay, Converter={StaticResource StringToIntConverter}}" MaxLength="9"
-                     IsReadOnly="{Binding IsIdReadOnly}"/>
+            <TextBox Grid.Row="0" Grid.Column="1" MaxLength="9" IsReadOnly="{Binding IsIdReadOnly}">
+                <TextBox.Text>
+                    <Binding Path="CurrentCourier.Id" Mode="TwoWay" Converter="{StaticResource StringToIntConverter}">
+                        <!-- Validates that the ID is a valid integer -->
+                        <Binding.ValidationRules>
+                            <pl:IntegerValidationRule IsNullable="False" FieldName="ID"/>
+                        </Binding.ValidationRules>
+                    </Binding>
+                </TextBox.Text>
+            </TextBox>
 
             <!-- Basic Information Fields -->
             <Label Grid.Row="1" Grid.Column="0" Content="Full Name:" Margin="3"/>
@@ -98,10 +105,19 @@
             
             <!-- Operational Parameters -->
             <Label Grid.Row="6" Grid.Column="0" Content="Max Distance (km):" Margin="3"/>
-            <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding CurrentCourier.PersonalMaxDeliveryDistance, Converter={StaticResource NullableDoubleConverter}, Mode=TwoWay}" MaxLength="10"/>
+            <TextBox Grid.Row="6" Grid.Column="1" MaxLength="10">
+                <TextBox.Text>
+                    <Binding Path="CurrentCourier.PersonalMaxDeliveryDistance" Converter="{StaticResource NullableDoubleConverter}" Mode="TwoWay">
+                        <!-- Validates double input; allows null/empty because it's nullable -->
+                        <Binding.ValidationRules>
+                            <pl:DoubleValidationRule IsNullable="True" FieldName="Max Distance"/>
+                        </Binding.ValidationRules>
+                    </Binding>
+                </TextBox.Text>
+            </TextBox>
 
             <Label Grid.Row="7" Grid.Column="0" Content="Active:" Margin="3"/>
-            <CheckBox Grid.Row="7" Grid.Column="1" Margin="3" VerticalAlignment="Center" IsChecked="{Binding CurrentCourier.Active, Mode=TwoWay}"/>
+            <CheckBox Grid.Row="7" Grid.Column="1" Margin="3" VerticalAlignment="Center" IsChecked="{Binding CurrentCourier.Active, Mode=TwoWay, ValidatesOnExceptions=True}"/>
 
             <!-- Employment Data (ReadOnly/Calculated) -->
             <!-- Visibility Binding: Uses BooleanToVisibilityConverter to hide fields if IsIdReadOnly is false (Add Mode) -->

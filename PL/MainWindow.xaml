@@ -86,8 +86,16 @@
 
                     <!-- AdminId -->
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Admin ID" Margin="0,4,0,4"/>
-                    <TextBox Grid.Row="0" Grid.Column="1"
-                         Text="{Binding Configuration.AdminId, Converter={StaticResource StringToIntConverter}, UpdateSourceTrigger=LostFocus}" Margin="0,4,0,4" MaxLength="9"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Margin="0,4,0,4" MaxLength="9">
+                        <TextBox.Text>
+                            <Binding Path="Configuration.AdminId" Converter="{StaticResource StringToIntConverter}" UpdateSourceTrigger="LostFocus">
+                                <!-- ValidationRule runs before the Converter to catch format errors (e.g. "abc") safely -->
+                                <Binding.ValidationRules>
+                                    <local:IntegerValidationRule IsNullable="False" FieldName="Admin ID"/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
 
                     <!-- AdminPassword -->
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Admin Password" Margin="0,4,0,4"/>
@@ -96,28 +104,64 @@
 
                     <!-- AvgCarSpeedKmh -->
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Avg Car Speed (Km/h)" Margin="0,4,0,4"/>
-                    <TextBox Grid.Row="2" Grid.Column="1"
-                         Text="{Binding Configuration.AvgCarSpeedKmh, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}" Margin="0,4,0,4" MaxLength="5"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Margin="0,4,0,4" MaxLength="5">
+                        <TextBox.Text>
+                            <Binding Path="Configuration.AvgCarSpeedKmh" Converter="{StaticResource NullableDoubleConverter}" UpdateSourceTrigger="LostFocus">
+                                <!-- Ensures input is a valid double before conversion -->
+                                <Binding.ValidationRules>
+                                    <local:DoubleValidationRule IsNullable="False" FieldName="Avg Car Speed"/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
 
                     <!-- AvgMotorcycleSpeedKmh -->
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Avg Motorcycle Speed (Km/h)" Margin="0,4,0,4"/>
-                    <TextBox Grid.Row="3" Grid.Column="1"
-                         Text="{Binding Configuration.AvgMotorcycleSpeedKmh, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}" Margin="0,4,0,4" MaxLength="5"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" Margin="0,4,0,4" MaxLength="5">
+                        <TextBox.Text>
+                            <Binding Path="Configuration.AvgMotorcycleSpeedKmh" Converter="{StaticResource NullableDoubleConverter}" UpdateSourceTrigger="LostFocus">
+                                <Binding.ValidationRules>
+                                    <local:DoubleValidationRule IsNullable="False" FieldName="Avg Motorcycle Speed"/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
 
                     <!-- AvgBicycleSpeedKmh -->
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Avg Bicycle Speed (Km/h)" Margin="0,4,0,4"/>
-                    <TextBox Grid.Row="4" Grid.Column="1"
-                         Text="{Binding Configuration.AvgBicycleSpeedKmh, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}" Margin="0,4,0,4" MaxLength="5"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" Margin="0,4,0,4" MaxLength="5">
+                        <TextBox.Text>
+                            <Binding Path="Configuration.AvgBicycleSpeedKmh" Converter="{StaticResource NullableDoubleConverter}" UpdateSourceTrigger="LostFocus">
+                                <Binding.ValidationRules>
+                                    <local:DoubleValidationRule IsNullable="False" FieldName="Avg Bicycle Speed"/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
 
                     <!-- AvgWalkingSpeedKmh -->
                     <TextBlock Grid.Row="5" Grid.Column="0" Text="Avg Walking Speed (Km/h)" Margin="0,4,0,4"/>
-                    <TextBox Grid.Row="5" Grid.Column="1"
-                         Text="{Binding Configuration.AvgWalkingSpeedKmh, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}" Margin="0,4,0,4" MaxLength="5"/>
+                    <TextBox Grid.Row="5" Grid.Column="1" Margin="0,4,0,4" MaxLength="5">
+                        <TextBox.Text>
+                            <Binding Path="Configuration.AvgWalkingSpeedKmh" Converter="{StaticResource NullableDoubleConverter}" UpdateSourceTrigger="LostFocus">
+                                <Binding.ValidationRules>
+                                    <local:DoubleValidationRule IsNullable="False" FieldName="Avg Walking Speed"/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
 
                     <!-- MaxGeneralDeliveryDistanceKm (nullable) -->
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Max General Delivery Distance (Km)" Margin="0,4,0,4"/>
-                    <TextBox Grid.Row="6" Grid.Column="1"
-                         Text="{Binding Configuration.MaxGeneralDeliveryDistanceKm, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,4" MaxLength="10"/>
+                    <TextBox Grid.Row="6" Grid.Column="1" Margin="0,4,0,4" MaxLength="10">
+                        <TextBox.Text>
+                            <Binding Path="Configuration.MaxGeneralDeliveryDistanceKm" Converter="{StaticResource NullableDoubleConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <local:DoubleValidationRule IsNullable="True" FieldName="Max General Distance"/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
 
                     <!-- MaxDeliveryTimeSpan -->
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="Max Delivery Time Span" Margin="0,4,0,4"/>

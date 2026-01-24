@@ -2,6 +2,10 @@
 ﻿using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Reflection;
+using System.Text;
 
 namespace PL;
 
@@ -74,6 +78,89 @@ internal static class Tools
                 newWindow.Show();
                 newWindow.Activate();
             }
+        }
+    }
+
+    /// <summary>
+    /// Recursively checks if a DependencyObject and its children have any validation errors.
+    /// </summary>
+    public static bool IsValid(DependencyObject parent)
+    {
+        if (Validation.GetHasError(parent))
+            return false;
+
+        // Validate all the bindings on the children
+        for (int i = 0; i != VisualTreeHelper.GetChildrenCount(parent); ++i)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+            if (!IsValid(child)) { return false; }
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Generic method to compare two objects of the same type to check if any properties have changed.
+    /// </summary>
+    /// <typeparam name="T">The type of the objects.</typeparam>
+    /// <param name="oldObj">The original object.</param>
+    /// <param name="newObj">The modified object.</param>
+    /// <param name="ignoreProperties">List of property names to ignore during comparison.</param>
+    /// <returns>True if any non-ignored property has changed; otherwise, false.</returns>
+    public static bool IsInstanceChanged<T>(T oldObj, T newObj, params string[] ignoreProperties)
+    {
+        if (oldObj == null && newObj == null) return false;
+        if (oldObj == null || newObj == null) return true;
+
+        var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        // Use LINQ to check if any property value differs between the two objects
+        return properties
+            .Where(prop => ignoreProperties == null || !ignoreProperties.Contains(prop.Name))
+            .Any(prop => !Equals(prop.GetValue(oldObj), prop.GetValue(newObj)));
+    }
+
+    /// <summary>
+    /// Recursively collects validation error messages from the visual tree.
+    /// This aggregates errors flagged by ValidationRules (e.g., format errors) so we can display them in a MessageBox.
+    /// </summary>
+    /// <param name="parent">The root element to start searching from.</param>
+    /// <returns>A string containing all validation error messages, or empty string if none.</returns>
+    public static string GetUiValidationErrors(DependencyObject parent)
+    {
+        StringBuilder sb = new StringBuilder();
+        GetErrorsRecursive(parent, sb);
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Reverts specific properties on a target object to their values from a source object,
+    /// based on a dictionary of validation errors (where keys are property names).
+    /// </summary>
+    /// <typeparam name="T">The type of the object.</typeparam>
+    public static void RevertInvalidProperties<T>(T target, T source, System.Collections.Generic.Dictionary<string, string> errors)
+    {
+        _ = errors.All(error =>
+        {
+            var prop = typeof(T).GetProperty(error.Key);
+            if (prop != null && prop.CanWrite)
+            {
+                prop.SetValue(target, prop.GetValue(source));
+            }
+            return true;
+        });
+    }
+
+    // Helper to traverse the visual tree and accumulate errors
+    private static void GetErrorsRecursive(DependencyObject parent, StringBuilder sb)
+    {
+        if (Validation.GetHasError(parent))
+        {
+            foreach (var error in Validation.GetErrors(parent))
+                if (error.ErrorContent != null) sb.AppendLine($"- {error.ErrorContent}");
+        }
+
+        for (int i = 0; i != VisualTreeHelper.GetChildrenCount(parent); ++i)
+        {
+            GetErrorsRecursive(VisualTreeHelper.GetChild(parent, i), sb);
         }
     }
 }
