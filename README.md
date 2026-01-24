@@ -207,10 +207,10 @@ ReadAll
 GetOrderTracking
 
 LINQ Query Syntax (Linq-to-Objects):
-let: Used in GetCourierDeliveryHistory, GetOpenOrders, PeriodicCouriersUpdate, and GetAvailableOrders.
-select new: Used in GetCourierDeliveryHistory, GetCourierStatistics, PeriodicCouriersUpdate, and GetAvailableOrders.
+let: Used in GetCourierDeliveryHistory, GetOpenOrders, PeriodicCouriersUpdate.
+select new: Used in GetCourierDeliveryHistory, GetCourierStatistics, PeriodicCouriersUpdate.
 grouping: Used in GetCourierStatistics (group d by d.DeliveryEndType).
-sorting: Used in GetCourierDeliveryHistory (orderby d.DeliveryStartTime) and GetAvailableOrders (orderby order.OrderOpenTime).
+sorting: Used in GetCourierDeliveryHistory (orderby d.DeliveryStartTime) and GetOpenOrders (orderby order.OrderOpenTime).
 
 # Stage 5:
 I first gave Gemini the relevant sections of the Stage 5 instruction document (the rules and requirements) and told it to synthesize the rules and requirements it found into the GEMINI.md file. Then I told it to implement the instructions found thereign in the appropriate files using the prompt:
